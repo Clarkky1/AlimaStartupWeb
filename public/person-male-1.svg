@@ -1,0 +1,16 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<svg width="800px" height="800px" viewBox="0 0 24 24" version="1.1" xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink">
+  <title>Person Male 1</title>
+  <g id="Person-Male-1" stroke="none" stroke-width="1" fill="none" fill-rule="evenodd">
+    <!-- Head -->
+    <circle cx="12" cy="8" r="4.5" fill="#DBEAFE" stroke="#3B82F6" stroke-width="1.5"/>
+    <!-- Body -->
+    <path d="M4,20 C4,16.5 7.5,14 12,14 C16.5,14 20,16.5 20,20" stroke="#3B82F6" stroke-width="1.5" stroke-linecap="round"/>
+    <!-- Face details -->
+    <circle cx="10" cy="7.5" r="0.5" fill="#3B82F6"/>
+    <circle cx="14" cy="7.5" r="0.5" fill="#3B82F6"/>
+    <path d="M10.5,9.5 C11.5,10.5 12.5,10.5 13.5,9.5" stroke="#3B82F6" stroke-width="0.75" stroke-linecap="round"/>
+    <!-- Hair -->
+    <path d="M8,6 C8.5,4 10,3.5 12,3.5 C14,3.5 15.5,4 16,6" stroke="#3B82F6" stroke-width="1.5" fill="#BFDBFE" stroke-linecap="round"/>
+  </g>
+</svg>

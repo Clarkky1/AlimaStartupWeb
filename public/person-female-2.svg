@@ -1,0 +1,20 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<svg width="800px" height="800px" viewBox="0 0 24 24" version="1.1" xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink">
+  <title>Person Female 2</title>
+  <g id="Person-Female-2" stroke="none" stroke-width="1" fill="none" fill-rule="evenodd">
+    <!-- Head -->
+    <circle cx="12" cy="8" r="4.5" fill="#FCE7F3" stroke="#BE185D" stroke-width="1.5"/>
+    <!-- Body -->
+    <path d="M4,20 C4,16.5 7.5,14 12,14 C16.5,14 20,16.5 20,20" stroke="#BE185D" stroke-width="1.5" stroke-linecap="round"/>
+    <!-- Face details -->
+    <circle cx="10" cy="7.5" r="0.5" fill="#BE185D"/>
+    <circle cx="14" cy="7.5" r="0.5" fill="#BE185D"/>
+    <path d="M10.5,9.5 C11.5,10.5 12.5,10.5 13.5,9.5" stroke="#BE185D" stroke-width="0.75" stroke-linecap="round"/>
+    <!-- Hair with ponytail -->
+    <path d="M8,7 C7.5,4 9,3 12,3 C15,3 16.5,4 16,7" stroke="#BE185D" stroke-width="1.5" fill="#F9A8D4" stroke-linecap="round"/>
+    <path d="M16,6 C17,6.5 17.5,7 17,9 C16.5,11 15,13 15,13" stroke="#BE185D" stroke-width="1" stroke-linecap="round"/>
+    <!-- Earrings -->
+    <circle cx="7.5" cy="8" r="0.5" fill="#BE185D" stroke="#BE185D" stroke-width="0.5"/>
+    <circle cx="16.5" cy="8" r="0.5" fill="#BE185D" stroke="#BE185D" stroke-width="0.5"/>
+  </g>
+</svg>

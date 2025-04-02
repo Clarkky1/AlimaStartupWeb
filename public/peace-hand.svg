@@ -1,0 +1,13 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<svg width="800px" height="800px" viewBox="0 0 24 24" version="1.1" xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink">
+  <title>Peace Hand Gesture</title>
+  <g id="Peace-Hand" stroke="none" stroke-width="1" fill="none" fill-rule="evenodd">
+    <path d="M18.364,6.636 L18.364,15.182 C18.3547,16.7699 17.71,18.2893 16.5663,19.4267 C15.4226,20.5641 13.8999,21.2004 12.3121,21.2004 C10.7243,21.2004 9.2016,20.5641 8.05791,19.4267 C6.91422,18.2893 6.26953,16.7699 6.26,15.182 L6.26,12.3 L6.26,9.409 C6.26,8.526 6.97818,7.81818 7.86364,7.81818 C8.74909,7.81818 9.46727,8.526 9.46727,9.409 L9.46727,6.636 C9.46727,5.75773 10.1836,5.04545 11.0673,5.04545 C11.9509,5.04545 12.6673,5.75773 12.6673,6.636 L12.6673,5.04545 C12.6673,4.16 13.3855,3.45455 14.2673,3.45455 C15.1491,3.45455 15.8673,4.16 15.8673,5.04545 L15.8673,6.636 C15.8673,5.75773 16.5836,5.04545 17.4673,5.04545 C18.3509,5.04545 19.0673,5.75773 19.0673,6.636" id="peace-hand-path" stroke="#3B82F6" stroke-width="1.5" fill="#DBEAFE" fill-rule="nonzero" stroke-linecap="round" stroke-linejoin="round"></path>
+    <path d="M9.46727,9.409 L9.46727,14.3909 C9.47108,14.8358 9.64961,15.2602 9.9657,15.5759 C10.2818,15.8917 10.7064,16.0698 11.1513,16.0732 C11.5961,16.0766 12.0232,15.9042 12.344,15.5926 C12.6647,15.281 12.8497,14.8588 12.86,14.414 L12.86,8.227" id="peace-hand-detail" stroke="#3B82F6" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"></path>
+    <path d="M15.8673,10.227 L15.8673,14.3909 C15.8673,14.8358 15.6887,15.2624 15.3723,15.579 C15.0558,15.8957 14.6293,16.0746 14.1845,16.0748 C13.7396,16.075 13.3129,15.8965 12.9961,15.5802 C12.6793,15.264 12.5,14.8376 12.4995,14.3928" id="peace-hand-detail2" stroke="#3B82F6" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"></path>
+    <path d="M18.995,8.227 L18.995,13.591 C18.995,14.4764 18.6639,15.3254 18.0739,15.9554 C17.4838,16.5853 16.6588,16.9765 15.7761,17.0414 C14.8935,17.1063 14.0245,16.84 13.3506,16.2976 C12.6767,15.7552 12.2488,14.9776 12.1568,14.1291" id="peace-hand-detail3" stroke="#3B82F6" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"></path>
+    <!-- Payment confirmation symbol -->
+    <circle cx="17" cy="7" r="1.5" fill="#34D399" stroke="#065F46" stroke-width="0.5"></circle>
+    <text x="12" y="23" font-family="Arial, sans-serif" font-size="1.5" fill="#3B82F6" text-anchor="middle">Payment Confirmed</text>
+  </g>
+</svg>

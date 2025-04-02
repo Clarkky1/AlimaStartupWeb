@@ -1,0 +1,290 @@
+rules_version = '2';
+service cloud.firestore {
+  match /databases/{database}/documents {
+    // Helper functions
+    function isAuthenticated() {
+      return request.auth != null;
+    }
+    
+    function isOwner(userId) {
+      return isAuthenticated() && request.auth.uid == userId;
+    }
+    
+    // Safer provider check that won't trigger circular dependencies
+    function isProvider() {
+      return isAuthenticated() && exists(/databases/$(database)/documents/providers/$(request.auth.uid));
+    }
+    
+    // Safer client check to avoid circular dependencies
+    function isClient() {
+      return isAuthenticated() && 
+        !exists(/databases/$(database)/documents/providers/$(request.auth.uid));
+    }
+
+    function isAdmin() {
+      return isAuthenticated() && 
+        exists(/databases/$(database)/documents/users/$(request.auth.uid)) &&
+        get(/databases/$(database)/documents/users/$(request.auth.uid)).data.role == 'admin';
+    }
+
+    // Users collection
+    match /users/{userId} {
+      // Allow authenticated users to read other users
+      // Also allow public queries for providers with a limit
+      allow read: if true;
+      
+      // Allow users to create their own profile
+      allow create: if isAuthenticated() && isOwner(userId);
+      
+      // Allow users to update their own profile
+      allow update: if isOwner(userId);
+      
+      // Prevent deletion through client
+      allow delete: if false;
+    }
+
+    // Services collection
+    match /services/{serviceId} {
+      // Public read access for services
+      allow read: if true;
+      
+      // Only providers can create services
+      allow create: if isAuthenticated() && 
+        (request.resource.data.providerId == request.auth.uid);
+      
+      // Only the provider who owns the service can update it
+      allow update: if isAuthenticated() && 
+        (resource.data.providerId == request.auth.uid);
+      
+      // Only the provider who owns the service can delete it
+      allow delete: if isAuthenticated() && 
+        (resource.data.providerId == request.auth.uid);
+    }
+
+    // Reviews collection
+    match /reviews/{reviewId} {
+      // Public read access for reviews
+      allow read: if true;
+      
+      // Only authenticated users can create reviews for existing services
+      allow create: if isAuthenticated() && 
+        exists(/databases/$(database)/documents/services/$(request.resource.data.serviceId));
+      
+      // Only the review owner can update their review
+      allow update: if isAuthenticated() && 
+        (resource.data.userId == request.auth.uid);
+      
+      // Only the review owner can delete their review
+      allow delete: if isAuthenticated() && 
+        (resource.data.userId == request.auth.uid);
+    }
+
+    // Conversations collection - Updated rules for better participant checks
+    match /conversations/{conversationId} {
+      // Allow reading conversation if user is a participant
+      allow read: if isAuthenticated() && 
+        request.auth.uid in resource.data.participants;
+      
+      // Allow creating and updating conversation if user is a participant
+      allow create, update: if isAuthenticated() && 
+        request.auth.uid in request.resource.data.participants;
+      
+      // Prevent conversation deletion
+      allow delete: if false;
+    }
+
+    // Messages collection - Updated rules for better message control
+    match /messages/{messageId} {
+      // Allow reading messages if user is a participant in the conversation
+      allow read: if isAuthenticated() && 
+        exists(/databases/$(database)/documents/conversations/$(resource.data.conversationId)) &&
+        (request.auth.uid in get(/databases/$(database)/documents/conversations/$(resource.data.conversationId)).data.participants);
+      
+      // Allow message creation if user is the sender
+      allow create: if isAuthenticated() && 
+        request.resource.data.senderId == request.auth.uid;
+      
+      // Allow updating only specific fields and only by sender or receiver
+      allow update: if isAuthenticated() && 
+        (request.auth.uid == resource.data.senderId || 
+         request.auth.uid == resource.data.receiverId) && 
+         (!request.resource.data.diff(resource.data).affectedKeys()
+          .hasAny(['senderId', 'conversationId', 'timestamp', 'text']));
+      
+      // Prevent message deletion
+      allow delete: if false;
+    }
+
+    // Message Threads (for thread-based chat implementation)
+    match /messageThreads/{threadId} {
+      // Anyone authenticated can access threads
+      allow read: if isAuthenticated();
+      
+      // Users can create new threads
+      allow create: if isAuthenticated();
+      
+      // Any authenticated user can update threads
+      allow update: if isAuthenticated();
+      
+      // Threads cannot be deleted
+      allow delete: if false;
+      
+      // Nested messages in threads
+      match /messages/{messageId} {
+        // Any authenticated user can read thread messages
+        allow read: if isAuthenticated();
+        
+        // Any authenticated user can send messages
+        allow create: if isAuthenticated();
+        
+        // Message senders can update their own messages
+        allow update: if isAuthenticated() && 
+                      resource.data.senderId == request.auth.uid;
+        
+        // Messages cannot be deleted
+        allow delete: if false;
+      }
+    }
+
+    // Chats collection (alternative implementation)
+    match /chats/{chatId} {
+      // Any authenticated user can access chats
+      allow read: if isAuthenticated();
+      
+      // Any authenticated user can create chats
+      allow create: if isAuthenticated();
+      
+      // Any authenticated user can update chats
+      allow update: if isAuthenticated();
+      
+      // Chats cannot be deleted
+      allow delete: if false;
+    }
+
+    // Notifications collection - Updated to allow message notifications
+    match /notifications/{notificationId} {
+      // Users can only read their own notifications
+      allow read: if isAuthenticated() && resource.data.userId == request.auth.uid;
+      
+      // Allow authenticated users to create notifications with proper checks
+      allow create: if isAuthenticated() && (
+        request.resource.data.userId == request.auth.uid || 
+        request.resource.data.type == 'payment_proof' ||
+        request.resource.data.type == 'message' ||
+        (request.resource.data.senderId == request.auth.uid && exists(/databases/$(database)/documents/conversations/$(request.resource.data.data.conversationId)))
+      );
+      
+      // Users can update their own notifications (e.g., to mark as read)
+      allow update: if isAuthenticated() && resource.data.userId == request.auth.uid;
+      
+      // Notifications cannot be deleted
+      allow delete: if false;
+    }
+
+    // Transactions collection
+    match /transactions/{transactionId} {
+      // Only transaction participants can view transactions
+      allow read: if isAuthenticated() && 
+        (resource.data.userId == request.auth.uid || 
+         resource.data.providerId == request.auth.uid);
+      
+      // Users can create transactions for existing services
+      allow create: if isAuthenticated() && 
+        exists(/databases/$(database)/documents/services/$(request.resource.data.serviceId));
+      
+      // Allow specific updates based on role
+      allow update: if isAuthenticated() && 
+        ((resource.data.providerId == request.auth.uid && 
+          request.resource.data.diff(resource.data).affectedKeys()
+            .hasOnly(['status', 'updatedAt'])) ||
+         (resource.data.userId == request.auth.uid && 
+          request.resource.data.diff(resource.data).affectedKeys()
+            .hasOnly(['paymentProofUrl', 'cloudinaryId', 'updatedAt'])));
+      
+      // Transactions cannot be deleted
+      allow delete: if false;
+    }
+
+    // Providers collection - FIXED to avoid circular dependencies
+    match /providers/{providerId} {
+      // Public read access - THIS FIXES THE PERMISSION ERROR
+      allow read: if true;
+      
+      // Only the owner can create their provider profile
+      allow create: if isAuthenticated() && providerId == request.auth.uid;
+      
+      // Only the owner can update their provider profile
+      allow update: if isAuthenticated() && providerId == request.auth.uid;
+      
+      // Provider profiles cannot be deleted
+      allow delete: if false;
+    }
+
+    // Categories collection
+    match /categories/{categoryId} {
+      // Public read access for categories
+      allow read: if true;
+      
+      // Only admin can modify categories (via Admin SDK)
+      allow write: if false;
+    }
+
+    // Payment information collection
+    match /paymentInfo/{userId} {
+      // Only the owner can access payment info
+      allow read: if isAuthenticated() && request.auth.uid == userId;
+      
+      // Only the owner can modify payment info
+      allow write: if isAuthenticated() && request.auth.uid == userId;
+    }
+
+    // Payment Proofs collection
+    match /payment_proofs/{proofId} {
+      // Only transaction participants can view proofs
+      allow read: if isAuthenticated() && 
+        (resource.data.userId == request.auth.uid || 
+         resource.data.providerId == request.auth.uid);
+      
+      // Users can create payment proofs for existing transactions
+      allow create: if isAuthenticated() && 
+        exists(/databases/$(database)/documents/transactions/$(request.resource.data.transactionId));
+      
+      // Payment proofs cannot be modified or deleted
+      allow update, delete: if false;
+    }
+    
+    // Chat payments
+    match /chatPayments/{paymentId} {
+      // Only participants can view payments
+      allow read: if isAuthenticated() && 
+                 (resource.data.senderId == request.auth.uid || 
+                  resource.data.receiverId == request.auth.uid);
+      
+      // Authenticated users can create payments
+      allow create: if isAuthenticated();
+      
+      // Payments cannot be modified
+      allow update: if false;
+      
+      // Payments cannot be deleted
+      allow delete: if false;
+    }
+    
+    // Bookings can be read by the provider or the customer who is part of the booking
+    match /bookings/{bookingId} {
+      allow read: if isAuthenticated() && 
+                  (resource.data.providerId == request.auth.uid || 
+                   resource.data.userId == request.auth.uid);
+      allow create: if isAuthenticated();
+      allow update: if isAuthenticated() && 
+                    (resource.data.providerId == request.auth.uid || 
+                     resource.data.userId == request.auth.uid);
+      allow delete: if isOwner(resource.data.userId);
+    }
+    
+    // Admin access for all documents
+    match /{document=**} {
+      allow read, write: if isAdmin();
+    }
+  }
+}

@@ -15,6 +15,7 @@ interface ServiceProvider {
   avatar: string;
   location: string;
   rating: number;
+  hasRating: boolean;
 }
 
 interface Service {
@@ -56,6 +57,7 @@ const mockGlobalServices: Service[] = [
       avatar: "/person-male-1.svg?height=50&width=50",
       location: "Quezon City",
       rating: 4.9,
+      hasRating: true,
     },
   },
   {
@@ -71,6 +73,7 @@ const mockGlobalServices: Service[] = [
       avatar: "/person-male-1.svg?height=50&width=50",
       location: "Makati City",
       rating: 4.8,
+      hasRating: true,
     },
   },
   {
@@ -86,6 +89,7 @@ const mockGlobalServices: Service[] = [
       avatar: "/person-male-1.svg?height=50&width=50",
       location: "Pasig City",
       rating: 4.6,
+      hasRating: true,
     },
   },
   {
@@ -101,6 +105,7 @@ const mockGlobalServices: Service[] = [
       avatar: "/person-male-1.svg?height=50&width=50",
       location: "Manila",
       rating: 4.7,
+      hasRating: true,
     },
   },
 ]
@@ -211,10 +216,11 @@ export function GlobalServices({ category = 'recent', expandable = false }: Glob
               image: data.image || "https://images.unsplash.com/photo-1498050108023-c5249f4df085?q=80&w=2072&auto=format&fit=crop",
               provider: {
                 id: data.providerId || "unknown",
-                name: providerData?.displayName || "Service Provider",
-                avatar: providerData?.photoURL || "/person-male-1.svg?height=50&width=50",
+                name: providerData?.displayName || providerData?.name || "Service Provider",
+                avatar: providerData?.photoURL || providerData?.profilePicture || "/person-male-1.svg?height=50&width=50",
                 location: providerData?.location || "Philippines",
-                rating: data.rating || 4.0,
+                rating: data.rating || 0,
+                hasRating: data.rating > 0
               },
             })
           }
@@ -257,60 +263,42 @@ export function GlobalServices({ category = 'recent', expandable = false }: Glob
   const limitedServices = isExpanded ? displayServices : displayServices.slice(0, 4);
 
   return (
-    <div className="space-y-6">
+    <div className="space-y-4">
       {loading ? (
-        // Skeleton loading state
-        <div className="grid grid-cols-1 gap-6 sm:grid-cols-2 lg:grid-cols-4">
-          {Array(4)
-            .fill(0)
-            .map((_, i) => (
-              <div key={i} className="space-y-3">
-                <Skeleton className="h-48 w-full rounded-lg" />
-                <div className="space-y-2">
-                  <Skeleton className="h-5 w-3/4" />
-                  <Skeleton className="h-4 w-full" />
-                  <div className="flex items-center gap-2 pt-2">
-                    <Skeleton className="h-8 w-8 rounded-full" />
-                    <Skeleton className="h-4 w-24" />
-                  </div>
-                </div>
-              </div>
-            ))}
+        <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-4">
+          {[1, 2, 3, 4].map((i) => (
+            <Skeleton key={i} className="h-[300px] w-full" />
+          ))}
         </div>
-      ) : limitedServices.length > 0 ? (
+      ) : (
         <>
-          <div className="grid grid-cols-1 gap-6 sm:grid-cols-2 lg:grid-cols-4">
-            {limitedServices.map((service) => (
-              <div key={service.id}>
-                <ServiceCard 
-                  id={service.id} 
-                  title={service.title}
-                  description={service.description}
-                  price={service.price}
-                  category={service.category}
-                  image={service.image}
-                  provider={service.provider}
-                />
-              </div>
+          <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-4">
+            {(isExpanded ? services : services.slice(0, 4)).map((service) => (
+              <ServiceCard
+                key={service.id}
+                id={service.id}
+                title={service.title}
+                description={service.description}
+                price={service.price}
+                category={service.category}
+                image={service.image}
+                provider={service.provider}
+                showRating={true}
+              />
             ))}
           </div>
-
-          {expandable && displayServices.length > 4 && (
-            <div className="flex justify-center mt-8">
+          {expandable && services.length > 4 && (
+            <div className="flex justify-center">
               <Button
                 variant="outline"
                 onClick={() => setIsExpanded(!isExpanded)}
               >
-                {isExpanded ? 'Show Less' : 'View All'}
+                {isExpanded ? "Show Less" : "Show More"}
               </Button>
             </div>
           )}
         </>
-      ) : (
-        <div className="flex h-48 items-center justify-center rounded-lg border">
-          <p className="text-muted-foreground">No services available</p>
-        </div>
       )}
     </div>
-  )
+  );
 }

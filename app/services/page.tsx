@@ -59,6 +59,19 @@ export default function ServicesPage() {
   const [loading, setLoading] = useState(true)
   const { toast } = useToast()
 
+  // Reset all filters
+  const resetFilters = () => {
+    setSearchTerm("");
+    setSelectedCategory("all");
+    setPriceRange([0, 10000]);
+    setLocation("");
+  };
+
+  // Reset only category filter
+  const resetCategoryFilter = () => {
+    setSelectedCategory("all");
+  };
+
   useEffect(() => {
     async function fetchServices() {
       setLoading(true)
@@ -92,7 +105,7 @@ export default function ServicesPage() {
           const data = doc.data()
           
           // If provider has a location, add it to locations set
-          if (data.location) {
+          if (data.location && data.location !== "Philippines") {
             uniqueLocations.add(data.location)
           }
           
@@ -128,6 +141,8 @@ export default function ServicesPage() {
     }
 
     fetchServices()
+    // Only reset category filter when tab changes
+    resetCategoryFilter()
   }, [activeTab, selectedCategory, sortBy, toast])
 
   // Apply all filters (search, price, location)
@@ -146,14 +161,6 @@ export default function ServicesPage() {
     
     return matchesSearch && matchesPrice && matchesLocation;
   });
-
-  // Reset all filters
-  const resetFilters = () => {
-    setSearchTerm("");
-    setSelectedCategory("all");
-    setPriceRange([0, 10000]);
-    setLocation("");
-  };
 
   return (
     <div className="container py-8">
@@ -325,9 +332,12 @@ export default function ServicesPage() {
                   </SelectTrigger>
                   <SelectContent>
                     <SelectItem value="">All Locations</SelectItem>
-                    {locations.map((loc) => (
-                      <SelectItem key={loc} value={loc}>{loc}</SelectItem>
-                    ))}
+                    {locations
+                      .filter(loc => loc !== "Philippines")
+                      .sort()
+                      .map((loc) => (
+                        <SelectItem key={loc} value={loc}>{loc}</SelectItem>
+                      ))}
                   </SelectContent>
                 </Select>
               </div>

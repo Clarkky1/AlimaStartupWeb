@@ -14,7 +14,7 @@ import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar"
 
 interface Notification {
   id: string
-  type: "message" | "review" | "payment" | "system" | "payment_proof"
+  type: "message" | "review" | "payment" | "system" | "payment_proof" | "rating"
   title: string
   description: string
   timestamp: any
@@ -32,6 +32,8 @@ interface Notification {
     senderAvatar?: string
     messageText?: string
     type?: string
+    rating?: number
+    feedback?: string
   }
 }
 
@@ -238,6 +240,8 @@ export function NotificationCenter() {
           router.push(`/message/${otherUserId}`)
         }
       } else if (notification.type === "review" && notification.data?.serviceId) {
+        router.push(`/services/${notification.data.serviceId}`)
+      } else if (notification.type === "rating" && notification.data?.serviceId) {
         router.push(`/services/${notification.data.serviceId}`)
       }
     } catch (error) {

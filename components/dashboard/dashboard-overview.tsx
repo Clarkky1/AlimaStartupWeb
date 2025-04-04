@@ -82,10 +82,48 @@ export function DashboardOverview() {
           return data.participants.find((p: string) => p !== user.uid);
         }));
 
-        // Get total services count
+        // Get total services count and calculate average rating
         const servicesRef = collection(firebase.db, "services");
-        const servicesSnap = await getDocs(servicesRef);
+        const servicesQuery = query(servicesRef, where("providerId", "==", user.uid));
+        const servicesSnap = await getDocs(servicesQuery);
         const totalServices = servicesSnap.size;
+
+        // Calculate average rating from services
+        let totalRating = 0;
+        let ratedServices = 0;
+        servicesSnap.docs.forEach(doc => {
+          const data = doc.data();
+          if (data.rating && data.rating > 0) {
+            totalRating += data.rating;
+            ratedServices++;
+          }
+        });
+        const averageRating = ratedServices > 0 ? totalRating / ratedServices : 0;
+
+        // Set up previous period date for comparisons
+        const previousPeriod = new Date();
+        previousPeriod.setMonth(previousPeriod.getMonth() - 1);
+
+        // Get previous period ratings
+        const previousRatingsQuery = query(
+          servicesRef,
+          where("providerId", "==", user.uid),
+          where("updatedAt", "<=", previousPeriod)
+        );
+        const previousRatingsSnap = await getDocs(previousRatingsQuery);
+        let previousTotalRating = 0;
+        let previousRatedServices = 0;
+        previousRatingsSnap.docs.forEach(doc => {
+          const data = doc.data();
+          if (data.rating && data.rating > 0) {
+            previousTotalRating += data.rating;
+            previousRatedServices++;
+          }
+        });
+        const previousAverageRating = previousRatedServices > 0 ? previousTotalRating / previousRatedServices : 0;
+        const ratingChange = previousAverageRating > 0 
+          ? ((averageRating - previousAverageRating) / previousAverageRating) * 100 
+          : 0;
 
         // Get user's transactions
         const transactionsRef = collection(firebase.db, "transactions");
@@ -99,14 +137,11 @@ export function DashboardOverview() {
         // Calculate revenue from completed transactions
         const revenue = transactionsSnap.docs.reduce((sum, doc) => {
           const data = doc.data();
-          // Convert amount to number, handling both string and number formats
           const amount = typeof data.amount === 'string' ? parseFloat(data.amount) : data.amount;
           return sum + (amount || 0);
         }, 0);
 
-        // Get previous period data for comparison
-        const previousPeriod = new Date();
-        previousPeriod.setMonth(previousPeriod.getMonth() - 1);
+        // Get previous period transactions
         const previousTransactionsQuery = query(
           transactionsRef,
           where("userId", "==", user.uid),
@@ -116,12 +151,10 @@ export function DashboardOverview() {
         const previousTransactionsSnap = await getDocs(previousTransactionsQuery);
         const previousRevenue = previousTransactionsSnap.docs.reduce((sum, doc) => {
           const data = doc.data();
-          // Convert amount to number, handling both string and number formats
           const amount = typeof data.amount === 'string' ? parseFloat(data.amount) : data.amount;
           return sum + (amount || 0);
         }, 0);
 
-        // Calculate revenue change percentage
         const revenueChange = previousRevenue > 0 
           ? ((revenue - previousRevenue) / previousRevenue) * 100 
           : 0;
@@ -133,11 +166,11 @@ export function DashboardOverview() {
 
         setStats({
           contacts: uniqueProviders.size,
-          contactsChange: 0, // This would need historical data to calculate
+          contactsChange: 0,
           transactions: transactionsSnap.size,
-          transactionsChange: 0, // This would need historical data to calculate
-          rating: 0, // This would need to be calculated from reviews
-          ratingChange: 0, // This would need historical data
+          transactionsChange: 0,
+          rating: averageRating,
+          ratingChange: Math.round(ratingChange),
           revenue: revenue.toLocaleString(),
           revenueChange: Math.round(revenueChange),
           serviceContactPercentage: Math.round(serviceContactPercentage),

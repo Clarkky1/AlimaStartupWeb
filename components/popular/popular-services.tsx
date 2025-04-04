@@ -57,6 +57,7 @@ interface Provider {
   avatar: string
   rating: number
   location: string
+  hasRating?: boolean
 }
 
 interface ServiceData {
@@ -218,6 +219,19 @@ export function PopularServices({ category, limit: serviceLimit = 8 }: PopularSe
   const [location, setLocation] = useState("all")
   const [showFilters, setShowFilters] = useState(false)
 
+  // Reset all filters
+  const resetFilters = () => {
+    setSearchTerm("");
+    setSelectedCategory("all");
+    setPriceRange([0, 10000]);
+    setLocation("all");
+  };
+
+  // Reset only category filter
+  const resetCategoryFilter = () => {
+    setSelectedCategory("all");
+  };
+
   // Fetch services from Firestore
   const fetchServices = useCallback(async () => {
     if (!isMounted.current) return
@@ -258,30 +272,32 @@ export function PopularServices({ category, limit: serviceLimit = 8 }: PopularSe
 
           if (!provider && firebase.db && serviceData.providerId) {
             try {
-              const providerRef = doc(firebase.db, "providers", serviceData.providerId)
-              const providerDoc = await getDoc(providerRef)
-              if (providerDoc.exists()) {
-                const providerData = providerDoc.data() as {
-                  name?: string;
-                  photoURL?: string;
-                  rating?: number;
-                  location?: string;
-                }
+              const providerQuery = query(
+                collection(firebase.db, "users"),
+                where("uid", "==", serviceData.providerId),
+                limit(1)
+              )
+              const providerDocs = await getDocs(providerQuery)
+              
+              if (!providerDocs.empty) {
+                const providerData = providerDocs.docs[0].data()
+                const hasRating = providerData.rating !== undefined && providerData.rating > 0
                 provider = {
-                  id: providerDoc.id,
-                  name: providerData.name || "Service Provider",
-                  avatar: providerData.photoURL || "/person-male-1.svg",
-                  rating: providerData.rating || 0,
-                  location: providerData.location || "Unknown"
+                  id: serviceData.providerId,
+                  name: providerData.displayName || providerData.name || "Service Provider",
+                  avatar: providerData.photoURL || providerData.profilePicture || "/person-male-1.svg",
+                  rating: hasRating ? providerData.rating : 0,
+                  location: providerData.location || "Unknown",
+                  hasRating
                 }
-                providersCache.current.set(providerDoc.id, provider)
+                providersCache.current.set(serviceData.providerId, provider)
               }
             } catch (error) {
               console.error("Error fetching provider data:", error)
             }
           }
 
-          return {
+          const service: Service = {
             id: docSnapshot.id,
             title: serviceData.title || "",
             description: serviceData.description || "",
@@ -291,17 +307,20 @@ export function PopularServices({ category, limit: serviceLimit = 8 }: PopularSe
             providerId: serviceData.providerId,
             provider: provider || {
               id: serviceData.providerId,
-              name: "Unknown Provider",
+              name: "Service Provider",
               avatar: "/person-male-1.svg",
               rating: 0,
-              location: "Unknown"
+              location: "Unknown",
+              hasRating: false
             },
             isGlobalService: !serviceData.isLocalService,
             isLocalService: serviceData.isLocalService || false,
             rating: serviceData.rating || 0
-          } as Service
+          }
+
+          return service
         })
-      )
+      ).then(services => services.filter((service): service is Service => service !== undefined))
 
       setServices(servicesWithProviders)
       setFilteredServices(servicesWithProviders)
@@ -318,6 +337,11 @@ export function PopularServices({ category, limit: serviceLimit = 8 }: PopularSe
       })
     }
   }, [serviceLimit, toast, activeTab])
+
+  // Reset category filter when tab changes
+  useEffect(() => {
+    resetCategoryFilter()
+  }, [activeTab])
 
   // Fetch services on mount and when pathname changes
   useEffect(() => {
@@ -377,11 +401,11 @@ export function PopularServices({ category, limit: serviceLimit = 8 }: PopularSe
   const locations = useMemo(() => {
     const uniqueLocations = new Set<string>()
     services.forEach(service => {
-      if (service.provider?.location && service.provider.location !== "Unknown") {
+      if (service.provider?.location && service.provider.location !== "Unknown" && service.provider.location !== "Philippines") {
         uniqueLocations.add(service.provider.location)
       }
     })
-    return Array.from(uniqueLocations)
+    return Array.from(uniqueLocations).sort()
   }, [services])
 
   // Get categories based on active tab
@@ -473,11 +497,14 @@ export function PopularServices({ category, limit: serviceLimit = 8 }: PopularSe
                 </SelectTrigger>
                 <SelectContent>
                   <SelectItem value="all">All Locations</SelectItem>
-                  {locations.map((loc) => (
-                    <SelectItem key={loc} value={loc}>
-                      {loc}
-                    </SelectItem>
-                  ))}
+                  {locations
+                    .filter(loc => loc !== "Philippines")
+                    .sort()
+                    .map((loc) => (
+                      <SelectItem key={loc} value={loc}>
+                        {loc}
+                      </SelectItem>
+                    ))}
                 </SelectContent>
               </Select>
             </div>
@@ -524,6 +551,7 @@ export function PopularServices({ category, limit: serviceLimit = 8 }: PopularSe
                   category={service.category}
                   image={service.image}
                   provider={service.provider}
+                  showRating={service.provider.hasRating}
                 />
               </div>
             ))}

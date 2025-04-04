@@ -15,6 +15,7 @@ interface Provider {
   avatar: string;
   location: string;
   rating: number;
+  hasRating?: boolean;
 }
 
 interface ServiceCardProps {
@@ -25,6 +26,7 @@ interface ServiceCardProps {
   category: string;
   image: string;
   provider?: Provider; // Make provider optional
+  showRating?: boolean;
 }
 
 // Default provider values
@@ -33,7 +35,8 @@ const defaultProvider: Provider = {
   name: "Service Provider",
   avatar: "/person-male-1.svg",
   location: "Philippines",
-  rating: 4.0
+  rating: 0,
+  hasRating: false
 }
 
 // Function to format category name
@@ -51,7 +54,8 @@ export function ServiceCard({
   price,
   category,
   image,
-  provider = defaultProvider // Set default value
+  provider = defaultProvider, // Set default value
+  showRating = false
 }: ServiceCardProps) {
   const [isContactModalOpen, setIsContactModalOpen] = useState(false)
 
@@ -96,10 +100,12 @@ export function ServiceCard({
               <div className="flex items-baseline gap-1">
                 <span className="text-lg font-bold">₱{price}</span>
               </div>
-              <div className="flex items-center gap-1">
-                <StarIcon className="h-4 w-4 fill-yellow-400 text-yellow-400" />
-                <span className="text-sm font-medium">{provider.rating}</span>
-              </div>
+              {showRating && provider.hasRating && (
+                <div className="flex items-center gap-1">
+                  <StarIcon className="h-4 w-4 fill-yellow-400 text-yellow-400" />
+                  <span className="text-sm font-medium">{provider.rating}</span>
+                </div>
+              )}
             </div>
 
             <div className="space-y-3 border-t pt-3">

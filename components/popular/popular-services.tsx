@@ -4,7 +4,7 @@ import { useState, useEffect, useCallback, useRef, useMemo } from "react"
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
 import { Skeleton } from "@/components/ui/skeleton"
 import { ServiceCard } from "@/components/ui/service-card"
-import { collection, query, where, orderBy, limit, getDocs, getDoc, doc } from "firebase/firestore"
+import { collection, query, where, orderBy, limit, getDocs, getDoc, doc, DocumentData } from "firebase/firestore"
 import { initializeFirebase } from "@/app/lib/firebase"
 import { useToast } from "@/components/ui/use-toast"
 import { Card, CardContent } from "@/components/ui/card"
@@ -44,6 +44,7 @@ import {
   Building2,
   Cpu
 } from "lucide-react"
+import { usePathname } from "next/navigation"
 
 interface PopularServicesProps {
   category?: string
@@ -58,6 +59,17 @@ interface Provider {
   location: string
 }
 
+interface ServiceData {
+  title?: string;
+  description?: string;
+  price?: number | string;
+  category?: string;
+  image?: string;
+  providerId: string;
+  isLocalService?: boolean;
+  rating?: number;
+}
+
 interface Service {
   id: string
   title: string
@@ -67,9 +79,19 @@ interface Service {
   image: string
   providerId: string
   provider: Provider
-  isGlobalService?: boolean
-  isLocalService?: boolean
-  rating?: number
+  isGlobalService: boolean
+  isLocalService: boolean
+  rating: number
+}
+
+interface ServiceCardProps {
+  id: string
+  title: string
+  description: string
+  price: string
+  category: string
+  image: string
+  provider: Provider
 }
 
 const globalCategories = [
@@ -112,11 +134,13 @@ const mockServices: Service[] = [
     provider: {
       id: "p1",
       name: "John Smith",
-      avatar: "/person-male-1.svg?height=50&width=50",
+      avatar: "/person-male-1.svg",
       location: "Remote",
       rating: 4.8,
     },
     isGlobalService: true,
+    isLocalService: false,
+    rating: 4.8,
   },
   {
     id: "s2",
@@ -129,11 +153,13 @@ const mockServices: Service[] = [
     provider: {
       id: "p2",
       name: "Sarah Lee",
-      avatar: "/person-female-1.svg?height=50&width=50",
+      avatar: "/person-female-1.svg",
       location: "Remote",
       rating: 4.9,
     },
     isGlobalService: true,
+    isLocalService: false,
+    rating: 4.9,
   },
   {
     id: "ls1",
@@ -146,11 +172,13 @@ const mockServices: Service[] = [
     provider: {
       id: "p3",
       name: "Jerry",
-      avatar: "/person-male-1.svg?height=50&width=50",
+      avatar: "/person-male-1.svg",
       location: "Manila",
       rating: 4.9,
     },
+    isGlobalService: false,
     isLocalService: true,
+    rating: 4.9,
   },
   {
     id: "ls2",
@@ -163,11 +191,13 @@ const mockServices: Service[] = [
     provider: {
       id: "p4",
       name: "Paul",
-      avatar: "/person-male-1.svg?height=50&width=50",
+      avatar: "/person-male-1.svg",
       location: "Pasig City",
       rating: 4.7,
     },
+    isGlobalService: false,
     isLocalService: true,
+    rating: 4.7,
   }
 ]
 
@@ -179,6 +209,7 @@ export function PopularServices({ category, limit: serviceLimit = 8 }: PopularSe
   const { toast } = useToast()
   const isMounted = useRef(true)
   const providersCache = useRef(new Map<string, Provider>())
+  const pathname = usePathname()
   
   // Add state for filters
   const [searchTerm, setSearchTerm] = useState("")
@@ -187,47 +218,130 @@ export function PopularServices({ category, limit: serviceLimit = 8 }: PopularSe
   const [location, setLocation] = useState("all")
   const [showFilters, setShowFilters] = useState(false)
 
-  // Get list of unique locations from services
-  const locations = useMemo(() => {
-    const uniqueLocations = new Set<string>()
-    services.forEach(service => {
-      if (service.provider?.location) {
-        uniqueLocations.add(service.provider.location)
+  // Fetch services from Firestore
+  const fetchServices = useCallback(async () => {
+    if (!isMounted.current) return
+
+    try {
+      setLoading(true)
+      const firebase = await initializeFirebase()
+      if (!firebase.db) {
+        console.log("Using mock data - Firebase not initialized")
+        setServices(mockServices)
+        setFilteredServices(mockServices)
+        setLoading(false)
+        return
       }
-    })
-    return Array.from(uniqueLocations)
-  }, [services])
 
-  // Get categories based on active tab - extract just the slugs for compatibility
-  const categories = useMemo(() => {
-    return activeTab === "global" 
-      ? globalCategories.map(cat => cat.slug) 
-      : localCategories.map(cat => cat.slug)
-  }, [activeTab])
+      // Get all services
+      const servicesRef = collection(firebase.db, "services")
+      const servicesQuery = query(
+        servicesRef,
+        orderBy("createdAt", "desc"),
+        limit(serviceLimit)
+      )
+      const servicesSnap = await getDocs(servicesQuery)
 
-  // For category name display, we need a function to get category name from slug
-  const getCategoryName = useCallback((slug: string) => {
-    const allCategories = [...globalCategories, ...localCategories]
-    return allCategories.find(cat => cat.slug === slug)?.name || slug.split('-').map(word => word.charAt(0).toUpperCase() + word.slice(1)).join(' ')
+      if (servicesSnap.empty) {
+        console.log("Using mock data - No services found in Firestore")
+        setServices(mockServices)
+        setFilteredServices(mockServices)
+        setLoading(false)
+        return
+      }
+
+      // Get provider data for each service
+      const servicesWithProviders = await Promise.all(
+        servicesSnap.docs.map(async (docSnapshot) => {
+          const serviceData = docSnapshot.data() as ServiceData
+          let provider = providersCache.current.get(serviceData.providerId)
+
+          if (!provider && firebase.db && serviceData.providerId) {
+            try {
+              const providerRef = doc(firebase.db, "providers", serviceData.providerId)
+              const providerDoc = await getDoc(providerRef)
+              if (providerDoc.exists()) {
+                const providerData = providerDoc.data() as {
+                  name?: string;
+                  photoURL?: string;
+                  rating?: number;
+                  location?: string;
+                }
+                provider = {
+                  id: providerDoc.id,
+                  name: providerData.name || "Service Provider",
+                  avatar: providerData.photoURL || "/person-male-1.svg",
+                  rating: providerData.rating || 0,
+                  location: providerData.location || "Unknown"
+                }
+                providersCache.current.set(providerDoc.id, provider)
+              }
+            } catch (error) {
+              console.error("Error fetching provider data:", error)
+            }
+          }
+
+          return {
+            id: docSnapshot.id,
+            title: serviceData.title || "",
+            description: serviceData.description || "",
+            price: serviceData.price?.toString() || "0",
+            category: serviceData.category || "",
+            image: serviceData.image || "https://via.placeholder.com/300",
+            providerId: serviceData.providerId,
+            provider: provider || {
+              id: serviceData.providerId,
+              name: "Unknown Provider",
+              avatar: "/person-male-1.svg",
+              rating: 0,
+              location: "Unknown"
+            },
+            isGlobalService: !serviceData.isLocalService,
+            isLocalService: serviceData.isLocalService || false,
+            rating: serviceData.rating || 0
+          } as Service
+        })
+      )
+
+      setServices(servicesWithProviders)
+      setFilteredServices(servicesWithProviders)
+      setLoading(false)
+    } catch (error) {
+      console.error("Error fetching services:", error)
+      setServices(mockServices)
+      setFilteredServices(mockServices)
+      setLoading(false)
+      toast({
+        title: "Error",
+        description: "Failed to load services. Using sample data.",
+        variant: "destructive"
+      })
+    }
+  }, [serviceLimit, toast, activeTab])
+
+  // Fetch services on mount and when pathname changes
+  useEffect(() => {
+    fetchServices()
+  }, [fetchServices, pathname])
+
+  // Cleanup
+  useEffect(() => {
+    return () => {
+      isMounted.current = false
+    }
   }, [])
 
-  // Add filter application function
-  const applyFilters = useCallback(() => {
+  // Apply filters whenever any filter changes
+  useEffect(() => {
     if (!services.length) return
 
     let filtered = [...services]
 
     // First filter based on active tab
     if (activeTab === "global") {
-      filtered = filtered.filter(service => 
-        service.isGlobalService || 
-        globalCategories.some(cat => cat.slug ===  service.category)
-      )
+      filtered = filtered.filter(service => service.isGlobalService)
     } else {
-      filtered = filtered.filter(service => 
-        service.isLocalService || 
-        localCategories.some(cat => cat.slug === service.category)
-      )
+      filtered = filtered.filter(service => service.isLocalService)
     }
 
     // Apply search filter
@@ -235,7 +349,8 @@ export function PopularServices({ category, limit: serviceLimit = 8 }: PopularSe
       const searchLower = searchTerm.toLowerCase()
       filtered = filtered.filter(service => 
         service.title.toLowerCase().includes(searchLower) || 
-        service.description.toLowerCase().includes(searchLower)
+        service.description.toLowerCase().includes(searchLower) ||
+        service.provider.name.toLowerCase().includes(searchLower)
       )
     }
 
@@ -244,417 +359,180 @@ export function PopularServices({ category, limit: serviceLimit = 8 }: PopularSe
       filtered = filtered.filter(service => service.category === selectedCategory)
     }
 
-    // Apply price filter (convert string price to number first by removing non-numeric chars)
+    // Apply price filter
     filtered = filtered.filter(service => {
-      // Convert price to string before using replace method
-      const priceStr = String(service.price);
-      const numericPrice = parseInt(priceStr.replace(/[^0-9]/g, '')) || 0;
-      return numericPrice >= priceRange[0] && numericPrice <= priceRange[1]
+      const price = parseFloat(service.price.replace(/[^0-9.-]+/g, ""))
+      return price >= priceRange[0] && price <= priceRange[1]
     })
 
     // Apply location filter
     if (location && location !== "all") {
-      filtered = filtered.filter(service => 
-        service.provider?.location?.toLowerCase() === location.toLowerCase()
-      )
+      filtered = filtered.filter(service => service.provider.location === location)
     }
 
     setFilteredServices(filtered)
   }, [services, activeTab, searchTerm, selectedCategory, priceRange, location])
 
-  // Apply filters whenever services or filter criteria change
-  useEffect(() => {
-    applyFilters()
-  }, [services, activeTab, searchTerm, selectedCategory, priceRange, location, applyFilters])
-
-  const fetchProviderData = useCallback(async (providerId: string, db: any) => {
-    // Check cache first
-    if (providersCache.current.has(providerId)) {
-      return providersCache.current.get(providerId) as Provider
-    }
-
-    try {
-      const providerDoc = await getDoc(doc(db, "users", providerId))
-      const providerData = providerDoc.data()
-      
-      if (providerDoc.exists() && providerData) {
-        const provider: Provider = {
-          id: providerId,
-          name: providerData.displayName || providerData.name || "Unknown Provider",
-          avatar: providerData.photoURL || providerData.profilePicture || "/person-male-1.svg?height=50&width=50",
-          location: providerData.location || "Unknown Location",
-          rating: providerData.rating || 4.0,
-        }
-        
-        // Cache the result
-        providersCache.current.set(providerId, provider)
-        return provider
+  // Get list of unique locations from services
+  const locations = useMemo(() => {
+    const uniqueLocations = new Set<string>()
+    services.forEach(service => {
+      if (service.provider?.location && service.provider.location !== "Unknown") {
+        uniqueLocations.add(service.provider.location)
       }
-    } catch (error) {
-      console.error(`Error fetching provider ${providerId}:`, error)
-    }
+    })
+    return Array.from(uniqueLocations)
+  }, [services])
 
-    // Always return a default Provider if none found
-    const defaultProvider: Provider = {
-      id: providerId,
-      name: "Unknown Provider",
-      avatar: "/person-male-1.svg?height=50&width=50",
-      location: "Unknown",
-      rating: 4.0,
-    }
-    return defaultProvider
+  // Get categories based on active tab
+  const categories = useMemo(() => {
+    return activeTab === "global" 
+      ? globalCategories 
+      : localCategories
+  }, [activeTab])
+
+  // For category name display, we need a function to get category name from slug
+  const getCategoryName = useCallback((slug: string) => {
+    const allCategories = [...globalCategories, ...localCategories]
+    return allCategories.find(cat => cat.slug === slug)?.name || slug.split('-').map(word => word.charAt(0).toUpperCase() + word.slice(1)).join(' ')
   }, [])
 
-  const fetchServices = useCallback(async () => {
-    setLoading(true)
-    
-    try {
-      const { db } = await initializeFirebase()
-      if (!db) throw new Error("Failed to initialize Firebase")
-
-      const servicesCollection = collection(db, "services")
-      let serviceQuery;
-
-      // Base query conditions
-      let queryConditions = [where("active", "==", true)];
-
-      // Add category filter if specified
-      if (category) {
-        queryConditions.push(where("category", "==", category));
-      }
-
-      // Add service type filter based on active tab
-      if (activeTab === "global") {
-        queryConditions.push(where("isGlobalService", "==", true));
-      } else {
-        queryConditions.push(where("isLocalService", "==", true));
-      }
-
-      serviceQuery = query(
-        servicesCollection,
-        ...queryConditions,
-        orderBy("rating", "desc"),
-        limit(serviceLimit)
-      );
-
-      const querySnapshot = await getDocs(serviceQuery)
-      const servicesData: Service[] = []
-
-      for (const doc of querySnapshot.docs) {
-        const data = doc.data()
-        const provider = await fetchProviderData(data.providerId, db)
-
-        servicesData.push({
-          id: doc.id,
-          title: data.title,
-          description: data.description,
-          price: data.price?.toString() || "0",
-          category: data.category,
-          image: data.image || "https://via.placeholder.com/300",
-          providerId: data.providerId,
-          provider,
-          isGlobalService: data.isGlobalService,
-          isLocalService: data.isLocalService,
-          rating: data.rating || 4.0,
-        })
-      }
-
-      if (isMounted.current) {
-        setServices(servicesData.length > 0 ? servicesData : mockServices)
-        setLoading(false)
-      }
-    } catch (error) {
-      console.error("Error fetching services:", error)
-      toast({
-        title: "Error",
-        description: "Failed to load services. Using sample data instead.",
-        variant: "destructive",
-      })
-      if (isMounted.current) {
-        setServices(mockServices)
-        setLoading(false)
-      }
-    }
-  }, [category, activeTab, toast, fetchProviderData, serviceLimit])
-
-  useEffect(() => {
-    isMounted.current = true
-    fetchServices()
-    return () => {
-      isMounted.current = false
-      providersCache.current.clear()
-    }
-  }, [fetchServices])
-
-  const handleTabChange = (value: string) => {
-    setActiveTab(value)
-    setSearchTerm("")
-    setSelectedCategory("all")
-    setPriceRange([0, 60000])
-    setLocation("all")
-  }
-
   return (
-    <div className="container mx-auto py-8">
-      <div className="mb-6">
-        <Tabs defaultValue={activeTab} onValueChange={handleTabChange}>
-          <div className="flex justify-center mb-4">
-            <TabsList className="grid w-full max-w-md grid-cols-2">
-              <TabsTrigger value="global">Global Services</TabsTrigger>
-              <TabsTrigger value="local">Local Services</TabsTrigger>
-            </TabsList>
+    <div className="space-y-4">
+      <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
+        <Tabs defaultValue="global" className="w-full sm:w-auto" onValueChange={setActiveTab}>
+          <TabsList className="grid w-full grid-cols-2 sm:w-[400px]">
+            <TabsTrigger value="global">Global Services</TabsTrigger>
+            <TabsTrigger value="local">Local Services</TabsTrigger>
+          </TabsList>
+        </Tabs>
+
+        <div className="flex items-center gap-2">
+          <Button
+            variant="outline"
+            size="sm"
+            onClick={() => setShowFilters(!showFilters)}
+          >
+            <Search className="mr-2 h-4 w-4" />
+            Filters
+          </Button>
+        </div>
+      </div>
+
+      {showFilters && (
+        <Card className="p-4">
+          <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
+            <div className="space-y-2">
+              <Label>Search</Label>
+              <Input
+                placeholder="Search services..."
+                value={searchTerm}
+                onChange={(e) => setSearchTerm(e.target.value)}
+                className="h-8"
+              />
+            </div>
+
+            <div className="space-y-2">
+              <Label>Category</Label>
+              <Select value={selectedCategory} onValueChange={setSelectedCategory}>
+                <SelectTrigger className="h-8">
+                  <SelectValue placeholder="Select category" />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="all">All Categories</SelectItem>
+                  {categories.map((cat) => (
+                    <SelectItem key={cat.slug} value={cat.slug}>
+                      {cat.name}
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+            </div>
+
+            <div className="space-y-2">
+              <Label>Price Range</Label>
+              <Slider
+                value={priceRange}
+                onValueChange={setPriceRange}
+                min={0}
+                max={10000}
+                step={100}
+                className="py-2"
+              />
+              <div className="flex justify-between text-sm text-muted-foreground">
+                <span>₱{priceRange[0]}</span>
+                <span>₱{priceRange[1]}</span>
+              </div>
+            </div>
+
+            <div className="space-y-2">
+              <Label>Location</Label>
+              <Select value={location} onValueChange={setLocation}>
+                <SelectTrigger className="h-8">
+                  <SelectValue placeholder="Select location" />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="all">All Locations</SelectItem>
+                  {locations.map((loc) => (
+                    <SelectItem key={loc} value={loc}>
+                      {loc}
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+            </div>
           </div>
+        </Card>
+      )}
 
-          <div className="mb-4 flex justify-end">
-            <Button 
-              variant="outline" 
-              onClick={() => setShowFilters(!showFilters)}
-              className="flex items-center gap-1"
-            >
-              <Search className="h-4 w-4" />
-              {showFilters ? "Hide Filters" : "Show Filters"}
-            </Button>
-          </div>
-
-          {showFilters && (
-            <Card className="mb-6">
-              <CardContent className="pt-6">
-                <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
-                  {/* Search */}
-                  <div className="space-y-2">
-                    <Label htmlFor="search">Search</Label>
-                    <div className="flex gap-2">
-                      <Input
-                        id="search"
-                        placeholder="Search services..."
-                        value={searchTerm}
-                        onChange={(e) => setSearchTerm(e.target.value)}
-                      />
-                      {searchTerm && (
-                        <Button 
-                          variant="ghost" 
-                          size="icon" 
-                          onClick={() => setSearchTerm("")}
-                          className="h-10 w-10"
-                        >
-                          <X className="h-4 w-4" />
-                        </Button>
-                      )}
-                    </div>
-                  </div>
-
-                  {/* Category */}
-                  <div className="space-y-2">
-                    <Label htmlFor="category">Category</Label>
-                    <Select value={selectedCategory} onValueChange={setSelectedCategory}>
-                      <SelectTrigger>
-                        <SelectValue placeholder="Select category" />
-                      </SelectTrigger>
-                      <SelectContent>
-                        <SelectItem value="all">All Categories</SelectItem>
-                        {categories.map((cat) => (
-                          <SelectItem key={cat} value={cat}>
-                            {getCategoryName(cat)}
-                          </SelectItem>
-                        ))}
-                      </SelectContent>
-                    </Select>
-                  </div>
-
-                  {/* Price Range */}
-                  <div className="space-y-2">
-                    <Label>Price Range (₱)</Label>
-                    <div className="pt-4 px-1">
-                      <Slider
-                        value={priceRange}
-                        min={0}
-                        max={60000}
-                        step={500}
-                        onValueChange={setPriceRange}
-                        className="slider-inverted"
-                      />
-                      <div className="flex justify-between mt-2 text-sm text-muted-foreground">
-                        <span>₱{priceRange[0]}</span>
-                        <span>₱{priceRange[1]}</span>
-                      </div>
-                    </div>
-                  </div>
-
-                  {/* Location */}
-                  <div className="space-y-2">
-                    <Label htmlFor="location">Location</Label>
-                    <Select value={location} onValueChange={setLocation}>
-                      <SelectTrigger>
-                        <SelectValue placeholder="Select location" />
-                      </SelectTrigger>
-                      <SelectContent>
-                        <SelectItem value="all">All Locations</SelectItem>
-                        {locations.map((loc) => (
-                          <SelectItem key={loc} value={loc}>
-                            {loc}
-                          </SelectItem>
-                        ))}
-                      </SelectContent>
-                    </Select>
+      {loading ? (
+        <div className="grid grid-cols-1 gap-6 sm:grid-cols-2 lg:grid-cols-4">
+          {Array(4)
+            .fill(0)
+            .map((_, i) => (
+              <div key={i} className="space-y-3">
+                <Skeleton className="h-48 w-full rounded-lg" />
+                <div className="space-y-2">
+                  <Skeleton className="h-5 w-3/4" />
+                  <Skeleton className="h-4 w-full" />
+                  <div className="flex items-center gap-2 pt-2">
+                    <Skeleton className="h-8 w-8 rounded-full" />
+                    <Skeleton className="h-4 w-24" />
                   </div>
                 </div>
-
-                {/* Active filters */}
-                {(searchTerm || selectedCategory !== "all" || location !== "all" || priceRange[0] > 0 || priceRange[1] < 60000) && (
-                  <div className="mt-4">
-                    <p className="text-sm text-muted-foreground mb-2">Active filters:</p>
-                    <div className="flex flex-wrap gap-2">
-                      {searchTerm && (
-                        <Badge variant="secondary" className="flex items-center gap-1">
-                          Search: {searchTerm}
-                          <X 
-                            className="h-3 w-3 cursor-pointer" 
-                            onClick={() => setSearchTerm("")}
-                          />
-                        </Badge>
-                      )}
-                      {selectedCategory !== "all" && (
-                        <Badge variant="secondary" className="flex items-center gap-1">
-                          Category: {getCategoryName(selectedCategory)}
-                          <X 
-                            className="h-3 w-3 cursor-pointer" 
-                            onClick={() => setSelectedCategory("all")}
-                          />
-                        </Badge>
-                      )}
-                      {(priceRange[0] > 0 || priceRange[1] < 60000) && (
-                        <Badge variant="secondary" className="flex items-center gap-1">
-                          Price: ₱{priceRange[0]} - ₱{priceRange[1]}
-                          <X 
-                            className="h-3 w-3 cursor-pointer" 
-                            onClick={() => setPriceRange([0, 60000])}
-                          />
-                        </Badge>
-                      )}
-                      {location !== "all" && (
-                        <Badge variant="secondary" className="flex items-center gap-1">
-                          Location: {location}
-                          <X 
-                            className="h-3 w-3 cursor-pointer" 
-                            onClick={() => setLocation("all")}
-                          />
-                        </Badge>
-                      )}
-                      {(searchTerm || selectedCategory !== "all" || location !== "all" || priceRange[0] > 0 || priceRange[1] < 60000) && (
-                        <Button 
-                          variant="outline" 
-                          size="sm" 
-                          onClick={() => {
-                            setSearchTerm("")
-                            setSelectedCategory("all")
-                            setPriceRange([0, 60000])
-                            setLocation("all")
-                          }}
-                          className="h-6"
-                        >
-                          Clear All
-                        </Button>
-                      )}
-                    </div>
-                  </div>
-                )}
-              </CardContent>
-            </Card>
-          )}
-
-          <TabsContent value="global">
-            {loading ? (
-              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
-                {Array(4).fill(0).map((_, i) => (
-                  <div key={i} className="space-y-3">
-                    <Skeleton className="h-48 w-full rounded-xl" />
-                    <Skeleton className="h-4 w-3/4" />
-                    <Skeleton className="h-4 w-1/2" />
-                  </div>
-                ))}
               </div>
-            ) : filteredServices.length > 0 ? (
-              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
-                {filteredServices.map((service) => (
-                  <div key={service.id} className="transition-transform hover:scale-105">
-                    <ServiceCard 
-                      id={service.id}
-                      title={service.title}
-                      description={service.description}
-                      price={service.price}
-                      category={service.category}
-                      image={service.image}
-                      provider={service.provider}
-                    />
-                  </div>
-                ))}
+            ))}
+        </div>
+      ) : filteredServices.length > 0 ? (
+        <div className="grid grid-cols-1 gap-6 sm:grid-cols-2 lg:grid-cols-4">
+          {filteredServices
+            .filter(service => 
+              service.title && 
+              service.description && 
+              service.price && 
+              service.category && 
+              service.image && 
+              service.provider?.name
+            )
+            .map((service) => (
+              <div key={service.id} className="transition-transform hover:scale-105">
+                <ServiceCard 
+                  id={service.id}
+                  title={service.title}
+                  description={service.description}
+                  price={service.price}
+                  category={service.category}
+                  image={service.image}
+                  provider={service.provider}
+                />
               </div>
-            ) : (
-              <div className="text-center py-10">
-                <p className="text-lg text-muted-foreground">No services found matching your filters.</p>
-                <Button 
-                  variant="outline" 
-                  className="mt-4"
-                  onClick={() => {
-                    setSearchTerm("")
-                    setSelectedCategory("all")
-                    setPriceRange([0, 60000])
-                    setLocation("all")
-                  }}
-                >
-                  Reset Filters
-                </Button>
-              </div>
-            )}
-          </TabsContent>
-
-          <TabsContent value="local">
-            {loading ? (
-              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
-                {Array(4).fill(0).map((_, i) => (
-                  <div key={i} className="space-y-3">
-                    <Skeleton className="h-48 w-full rounded-xl" />
-                    <Skeleton className="h-4 w-3/4" />
-                    <Skeleton className="h-4 w-1/2" />
-                  </div>
-                ))}
-              </div>
-            ) : filteredServices.length > 0 ? (
-              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
-                {filteredServices.map((service) => (
-                  <div key={service.id} className="transition-transform hover:scale-105">
-                    <ServiceCard 
-                      id={service.id}
-                      title={service.title}
-                      description={service.description}
-                      price={service.price}
-                      category={service.category}
-                      image={service.image}
-                      provider={service.provider}
-                    />
-                  </div>
-                ))}
-              </div>
-            ) : (
-              <div className="text-center py-10">
-                <p className="text-lg text-muted-foreground">No services found matching your filters.</p>
-                <Button 
-                  variant="outline" 
-                  className="mt-4"
-                  onClick={() => {
-                    setSearchTerm("")
-                    setSelectedCategory("all")
-                    setPriceRange([0, 60000])
-                    setLocation("all")
-                  }}
-                >
-                  Reset Filters
-                </Button>
-              </div>
-            )}
-          </TabsContent>
-        </Tabs>
-      </div>
+            ))}
+        </div>
+      ) : (
+        <div className="flex h-48 items-center justify-center rounded-lg border">
+          <p className="text-muted-foreground">No services available</p>
+        </div>
+      )}
     </div>
   )
 }

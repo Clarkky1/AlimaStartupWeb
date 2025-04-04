@@ -131,9 +131,9 @@ export function ServiceCarousel() {
           const data = docSnap.data()
           const providerId = data.providerId
 
-          // Fetch provider details
+          // Fetch provider details from users collection
           const providerDoc = await getDoc(doc(firebase.db, "users", providerId))
-          const providerData = providerDoc.data() as ProviderData
+          const providerData = providerDoc.data()
 
           servicesData.push({
             id: docSnap.id,
@@ -146,7 +146,7 @@ export function ServiceCarousel() {
             provider: {
               id: providerId,
               name: providerData?.displayName || "Unknown Provider",
-              avatar: providerData?.profilePicture || "/person-male-1.svg",
+              avatar: providerData?.photoURL || "/person-male-1.svg",
               location: providerData?.location || "Unknown Location",
               rating: data.rating || 0,
             }

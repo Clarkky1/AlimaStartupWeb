@@ -19,7 +19,8 @@ import {
 } from "lucide-react";
 import { useAuth } from "@/app/context/auth-context";
 import { initializeFirebase } from "@/app/lib/firebase";
-import { getDoc, doc } from "firebase/firestore";
+import { getDoc, doc, collection, query, where, getDocs, orderBy, limit } from "firebase/firestore";
+import { DashboardStats, CategoryData, TimelineData } from "@/types";
 
 // Mock data for charts
 const mockCategoryData = [
@@ -41,20 +42,23 @@ const mockTimelineData = [
 
 export function DashboardOverview() {
   const { user } = useAuth();
-  const [timeframe, setTimeframe] = useState("month");
+  const [timeframe, setTimeframe] = useState<"week" | "month" | "year">("month");
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
-
-  // Stats would normally be fetched from Firebase
-  const [stats, setStats] = useState({
-    contacts: 42,
-    contactsChange: 15,
-    transactions: 36,
-    transactionsChange: 22,
-    rating: 4.8,
-    ratingChange: 0.3,
-    revenue: "25,000",
-    revenueChange: 18,
+  const [categoryData, setCategoryData] = useState<CategoryData[]>([]);
+  const [timelineData, setTimelineData] = useState<TimelineData[]>([]);
+  const [stats, setStats] = useState<DashboardStats>({
+    contacts: 0,
+    contactsChange: 0,
+    transactions: 0,
+    transactionsChange: 0,
+    rating: 0,
+    ratingChange: 0,
+    revenue: "0",
+    revenueChange: 0,
+    serviceContactPercentage: 0,
+    totalServices: 0,
+    contactedServices: 0
   });
 
   useEffect(() => {
@@ -62,27 +66,84 @@ export function DashboardOverview() {
       setIsLoading(true);
       setError(null);
       try {
-        // Here you would fetch actual data from Firebase
-        // For now, we'll just simulate a delay
-        await new Promise(resolve => setTimeout(resolve, 1000));
-        
-        // If you'd implement actual Firebase fetching:
         const firebase = await initializeFirebase();
         if (!firebase.db || !user?.uid) throw new Error("Failed to initialize database or user not authenticated");
-        const userDoc = await getDoc(doc(firebase.db, "users", user.uid));
-        const userData = userDoc.data();
-        
-        // Merge Firebase data with required stats structure
-        setStats(prevStats => ({
-          contacts: userData?.contacts || prevStats.contacts,
-          contactsChange: userData?.contactsChange || prevStats.contactsChange,
-          transactions: userData?.transactions || prevStats.transactions,
-          transactionsChange: userData?.transactionsChange || prevStats.transactionsChange,
-          rating: userData?.rating || prevStats.rating,
-          ratingChange: userData?.ratingChange || prevStats.ratingChange,
-          revenue: userData?.revenue || prevStats.revenue,
-          revenueChange: userData?.revenueChange || prevStats.revenueChange,
+
+        // Get user's conversations
+        const conversationsRef = collection(firebase.db, "conversations");
+        const conversationsQuery = query(
+          conversationsRef,
+          where("participants", "array-contains", user.uid),
+          orderBy("updatedAt", "desc")
+        );
+        const conversationsSnap = await getDocs(conversationsQuery);
+        const uniqueProviders = new Set(conversationsSnap.docs.map(doc => {
+          const data = doc.data();
+          return data.participants.find((p: string) => p !== user.uid);
         }));
+
+        // Get total services count
+        const servicesRef = collection(firebase.db, "services");
+        const servicesSnap = await getDocs(servicesRef);
+        const totalServices = servicesSnap.size;
+
+        // Get user's transactions
+        const transactionsRef = collection(firebase.db, "transactions");
+        const transactionsQuery = query(
+          transactionsRef,
+          where("userId", "==", user.uid),
+          where("status", "==", "completed")
+        );
+        const transactionsSnap = await getDocs(transactionsQuery);
+
+        // Calculate revenue from completed transactions
+        const revenue = transactionsSnap.docs.reduce((sum, doc) => {
+          const data = doc.data();
+          // Convert amount to number, handling both string and number formats
+          const amount = typeof data.amount === 'string' ? parseFloat(data.amount) : data.amount;
+          return sum + (amount || 0);
+        }, 0);
+
+        // Get previous period data for comparison
+        const previousPeriod = new Date();
+        previousPeriod.setMonth(previousPeriod.getMonth() - 1);
+        const previousTransactionsQuery = query(
+          transactionsRef,
+          where("userId", "==", user.uid),
+          where("status", "==", "completed"),
+          where("createdAt", "<=", previousPeriod)
+        );
+        const previousTransactionsSnap = await getDocs(previousTransactionsQuery);
+        const previousRevenue = previousTransactionsSnap.docs.reduce((sum, doc) => {
+          const data = doc.data();
+          // Convert amount to number, handling both string and number formats
+          const amount = typeof data.amount === 'string' ? parseFloat(data.amount) : data.amount;
+          return sum + (amount || 0);
+        }, 0);
+
+        // Calculate revenue change percentage
+        const revenueChange = previousRevenue > 0 
+          ? ((revenue - previousRevenue) / previousRevenue) * 100 
+          : 0;
+
+        // Calculate service contact percentage
+        const serviceContactPercentage = totalServices > 0 
+          ? (uniqueProviders.size / totalServices) * 100 
+          : 0;
+
+        setStats({
+          contacts: uniqueProviders.size,
+          contactsChange: 0, // This would need historical data to calculate
+          transactions: transactionsSnap.size,
+          transactionsChange: 0, // This would need historical data to calculate
+          rating: 0, // This would need to be calculated from reviews
+          ratingChange: 0, // This would need historical data
+          revenue: revenue.toLocaleString(),
+          revenueChange: Math.round(revenueChange),
+          serviceContactPercentage: Math.round(serviceContactPercentage),
+          totalServices,
+          contactedServices: uniqueProviders.size
+        });
         
         setIsLoading(false);
       } catch (err) {
@@ -93,7 +154,7 @@ export function DashboardOverview() {
     };
 
     fetchDashboardData();
-  }, [user]);
+  }, [user, timeframe]);
 
   // Function to format currency with peso sign
   const formatCurrency = (value: string | number) => {
@@ -146,7 +207,11 @@ export function DashboardOverview() {
     <div className="space-y-6">
       <div className="flex flex-col justify-between gap-4 sm:flex-row sm:items-center">
         <h1 className="text-3xl font-bold tracking-tight">Dashboard</h1>
-        <Tabs defaultValue="month" className="w-[240px]" onValueChange={setTimeframe}>
+        <Tabs 
+          defaultValue="month" 
+          className="w-[240px]" 
+          onValueChange={(value) => setTimeframe(value as "week" | "month" | "year")}
+        >
           <TabsList className="grid w-full grid-cols-3">
             <TabsTrigger value="week">Week</TabsTrigger>
             <TabsTrigger value="month">Month</TabsTrigger>
@@ -156,7 +221,7 @@ export function DashboardOverview() {
       </div>
 
       {/* Stats Cards */}
-      <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-4">
+      <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-5">
         <Card>
           <CardHeader className="flex flex-row items-center justify-between pb-2">
             <CardTitle className="text-sm font-medium">Total Contacts</CardTitle>
@@ -241,6 +306,19 @@ export function DashboardOverview() {
                   {stats.revenueChange}% from last {timeframe}
                 </span>
               )}
+            </p>
+          </CardContent>
+        </Card>
+
+        <Card>
+          <CardHeader className="flex flex-row items-center justify-between pb-2">
+            <CardTitle className="text-sm font-medium">Service Contact Rate</CardTitle>
+            <Users className="h-4 w-4 text-muted-foreground" />
+          </CardHeader>
+          <CardContent>
+            <div className="text-2xl font-bold">{stats.serviceContactPercentage}%</div>
+            <p className="text-xs text-muted-foreground">
+              {stats.contactedServices} of {stats.totalServices} services contacted
             </p>
           </CardContent>
         </Card>

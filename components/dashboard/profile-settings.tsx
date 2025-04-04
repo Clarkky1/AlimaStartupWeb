@@ -76,18 +76,6 @@ export function ProfileSettings() {
       // Update user document
       await updateDoc(doc(db, "users", user.uid), updatedUserData)
 
-      // If user is a provider, update provider document
-      if (user.role === 'provider') {
-        await updateDoc(doc(db, "providers", user.uid), {
-          "profile.displayName": name,
-          "profile.profilePicture": avatar,
-          "profile.bio": bio,
-          "profile.location": location,
-          "profile.contactNumber": phone,
-          updatedAt: timestamp,
-        })
-      }
-
       // Update local storage and user state with all properties
       if (typeof window !== 'undefined') {
         localStorage.setItem(`avatar_${user.uid}`, avatar || defaultAvatar)

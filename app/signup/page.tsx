@@ -102,7 +102,7 @@ export default function SignupPage() {
 
   return (
     <div 
-      className="flex min-h-screen items-center justify-center bg-cover bg-center relative"
+      className="flex min-h-screen items-center justify-center bg-cover bg-center relative px-4 sm:px-6"
       style={{ backgroundImage: "url('/Signup.svg')" }}
     >
       {/* Dark Overlay */}
@@ -110,45 +110,45 @@ export default function SignupPage() {
 
       {/* Centered Sign-Up Card */}
       <div className="relative z-10 flex w-full max-w-md flex-col items-center justify-center">
-        <div className="p-6 bg-transparent backdrop-blur-md shadow-lg rounded-lg w-full">
-          <div className="mb-6 flex items-center justify-center">
-            <img src="/AlimaLOGO.svg" alt="Logo" className="h-10 w-10" />
-            <h1 className="ml-2 text-xl font-bold text-white">Alima</h1>
+        <div className="p-4 sm:p-6 bg-transparent backdrop-blur-md shadow-lg rounded-lg w-full">
+          <div className="mb-4 sm:mb-6 flex items-center justify-center">
+            <img src="/AlimaLOGO.svg" alt="Logo" className="h-8 w-8 sm:h-10 sm:w-10" />
+            <h1 className="ml-2 text-lg sm:text-xl font-bold text-white">Alima</h1>
           </div>
 
           <Card className="border-none shadow-none bg-transparent">
-            <CardHeader className="p-0 pb-4 text-center">
-              <CardTitle className="text-2xl text-white">Sign Up</CardTitle>
-              <CardDescription className="text-gray-300">Create an account to get started</CardDescription>
+            <CardHeader className="p-0 pb-3 sm:pb-4 text-center">
+              <CardTitle className="text-xl sm:text-2xl text-white">Sign Up</CardTitle>
+              <CardDescription className="text-sm sm:text-base text-gray-300">Create an account to get started</CardDescription>
             </CardHeader>
             <CardContent className="p-0">
               {/* Updated Tabs */}
-              <Tabs defaultValue="user" className="mb-4" onValueChange={setRole}>
+              <Tabs defaultValue="user" className="mb-3 sm:mb-4" onValueChange={setRole}>
                 <TabsList className="grid w-full grid-cols-2 bg-gray-800 p-1 rounded-lg">
-                  <TabsTrigger value="user" className="text-white bg-transparent data-[state=active]:bg-white data-[state=active]:text-black rounded-md">
+                  <TabsTrigger value="user" className="text-sm sm:text-base text-white bg-transparent data-[state=active]:bg-white data-[state=active]:text-black rounded-md">
                     User
                   </TabsTrigger>
-                  <TabsTrigger value="provider" className="text-white bg-transparent data-[state=active]:bg-white data-[state=active]:text-black rounded-md">
+                  <TabsTrigger value="provider" className="text-sm sm:text-base text-white bg-transparent data-[state=active]:bg-white data-[state=active]:text-black rounded-md">
                     Service Provider
                   </TabsTrigger>
                 </TabsList>
               </Tabs>
 
               <form onSubmit={handleSignup}>
-                <div className="space-y-4">
-                  <div className="space-y-2">
-                    <Label htmlFor="name" className="text-white">Full Name</Label>
+                <div className="space-y-3 sm:space-y-4">
+                  <div className="space-y-1.5 sm:space-y-2">
+                    <Label htmlFor="name" className="text-sm sm:text-base text-white">Full Name</Label>
                     <Input
                       id="name"
                       placeholder="Kin Clark Perez"
                       value={name}
                       onChange={(e) => setName(e.target.value)}
                       required
-                      className="bg-gray-800 text-white border-gray-600"
+                      className="bg-gray-800 text-white border-gray-600 h-10 sm:h-11"
                     />
                   </div>
-                  <div className="space-y-2">
-                    <Label htmlFor="email" className="text-white">Email</Label>
+                  <div className="space-y-1.5 sm:space-y-2">
+                    <Label htmlFor="email" className="text-sm sm:text-base text-white">Email</Label>
                     <Input
                       id="email"
                       type="email"
@@ -156,11 +156,11 @@ export default function SignupPage() {
                       value={email}
                       onChange={(e) => setEmail(e.target.value)}
                       required
-                      className="bg-gray-800 text-white border-gray-600"
+                      className="bg-gray-800 text-white border-gray-600 h-10 sm:h-11"
                     />
                   </div>
-                  <div className="space-y-2">
-                    <Label htmlFor="password" className="text-white">Password</Label>
+                  <div className="space-y-1.5 sm:space-y-2">
+                    <Label htmlFor="password" className="text-sm sm:text-base text-white">Password</Label>
                     <Input
                       id="password"
                       type="password"
@@ -168,11 +168,11 @@ export default function SignupPage() {
                       value={password}
                       onChange={(e) => setPassword(e.target.value)}
                       required
-                      className="bg-gray-800 text-white border-gray-600"
+                      className="bg-gray-800 text-white border-gray-600 h-10 sm:h-11"
                     />
                   </div>
-                  <div className="space-y-2">
-                    <Label htmlFor="confirmPassword" className="text-white">Confirm Password</Label>
+                  <div className="space-y-1.5 sm:space-y-2">
+                    <Label htmlFor="confirmPassword" className="text-sm sm:text-base text-white">Confirm Password</Label>
                     <Input
                       id="confirmPassword"
                       type="password"
@@ -180,19 +180,19 @@ export default function SignupPage() {
                       value={confirmPassword}
                       onChange={(e) => setConfirmPassword(e.target.value)}
                       required
-                      className="bg-gray-800 text-white border-gray-600"
+                      className="bg-gray-800 text-white border-gray-600 h-10 sm:h-11"
                     />
                   </div>
 
                   {/* Blue Button with White Text */}
-                  <Button type="submit" className="w-full bg-blue-600 text-white hover:bg-blue-700" disabled={loading}>
+                  <Button type="submit" className="w-full bg-blue-600 text-white hover:bg-blue-700 h-10 sm:h-11 text-sm sm:text-base" disabled={loading}>
                     {loading ? "Creating account..." : "Sign Up"}
                   </Button>
                 </div>
               </form>
             </CardContent>
-            <CardFooter className="flex justify-center p-0 pt-4">
-              <p className="text-sm text-gray-300">
+            <CardFooter className="flex justify-center p-0 pt-3 sm:pt-4">
+              <p className="text-xs sm:text-sm text-gray-300">
                 Already have an account?{" "}
                 <Link href="/login" className="text-blue-400 hover:underline">
                   Login

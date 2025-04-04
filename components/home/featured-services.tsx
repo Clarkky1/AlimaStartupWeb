@@ -192,8 +192,8 @@ export function GlobalServices({ category = 'recent', expandable = false }: Glob
             let providerData: any = {}
             
             try {
-              // Get provider details
-              const providerRef = doc(db, "providers", data.providerId)
+              // Get provider details from users collection
+              const providerRef = doc(db, "users", data.providerId)
               const providerDoc = await getDoc(providerRef)
               if (providerDoc.exists()) {
                 providerData = providerDoc.data()
@@ -211,9 +211,9 @@ export function GlobalServices({ category = 'recent', expandable = false }: Glob
               image: data.image || "https://images.unsplash.com/photo-1498050108023-c5249f4df085?q=80&w=2072&auto=format&fit=crop",
               provider: {
                 id: data.providerId || "unknown",
-                name: providerData?.profile?.displayName || "Service Provider",
-                avatar: providerData?.profile?.profilePicture || "/person-male-1.svg?height=50&width=50",
-                location: providerData?.profile?.location || "Philippines",
+                name: providerData?.displayName || "Service Provider",
+                avatar: providerData?.photoURL || "/person-male-1.svg?height=50&width=50",
+                location: providerData?.location || "Philippines",
                 rating: data.rating || 4.0,
               },
             })

@@ -158,7 +158,7 @@ export default function MessagePage({ params }: { params: { providerId: string }
         const { db } = await initializeFirebase();
         if (!db) throw new Error("Failed to initialize Firebase");
         
-        const { collection, query, where, orderBy, onSnapshot } = await import("firebase/firestore");
+        const { collection, query, where, orderBy, onSnapshot, doc, getDoc } = await import("firebase/firestore");
 
         const participants = [user.uid, providerId].sort();
         const conversationId = participants.join('_');
@@ -169,17 +169,32 @@ export default function MessagePage({ params }: { params: { providerId: string }
           orderBy("timestamp", "asc")
         );
 
-        const unsubscribe = onSnapshot(messagesQuery, (snapshot) => {
+        const unsubscribe = onSnapshot(messagesQuery, async (snapshot) => {
           const messagesList: any[] = [];
-          snapshot.forEach((doc) => {
+          for (const messageDoc of snapshot.docs) {
+            const messageData = messageDoc.data();
+            const senderId = messageData.senderId;
+            
+            // Get sender's profile data
+            const senderDocRef = doc(db, "users", senderId);
+            const senderDoc = await getDoc(senderDocRef);
+            const senderData = senderDoc.data() || {};
+            
+            // Determine if sender is provider or client
+            const isProvider = senderData.role === 'provider';
+            
             messagesList.push({
-              id: doc.id,
-              ...doc.data(),
-              timestamp: doc.data().timestamp?.toDate()
+              id: messageDoc.id,
+              ...messageData,
+              timestamp: messageData.timestamp?.toDate(),
+              senderName: isProvider ? 
+                (senderData.name || senderData.displayName || "Provider") : 
+                (senderData.name || senderData.displayName || "Client"),
+              senderAvatar: senderData.profilePicture || senderData.avatar || null
             });
-          });
+          }
           setMessages(messagesList);
-          scrollToBottom(); // Add scroll after messages update
+          scrollToBottom();
         });
 
         return () => unsubscribe();

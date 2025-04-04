@@ -84,7 +84,7 @@ export function NotificationCenter() {
                 
                 if (senderDocSnap.exists()) {
                   const senderData = senderDocSnap.data()
-                  data.data.senderName = senderData.displayName || senderData.name || "Unknown User"
+                  data.data.senderName = senderData.name || "Unknown User"
                   data.data.senderAvatar = senderData.profilePicture || senderData.avatar || null
                 }
               } catch (error) {

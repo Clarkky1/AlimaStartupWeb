@@ -20,12 +20,11 @@ export function useUnreadCounts(userId: string | undefined) {
         where('read', '==', false)
       )
 
-      // Query for unread notifications (excluding message type)
+      // Query for unread notifications
       const notificationsQuery = query(
         collection(db, 'notifications'),
         where('userId', '==', userId),
-        where('read', '==', false),
-        where('type', '!=', 'message')
+        where('read', '==', false)
       )
 
       const messageUnsub = onSnapshot(messagesQuery, (snapshot) => {

@@ -324,9 +324,15 @@ const ConversationInfo = ({ userId, serviceId, isVisible, onClose }: {
         // Fetch user profile
         const userDoc = await getDoc(doc(db, "users", userId))
         if (userDoc.exists()) {
+          const userData = userDoc.data()
+          // Prioritize name, then displayName, then fallback to email
+          const name = userData.name || userData.displayName || userData.email?.split('@')[0] || 'Unknown User'
+          const avatar = userData.profilePicture || userData.avatar
           setUser({
             id: userDoc.id,
-            ...userDoc.data()
+            name,
+            avatar,
+            ...userData
           })
         }
         
@@ -611,6 +617,7 @@ const ImagePreviewDialog = ({ src, isOpen, onClose }: { src: string, isOpen: boo
       <DialogContent className="max-w-4xl">
         <DialogHeader>
           <DialogTitle>Image Preview</DialogTitle>
+          <DialogDescription>View the full size image</DialogDescription>
         </DialogHeader>
         <div className="relative w-full h-full max-h-[80vh] overflow-auto">
           <img
@@ -940,7 +947,7 @@ export function MessageCenter() {
       // Get current user's profile
       const userDoc = await getDoc(doc(db, "users", user.uid))
       const userData = userDoc.data() || {}
-      const userName = userData?.displayName || userData?.name || user.displayName || "Anonymous"
+      const userName = userData?.name || "Anonymous"
       
       // Determine which conversation to use
       let targetConversationId = selectedConversation.id
@@ -1072,27 +1079,36 @@ export function MessageCenter() {
     let name = conversation.otherParticipantName || 'Unknown User'
     let avatar = conversation.otherParticipantAvatar
     
-    // If the conversation has the lastSenderName and it's not the current user, use that
-    if (conversation.lastSenderName && conversation.lastSenderId !== user.uid) {
-      name = conversation.lastSenderName
-      avatar = conversation.lastSenderAvatar
-    }
-    
-    // If we don't have a name yet, try to fetch from users collection
-    if (name === 'Unknown User') {
-      try {
-        const { db } = await initializeFirebase()
-        if (db) {
-          const { doc, getDoc } = await import("firebase/firestore")
-          const userDoc = await getDoc(doc(db, "users", otherParticipantId))
-          if (userDoc.exists()) {
-            name = userDoc.data().displayName || userDoc.data().name || 'Unknown User'
-            avatar = userDoc.data().profilePicture || userDoc.data().avatar
+    try {
+      const { db } = await initializeFirebase()
+      if (db) {
+        const { doc, getDoc } = await import("firebase/firestore")
+        
+        // Get current user's role
+        const currentUserDoc = await getDoc(doc(db, "users", user.uid))
+        const currentUserData = currentUserDoc.data() || {}
+        const isProvider = currentUserData.role === 'provider'
+        
+        // Get other participant's data
+        const otherUserDoc = await getDoc(doc(db, "users", otherParticipantId))
+        if (otherUserDoc.exists()) {
+          const otherUserData = otherUserDoc.data()
+          
+          // If current user is provider, we want to show client info
+          // If current user is client, we want to show provider info
+          if (isProvider) {
+            // For provider viewing, show client info
+            name = otherUserData.name || otherUserData.displayName || otherUserData.email?.split('@')[0] || 'Unknown User'
+            avatar = otherUserData.profilePicture || otherUserData.avatar
+          } else {
+            // For client viewing, show provider info
+            name = otherUserData.name || otherUserData.displayName || otherUserData.email?.split('@')[0] || 'Unknown User'
+            avatar = otherUserData.profilePicture || otherUserData.avatar
           }
         }
-      } catch (error) {
-        console.error("Error fetching user details:", error)
       }
+    } catch (error) {
+      console.error("Error fetching user details:", error)
     }
     
     return { name, avatar }

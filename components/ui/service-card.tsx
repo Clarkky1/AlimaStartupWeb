@@ -65,24 +65,22 @@ export function ServiceCard({
     <>
       <Card className="group overflow-hidden">
         <CardContent className="p-0">
-          <Link href={`/service/${id}`}>
-            <div className="aspect-video overflow-hidden relative">
-              <img
-                src={image || "/placeholder.jpg"}
-                alt={title}
-                className="h-full w-full object-cover transition-transform group-hover:scale-105"
-                onError={(e) => {
-                  e.currentTarget.src = "/placeholder.jpg"
-                  e.currentTarget.onerror = null
-                }}
-              />
-            </div>
-          </Link>
+          <div className="aspect-video overflow-hidden relative">
+            <img
+              src={image || "/placeholder.jpg"}
+              alt={title}
+              className="h-full w-full object-cover transition-transform group-hover:scale-105"
+              onError={(e) => {
+                e.currentTarget.src = "/placeholder.jpg"
+                e.currentTarget.onerror = null
+              }}
+            />
+          </div>
 
           <div className="space-y-3 p-4">
             <div className="flex items-center justify-between">
               <h3 className="font-semibold leading-none tracking-tight">
-                <Link href={`/service/${id}`}>{title}</Link>
+                {title}
               </h3>
               <Badge 
                 className="bg-green-500 hover:bg-green-600 text-white border-0"

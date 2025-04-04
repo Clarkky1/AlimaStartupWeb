@@ -2,7 +2,7 @@
 
 import { useState, useEffect } from "react"
 import { useRouter } from "next/navigation"
-import { collection, query, where, getDocs, orderBy, limit } from "firebase/firestore"
+import { collection, query, where, getDocs, orderBy, limit, doc, getDoc } from "firebase/firestore"
 import { initializeFirebase } from "@/app/lib/firebase"
 import { Card, CardContent } from "@/components/ui/card"
 import { Button } from "@/components/ui/button"
@@ -103,7 +103,31 @@ export function ServiceProviderList({ category }: { category: string }) {
           }
         })
 
-        setServices(servicesData)
+        // Fetch provider data for each service
+        const servicesWithProviders = await Promise.all(
+          servicesData.map(async (service) => {
+            try {
+              const providerDoc = await getDoc(doc(db, "users", service.providerId))
+              if (providerDoc.exists()) {
+                const providerData = providerDoc.data()
+                return {
+                  ...service,
+                  providerName: providerData.displayName || "Service Provider",
+                  providerAvatar: providerData.photoURL || "/person-male-1.svg?height=50&width=50",
+                }
+              }
+            } catch (error) {
+              console.error(`Error fetching provider data for service ${service.id}:`, error)
+            }
+            return {
+              ...service,
+              providerName: "Service Provider",
+              providerAvatar: "/person-male-1.svg?height=50&width=50",
+            }
+          })
+        )
+
+        setServices(servicesWithProviders)
       } catch (error: any) {
         console.error("Error fetching services:", error)
         toast({

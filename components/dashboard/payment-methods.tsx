@@ -48,7 +48,7 @@ export function PaymentMethods() {
           return
         }
 
-        const docRef = doc(db, "providers", user.uid)
+        const docRef = doc(db, "users", user.uid)
         const docSnap = await getDoc(docRef)
 
         if (docSnap.exists()) {
@@ -104,7 +104,7 @@ export function PaymentMethods() {
         return
       }
 
-      const docRef = doc(db, "providers", user.uid)
+      const docRef = doc(db, "users", user.uid)
       await updateDoc(docRef, {
         paymentInfo: {
           accountNumber: paymentInfo.accountNumber,
@@ -152,7 +152,7 @@ export function PaymentMethods() {
         return
       }
 
-      const docRef = doc(db, "providers", user.uid)
+      const docRef = doc(db, "users", user.uid)
       await updateDoc(docRef, {
         "paymentInfo.accountNumber": tempAccountNumber,
         "paymentInfo.updatedAt": new Date().toISOString(),

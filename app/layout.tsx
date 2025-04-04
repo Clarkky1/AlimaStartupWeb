@@ -9,7 +9,7 @@ import { ThemeProvider } from "@/components/theme-provider";
 import { Toaster } from "@/components/ui/toaster";
 import { AuthProvider } from "@/app/context/auth-context";
 import { CustomThemeProvider } from "@/themes/theme-context";
-import { HydrationFix } from '@/components/ui/hydration-fix';
+import { ClientLayout } from "@/components/layout/client-layout";
 
 const inter = Inter({ subsets: ['latin'], variable: '--font-sans' });
 
@@ -63,8 +63,9 @@ export default function RootLayout({
         >
           <CustomThemeProvider defaultVariant="default">
             <AuthProvider>
-              <HydrationFix />
-              {children}
+              <ClientLayout>
+                {children}
+              </ClientLayout>
               <Toaster />
             </AuthProvider>
           </CustomThemeProvider>

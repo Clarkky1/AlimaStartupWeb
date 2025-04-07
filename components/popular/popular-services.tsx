@@ -19,7 +19,7 @@ import {
   SelectValue,
 } from "@/components/ui/select"
 import { Badge } from "@/components/ui/badge"
-import { Search, X } from "lucide-react"
+import { LucideIcon, Search, X } from "lucide-react"
 import { Button } from "@/components/ui/button"
 import {
   Code,
@@ -95,31 +95,38 @@ interface ServiceCardProps {
   provider: Provider
 }
 
-const globalCategories = [
-  { name: "Development", icon: Code, slug: "development" },
-  { name: "Design", icon: PenTool, slug: "design" },
-  { name: "Marketing", icon: BarChart, slug: "marketing" },
-  { name: "Mobile Apps", icon: Smartphone, slug: "mobile-apps" },
-  { name: "Writing", icon: FileText, slug: "writing" },
-  { name: "Video", icon: Video, slug: "video" },
-  { name: "Photography", icon: Camera, slug: "photography" },
-  { name: "Music", icon: Music, slug: "music" },
-  { name: "Education", icon: BookOpen, slug: "education" },
-  { name: "Translation", icon: Globe, slug: "translation" },
-  { name: "Business", icon: Briefcase, slug: "business" },
-  { name: "Lifestyle", icon: Home, slug: "lifestyle" },
+interface Category {
+  name: string;
+  value: string;
+  icon?: LucideIcon;
+}
+
+const globalCategories: Category[] = [
+  { name: "Development", icon: Code, value: "development" },
+  { name: "Design", icon: PenTool, value: "design" },
+  { name: "Marketing", icon: BarChart, value: "marketing" },
+  { name: "Mobile Apps", icon: Smartphone, value: "mobile-apps" },
+  { name: "Writing", icon: FileText, value: "writing" },
+  { name: "Video", icon: Video, value: "video" },
+  { name: "Photography", icon: Camera, value: "photography" },
+  { name: "Music", icon: Music, value: "music" },
+  { name: "Education", icon: BookOpen, value: "education" },
+  { name: "Translation", icon: Globe, value: "translation" },
+  { name: "Business", icon: Briefcase, value: "business" },
+  { name: "Lifestyle", icon: Home, value: "lifestyle" },
 ]
 
-const localCategories = [
-  { name: "Academic & Tutorial", icon: GraduationCap, slug: "academic-tutorial" },
-  { name: "Automotive & Motorcycle", icon: Car, slug: "automotive-motorcycle" },
-  { name: "Digital Marketing", icon: Lightbulb, slug: "digital-marketing" },
-  { name: "Beauty & Business", icon: Scissors, slug: "beauty-business" },
-  { name: "Event Management", icon: CalendarDays, slug: "event-management" },
-  { name: "PC & Smartphone", icon: Laptop, slug: "pc-smartphone" },
-  { name: "Psychological", icon: Heart, slug: "psychological" },
-  { name: "Property & Rental", icon: Building2, slug: "property-rental" },
-  { name: "Electronics & Electrical", icon: Cpu, slug: "electronics-electrical" },
+const localCategories: Category[] = [
+  { name: "All Categories", value: "all" },
+  { name: "Property & Rental", value: "property-rental" },
+  { name: "Academic & Tutorial", value: "academic-tutorial" },
+  { name: "Automotive & Motorcycle", value: "automotive-motorcycle" },
+  { name: "Digital Marketing", value: "digital-marketing" },
+  { name: "Beauty & Business", value: "beauty-business" },
+  { name: "Event Management", value: "event-management" },
+  { name: "PC & Smartphone", value: "pc-smartphone" },
+  { name: "Psychological", value: "psychological" },
+  { name: "Electronics & Electrical", value: "electronics-electrical" }
 ]
 
 // Mock data as fallback
@@ -201,6 +208,23 @@ const mockServices: Service[] = [
     rating: 4.7,
   }
 ]
+
+// Improved normalizeCategory function - defined as a regular function outside the component
+const normalizeCategory = (category: string): string => {
+  if (!category) return '';
+  
+  // Convert to lowercase and trim
+  return category
+    .toLowerCase()
+    .trim()
+    // Replace & and and with empty string for better matching
+    .replace(/&/g, 'and')
+    .replace(/\s+and\s+/g, 'and')
+    // Replace spaces with hyphens
+    .replace(/\s+/g, '-')
+    // Remove special characters except hyphens
+    .replace(/[^a-z0-9-]/g, '');
+};
 
 export function PopularServices({ category, limit: serviceLimit = 8 }: PopularServicesProps) {
   const [services, setServices] = useState<Service[]>([])
@@ -380,7 +404,62 @@ export function PopularServices({ category, limit: serviceLimit = 8 }: PopularSe
 
     // Apply category filter
     if (selectedCategory && selectedCategory !== "all") {
-      filtered = filtered.filter(service => service.category === selectedCategory)
+      const normalizedSelected = normalizeCategory(selectedCategory);
+      
+      filtered = filtered.filter(service => {
+        if (!service.category) return false;
+        
+        const normalizedServiceCategory = normalizeCategory(service.category);
+        
+        // Special case for categories with 'and' or '&'
+        switch (normalizedSelected) {
+          case 'propertyrental':
+          case 'property-rental':
+            return normalizedServiceCategory.includes('property') || 
+                   normalizedServiceCategory.includes('rental');
+          
+          case 'academictutorial':
+          case 'academic-tutorial':
+            return normalizedServiceCategory.includes('academic') || 
+                   normalizedServiceCategory.includes('tutorial');
+          
+          case 'automotivemotorcycle':
+          case 'automotive-motorcycle':
+            return normalizedServiceCategory.includes('automotive') || 
+                   normalizedServiceCategory.includes('motorcycle') ||
+                   normalizedServiceCategory.includes('car');
+          
+          case 'beautyandhealth':
+          case 'beauty-health':
+          case 'beautybusiness':
+          case 'beauty-business':
+            return normalizedServiceCategory.includes('beauty') || 
+                   normalizedServiceCategory.includes('health') ||
+                   normalizedServiceCategory.includes('business');
+          
+          case 'pcsmartphone':
+          case 'pc-smartphone':
+            return normalizedServiceCategory.includes('pc') || 
+                   normalizedServiceCategory.includes('smartphone') ||
+                   normalizedServiceCategory.includes('computer') ||
+                   normalizedServiceCategory.includes('mobile');
+          
+          case 'eventmanagement':
+          case 'event-management':
+            return normalizedServiceCategory.includes('event') || 
+                   normalizedServiceCategory.includes('management');
+          
+          case 'electronicselectrical':
+          case 'electronics-electrical':
+            return normalizedServiceCategory.includes('electronics') || 
+                   normalizedServiceCategory.includes('electrical');
+          
+          default:
+            // For other categories, use direct matching or include check
+            return normalizedServiceCategory === normalizedSelected || 
+                   normalizedServiceCategory.includes(normalizedSelected);
+        }
+      });
     }
 
     // Apply price filter
@@ -416,9 +495,12 @@ export function PopularServices({ category, limit: serviceLimit = 8 }: PopularSe
   }, [activeTab])
 
   // For category name display, we need a function to get category name from slug
-  const getCategoryName = useCallback((slug: string) => {
-    const allCategories = [...globalCategories, ...localCategories]
-    return allCategories.find(cat => cat.slug === slug)?.name || slug.split('-').map(word => word.charAt(0).toUpperCase() + word.slice(1)).join(' ')
+  const getCategoryName = useCallback((value: string) => {
+    const allCategories: Category[] = [...globalCategories, ...localCategories]
+    const category = allCategories.find(cat => 
+      normalizeCategory(cat.value) === normalizeCategory(value)
+    )
+    return category?.name || value.split('-').map(word => word.charAt(0).toUpperCase() + word.slice(1)).join(' ')
   }, [])
 
   return (
@@ -462,14 +544,13 @@ export function PopularServices({ category, limit: serviceLimit = 8 }: PopularSe
                 <SelectTrigger className="h-8">
                   <SelectValue placeholder="Select category" />
                 </SelectTrigger>
-                <SelectContent>
-                  <SelectItem value="all">All Categories</SelectItem>
-                  {categories.map((cat) => (
-                    <SelectItem key={cat.slug} value={cat.slug}>
-                      {cat.name}
-                    </SelectItem>
-                  ))}
-                </SelectContent>
+                  <SelectContent>
+                    {categories.map((cat) => (
+                      <SelectItem key={cat.value} value={cat.value}>
+                        {cat.name}
+                      </SelectItem>
+                    ))}
+                  </SelectContent>
               </Select>
             </div>
 

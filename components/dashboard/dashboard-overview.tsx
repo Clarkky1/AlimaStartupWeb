@@ -21,8 +21,9 @@ import { useAuth } from "@/app/context/auth-context";
 import { initializeFirebase } from "@/app/lib/firebase";
 import { getDoc, doc, collection, query, where, getDocs, orderBy, limit } from "firebase/firestore";
 import { DashboardStats, CategoryData, TimelineData } from "@/types";
+import { Skeleton } from "@/components/ui/skeleton";
 
-// Mock data for charts
+// Mock data will be replaced with dynamic data
 const mockCategoryData = [
   { name: "Development", value: 35 },
   { name: "Design", value: 25 },
@@ -39,6 +40,19 @@ const mockTimelineData = [
   { date: "May", contacts: 38, transactions: 28 },
   { date: "Jun", contacts: 42, transactions: 36 },
 ];
+
+// Define interface for service data
+interface ServiceData {
+  id: string;
+  providerId: string;
+  title: string;
+  description: string;
+  price: number;
+  image?: string;
+  category?: string;
+  rating?: number;
+  [key: string]: any; // For any other properties
+}
 
 export function DashboardOverview() {
   const { user } = useAuth();
@@ -60,6 +74,8 @@ export function DashboardOverview() {
     totalServices: 0,
     contactedServices: 0
   });
+  const [calendarMonth, setCalendarMonth] = useState<number>(new Date().getMonth());
+  const [calendarYear, setCalendarYear] = useState<number>(new Date().getFullYear());
 
   useEffect(() => {
     const fetchDashboardData = async () => {
@@ -87,6 +103,22 @@ export function DashboardOverview() {
         const servicesQuery = query(servicesRef, where("providerId", "==", user.uid));
         const servicesSnap = await getDocs(servicesQuery);
         const totalServices = servicesSnap.size;
+        
+        // Map service data with proper typing
+        const services = servicesSnap.docs.map(doc => {
+          const docData = doc.data();
+          return {
+            id: doc.id,
+            providerId: docData.providerId || "",
+            title: docData.title || "",
+            description: docData.description || "",
+            price: docData.price || 0,
+            category: docData.category || "Other",
+            rating: docData.rating || 0,
+            // Include all other properties
+            ...docData
+          };
+        });
 
         // Calculate average rating from services
         let totalRating = 0;
@@ -125,16 +157,16 @@ export function DashboardOverview() {
           ? ((averageRating - previousAverageRating) / previousAverageRating) * 100 
           : 0;
 
-        // Get user's transactions
+        // Get transactions where the provider is receiving payment
         const transactionsRef = collection(firebase.db, "transactions");
         const transactionsQuery = query(
           transactionsRef,
-          where("userId", "==", user.uid),
+          where("providerId", "==", user.uid),
           where("status", "==", "completed")
         );
         const transactionsSnap = await getDocs(transactionsQuery);
 
-        // Calculate revenue from completed transactions
+        // Calculate revenue from completed transactions where user is the provider
         const revenue = transactionsSnap.docs.reduce((sum, doc) => {
           const data = doc.data();
           const amount = typeof data.amount === 'string' ? parseFloat(data.amount) : data.amount;
@@ -144,7 +176,7 @@ export function DashboardOverview() {
         // Get previous period transactions
         const previousTransactionsQuery = query(
           transactionsRef,
-          where("userId", "==", user.uid),
+          where("providerId", "==", user.uid),
           where("status", "==", "completed"),
           where("createdAt", "<=", previousPeriod)
         );
@@ -163,6 +195,155 @@ export function DashboardOverview() {
         const serviceContactPercentage = totalServices > 0 
           ? (uniqueProviders.size / totalServices) * 100 
           : 0;
+
+        // Generate dynamic category data based on service categories
+        // Group services by category and count conversations for each
+        const categoryMap = new Map<string, number>();
+        const categoryContactsMap = new Map<string, number>();
+        
+        // Initialize all categories first
+        services.forEach(service => {
+          const category = service.category || "Other";
+          if (!categoryMap.has(category)) {
+            categoryMap.set(category, 0);
+            categoryContactsMap.set(category, 0);
+          }
+          categoryMap.set(category, categoryMap.get(category)! + 1);
+        });
+        
+        // Count conversations by category
+        const conversationsData = conversationsSnap.docs.map(doc => doc.data());
+        for (const conversation of conversationsData) {
+          // For each conversation, find the service it relates to
+          const serviceQueryForConversation = query(
+            servicesRef,
+            where("providerId", "==", user.uid),
+            // Limit to a reasonable number to avoid excessive reads
+            limit(10)
+          );
+          const serviceSnap = await getDocs(serviceQueryForConversation);
+          
+          if (serviceSnap.docs.length > 0) {
+            const serviceData = serviceSnap.docs[0].data() as ServiceData;
+            const category = serviceData.category || "Other";
+            if (categoryContactsMap.has(category)) {
+              categoryContactsMap.set(category, categoryContactsMap.get(category)! + 1);
+            }
+          }
+        }
+        
+        // Calculate percentage of contacts for each category
+        const dynamicCategoryData: CategoryData[] = [];
+        let totalContacts = 0;
+        
+        categoryContactsMap.forEach(contacts => {
+          totalContacts += contacts;
+        });
+        
+        categoryContactsMap.forEach((contacts, category) => {
+          const percentage = totalContacts > 0 
+            ? Math.round((contacts / totalContacts) * 100) 
+            : 0;
+          
+          if (percentage > 0) {
+            dynamicCategoryData.push({
+              name: category,
+              value: percentage
+            });
+          }
+        });
+        
+        // Don't add a default "No Data" entry when there's no data
+        setCategoryData(dynamicCategoryData);
+        
+        // Generate timeline data based on real conversations and transactions
+        const timelineData: TimelineData[] = [];
+        const periodCount = timeframe === "year" ? 12 : timeframe === "month" ? 30 : 7;
+        const endDate = new Date();
+        
+        // Generate date ranges based on selected timeframe
+        for (let i = 0; i < periodCount; i++) {
+          const startDate = new Date();
+          let label = "";
+          
+          if (timeframe === "year") {
+            // For yearly view, go back by months
+            startDate.setMonth(endDate.getMonth() - (periodCount - i - 1));
+            startDate.setDate(1);
+            label = startDate.toLocaleDateString('en-US', { month: 'short' });
+          } else if (timeframe === "month") {
+            // For monthly view, go back by days
+            startDate.setDate(endDate.getDate() - (periodCount - i - 1));
+            label = startDate.getDate().toString();
+          } else {
+            // For weekly view, go back by days and use day name
+            startDate.setDate(endDate.getDate() - (periodCount - i - 1));
+            label = startDate.toLocaleDateString('en-US', { weekday: 'short' });
+          }
+          
+          // Create entry with empty counts
+          timelineData.push({
+            date: label,
+            contacts: 0,
+            transactions: 0
+          });
+        }
+        
+        // Count conversations per time period
+        conversationsSnap.docs.forEach(doc => {
+          const data = doc.data();
+          if (data.updatedAt) {
+            const date = data.updatedAt.toDate ? data.updatedAt.toDate() : new Date(data.updatedAt);
+            let index = -1;
+            
+            if (timeframe === "year") {
+              // Find matching month
+              const month = date.toLocaleDateString('en-US', { month: 'short' });
+              index = timelineData.findIndex(item => item.date === month);
+            } else if (timeframe === "month") {
+              // Find matching day
+              const day = date.getDate().toString();
+              index = timelineData.findIndex(item => item.date === day);
+            } else {
+              // Find matching weekday
+              const weekday = date.toLocaleDateString('en-US', { weekday: 'short' });
+              index = timelineData.findIndex(item => item.date === weekday);
+            }
+            
+            if (index !== -1) {
+              timelineData[index].contacts++;
+            }
+          }
+        });
+        
+        // Count transactions per time period
+        transactionsSnap.docs.forEach(doc => {
+          const data = doc.data();
+          if (data.createdAt) {
+            const date = data.createdAt.toDate ? data.createdAt.toDate() : new Date(data.createdAt);
+            let index = -1;
+            
+            if (timeframe === "year") {
+              // Find matching month
+              const month = date.toLocaleDateString('en-US', { month: 'short' });
+              index = timelineData.findIndex(item => item.date === month);
+            } else if (timeframe === "month") {
+              // Find matching day
+              const day = date.getDate().toString();
+              index = timelineData.findIndex(item => item.date === day);
+            } else {
+              // Find matching weekday
+              const weekday = date.toLocaleDateString('en-US', { weekday: 'short' });
+              index = timelineData.findIndex(item => item.date === weekday);
+            }
+            
+            if (index !== -1) {
+              timelineData[index].transactions++;
+            }
+          }
+        });
+        
+        setTimelineData(timelineData);
 
         setStats({
           contacts: uniqueProviders.size,
@@ -212,14 +393,86 @@ export function DashboardOverview() {
 
   if (isLoading) {
     return (
-      <div className="w-full p-8">
-        <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-4">
-          {[1, 2, 3, 4].map((i) => (
-            <Card key={i} className="animate-pulse">
-              <CardHeader className="h-[60px] bg-muted/20"></CardHeader>
-              <CardContent className="h-[60px] bg-muted/10"></CardContent>
+      <div className="space-y-6">
+        {/* Skeleton for header and tabs */}
+        <div className="flex flex-col justify-between gap-4 sm:flex-row sm:items-center">
+          <Skeleton className="h-10 w-48" />
+          <Skeleton className="h-10 w-[240px]" />
+        </div>
+
+        {/* Skeleton for Stats Cards */}
+        <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-5">
+          {[...Array(5)].map((_, i) => (
+            <Card key={i}>
+              <CardHeader className="flex flex-row items-center justify-between pb-2">
+                <Skeleton className="h-4 w-32" />
+                <Skeleton className="h-4 w-4" />
+              </CardHeader>
+              <CardContent>
+                <Skeleton className="h-8 w-16 mb-2" />
+                <Skeleton className="h-3 w-24" />
+              </CardContent>
             </Card>
           ))}
+        </div>
+
+        {/* Skeleton for Charts */}
+        <div className="grid gap-4 md:grid-cols-2">
+          {/* Contacts by Category Chart Skeleton */}
+          <Card>
+            <CardHeader>
+              <Skeleton className="h-6 w-48 mb-2" />
+              <Skeleton className="h-4 w-64" />
+            </CardHeader>
+            <CardContent className="h-[300px]">
+              <div className="h-full w-full space-y-4 py-6">
+                {[...Array(4)].map((_, i) => (
+                  <div key={i} className="space-y-2">
+                    <div className="flex items-center justify-between">
+                      <Skeleton className="h-4 w-24" />
+                      <Skeleton className="h-4 w-12" />
+                    </div>
+                    <Skeleton className="h-2 w-full" />
+                  </div>
+                ))}
+              </div>
+            </CardContent>
+          </Card>
+
+          {/* Performance Over Time Chart Skeleton */}
+          <Card>
+            <CardHeader>
+              <Skeleton className="h-6 w-48 mb-2" />
+              <Skeleton className="h-4 w-64" />
+            </CardHeader>
+            <CardContent className="h-[300px]">
+              <div className="flex h-full flex-col">
+                {/* Legend Skeleton */}
+                <div className="mb-2 flex justify-center space-x-8">
+                  <div className="flex items-center">
+                    <Skeleton className="h-3 w-3 mr-2 rounded-full" />
+                    <Skeleton className="h-4 w-24" />
+                  </div>
+                  <div className="flex items-center">
+                    <Skeleton className="h-3 w-3 mr-2 rounded-full" />
+                    <Skeleton className="h-4 w-24" />
+                  </div>
+                </div>
+                
+                {/* Chart Skeleton */}
+                <div className="relative mt-6 flex-1">
+                  <div className="flex h-full items-end justify-between px-6">
+                    {[...Array(12)].map((_, i) => (
+                      <div key={i} className="flex flex-col items-center">
+                        <Skeleton className="h-24 w-1" style={{ height: `${Math.random() * 100 + 20}px` }} />
+                        <Skeleton className="mt-2 h-3 w-8" />
+                      </div>
+                    ))}
+            </div>
+            </div>
+          </div>
+            </CardContent>
+          </Card>
         </div>
       </div>
     );
@@ -238,12 +491,21 @@ export function DashboardOverview() {
 
   return (
     <div className="space-y-6">
-      <div className="flex flex-col justify-between gap-4 sm:flex-row sm:items-center">
-        <h1 className="text-3xl font-bold tracking-tight">Dashboard</h1>
+      {/* Personalized greeting and time selector */}
+      <div className="mb-8 flex flex-col space-y-2">
+        <h1 className="text-3xl font-bold tracking-tight">Good {getTimeOfDay()}, {user.displayName || 'there'}!</h1>
+        <p className="text-muted-foreground">
+          Alima notifies you have {stats.contacts} contacts waiting for your service. You also have {stats.transactions} completed transactions.
+        </p>
+        
+        <div className="mt-4 flex items-center justify-between">
+          <span className="text-sm font-medium text-muted-foreground">
+            Overview for {timeframe === "week" ? "this week" : timeframe === "month" ? "this month" : "this year"}
+          </span>
         <Tabs 
-          defaultValue="month" 
-          className="w-[240px]" 
+          value={timeframe}
           onValueChange={(value) => setTimeframe(value as "week" | "month" | "year")}
+          className="w-[240px]"
         >
           <TabsList className="grid w-full grid-cols-3">
             <TabsTrigger value="week">Week</TabsTrigger>
@@ -251,185 +513,522 @@ export function DashboardOverview() {
             <TabsTrigger value="year">Year</TabsTrigger>
           </TabsList>
         </Tabs>
+        </div>
       </div>
 
-      {/* Stats Cards */}
-      <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-5">
-        <Card>
+      {/* Top row - Stats cards in colorful cards */}
+      <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-4">
+        {/* Contacts card */}
+        <Card className="overflow-hidden bg-gradient-to-br from-amber-50 to-amber-100 border-amber-200">
           <CardHeader className="flex flex-row items-center justify-between pb-2">
-            <CardTitle className="text-sm font-medium">Total Contacts</CardTitle>
-            <Users className="h-4 w-4 text-muted-foreground" />
+            <CardTitle className="text-sm font-medium text-amber-900">Clients</CardTitle>
+            <Users className="h-4 w-4 text-amber-700" />
           </CardHeader>
           <CardContent>
-            <div className="text-2xl font-bold">{stats.contacts}</div>
-            <p className="text-xs text-muted-foreground">
+            <div className="text-2xl font-bold text-amber-900">{stats.contacts}</div>
+            <div className="flex items-center mt-1">
+              <div className="text-xs text-amber-800 flex items-center">
               {stats.contactsChange > 0 ? (
-                <span className="flex items-center text-green-500">
-                  <TrendingUp className="mr-1 h-3 w-3" />+{stats.contactsChange}% from last {timeframe}
+                  <TrendingUp className="mr-1 h-3 w-3 text-green-600" />
+                ) : (
+                  <TrendingDown className="mr-1 h-3 w-3 text-red-600" />
+                )}
+                <span className={stats.contactsChange > 0 ? "text-green-600" : "text-red-600"}>
+                  {stats.contactsChange > 0 ? "+" : ""}{stats.contactsChange}%
                 </span>
-              ) : (
-                <span className="flex items-center text-red-500">
-                  <TrendingDown className="mr-1 h-3 w-3" />
-                  {stats.contactsChange}% from last {timeframe}
-                </span>
-              )}
-            </p>
+                <span className="ml-1 text-amber-700">from last {timeframe}</span>
+              </div>
+            </div>
+            
+            {/* Simple mini-chart visualization */}
+            <div className="mt-3 flex h-12 items-end space-x-1">
+              {timelineData.slice(-6).map((item, i) => {
+                const maxValue = Math.max(...timelineData.slice(-6).map(d => d.contacts));
+                const height = maxValue > 0 ? (item.contacts / maxValue) * 100 : 0;
+                return (
+                  <div 
+                    key={i} 
+                    className="w-full bg-amber-400/60 rounded-t"
+                    style={{ height: `${Math.max(height, 5)}%` }}
+                  />
+                );
+              })}
+            </div>
           </CardContent>
         </Card>
 
-        <Card>
+        {/* Transactions card */}
+        <Card className="overflow-hidden bg-gradient-to-br from-rose-50 to-rose-100 border-rose-200">
           <CardHeader className="flex flex-row items-center justify-between pb-2">
-            <CardTitle className="text-sm font-medium">Successful Transactions</CardTitle>
-            <CheckCircle className="h-4 w-4 text-muted-foreground" />
+            <CardTitle className="text-sm font-medium text-rose-900">Transactions</CardTitle>
+            <CheckCircle className="h-4 w-4 text-rose-700" />
           </CardHeader>
           <CardContent>
-            <div className="text-2xl font-bold">{stats.transactions}</div>
-            <p className="text-xs text-muted-foreground">
+            <div className="text-2xl font-bold text-rose-900">{stats.transactions}</div>
+            <div className="flex items-center mt-1">
+              <div className="text-xs text-rose-800 flex items-center">
               {stats.transactionsChange > 0 ? (
-                <span className="flex items-center text-green-500">
-                  <TrendingUp className="mr-1 h-3 w-3" />+{stats.transactionsChange}% from last {timeframe}
+                  <TrendingUp className="mr-1 h-3 w-3 text-green-600" />
+                ) : (
+                  <TrendingDown className="mr-1 h-3 w-3 text-red-600" />
+                )}
+                <span className={stats.transactionsChange > 0 ? "text-green-600" : "text-red-600"}>
+                  {stats.transactionsChange > 0 ? "+" : ""}{stats.transactionsChange}%
                 </span>
-              ) : (
-                <span className="flex items-center text-red-500">
-                  <TrendingDown className="mr-1 h-3 w-3" />
-                  {stats.transactionsChange}% from last {timeframe}
-                </span>
-              )}
-            </p>
+                <span className="ml-1 text-rose-700">from last {timeframe}</span>
+              </div>
+            </div>
+            
+            {/* Line chart visualization */}
+            <div className="mt-3 relative h-12">
+              <svg className="w-full h-full" viewBox="0 0 100 30" preserveAspectRatio="none">
+                <path
+                  d={`M0,${30 - calculateYPosition(timelineData[0]?.transactions || 0, timelineData)} ${timelineData.map((item, i) => 
+                    `L${(i / (timelineData.length - 1)) * 100},${30 - calculateYPosition(item.transactions, timelineData)}`).join(' ')}`}
+                  fill="none"
+                  stroke="rgba(225, 29, 72, 0.5)"
+                  strokeWidth="2"
+                  strokeLinecap="round"
+                />
+              </svg>
+            </div>
           </CardContent>
         </Card>
 
-        <Card>
+        {/* Rating card */}
+        <Card className="overflow-hidden bg-gradient-to-br from-green-50 to-green-100 border-green-200">
           <CardHeader className="flex flex-row items-center justify-between pb-2">
-            <CardTitle className="text-sm font-medium">Average Rating</CardTitle>
-            <Star className="h-4 w-4 text-muted-foreground" />
+            <CardTitle className="text-sm font-medium text-green-900">Rating</CardTitle>
+            <Star className="h-4 w-4 text-green-700" />
           </CardHeader>
           <CardContent>
-            <div className="text-2xl font-bold">{stats.rating}</div>
-            <p className="text-xs text-muted-foreground">
+            <div className="text-2xl font-bold text-green-900">{stats.rating.toFixed(1)}</div>
+            <div className="flex items-center mt-1">
+              <div className="text-xs text-green-800 flex items-center">
               {stats.ratingChange > 0 ? (
-                <span className="flex items-center text-green-500">
-                  <TrendingUp className="mr-1 h-3 w-3" />+{stats.ratingChange} from last {timeframe}
+                  <TrendingUp className="mr-1 h-3 w-3 text-green-600" />
+                ) : (
+                  <TrendingDown className="mr-1 h-3 w-3 text-red-600" />
+                )}
+                <span className={stats.ratingChange > 0 ? "text-green-600" : "text-red-600"}>
+                  {stats.ratingChange > 0 ? "+" : ""}{stats.ratingChange}
                 </span>
-              ) : (
-                <span className="flex items-center text-red-500">
-                  <TrendingDown className="mr-1 h-3 w-3" />
-                  {stats.ratingChange} from last {timeframe}
-                </span>
-              )}
-            </p>
+                <span className="ml-1 text-green-700">from last {timeframe}</span>
+              </div>
+            </div>
+            
+            {/* Star visualization */}
+            <div className="mt-3 flex space-x-1">
+              {[...Array(5)].map((_, i) => (
+                <Star 
+                  key={i} 
+                  className={`h-5 w-5 ${i < Math.round(stats.rating) ? "text-yellow-500 fill-yellow-500" : "text-green-200"}`} 
+                />
+              ))}
+            </div>
           </CardContent>
         </Card>
 
-        <Card>
-          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-            <CardTitle className="text-sm font-medium">Total Revenue</CardTitle>
-            <MessageSquare className="h-4 w-4 text-muted-foreground" />
-          </CardHeader>
-          <CardContent>
-            <div className="text-2xl font-bold">{formatCurrency(stats.revenue)}</div>
-            <p className="text-xs text-muted-foreground">
-              {stats.revenueChange > 0 ? (
-                <span className="flex items-center text-green-500">
-                  <TrendingUp className="mr-1 h-3 w-3" />+{stats.revenueChange}% from last {timeframe}
-                </span>
-              ) : (
-                <span className="flex items-center text-red-500">
-                  <TrendingDown className="mr-1 h-3 w-3" />
-                  {stats.revenueChange}% from last {timeframe}
-                </span>
-              )}
-            </p>
-          </CardContent>
-        </Card>
-
-        <Card>
+        {/* Revenue card */}
+        <Card className="overflow-hidden bg-gradient-to-br from-blue-50 to-blue-100 border-blue-200">
           <CardHeader className="flex flex-row items-center justify-between pb-2">
-            <CardTitle className="text-sm font-medium">Service Contact Rate</CardTitle>
-            <Users className="h-4 w-4 text-muted-foreground" />
+            <CardTitle className="text-sm font-medium text-blue-900">Revenue</CardTitle>
+            <MessageSquare className="h-4 w-4 text-blue-700" />
           </CardHeader>
           <CardContent>
-            <div className="text-2xl font-bold">{stats.serviceContactPercentage}%</div>
-            <p className="text-xs text-muted-foreground">
-              {stats.contactedServices} of {stats.totalServices} services contacted
-            </p>
+            <div className="text-2xl font-bold text-blue-900">{formatCurrency(stats.revenue)}</div>
+            <div className="flex items-center mt-1">
+              <div className="text-xs text-blue-800 flex items-center">
+              {stats.revenueChange > 0 ? (
+                  <TrendingUp className="mr-1 h-3 w-3 text-green-600" />
+                ) : (
+                  <TrendingDown className="mr-1 h-3 w-3 text-red-600" />
+                )}
+                <span className={stats.revenueChange > 0 ? "text-green-600" : "text-red-600"}>
+                  {stats.revenueChange > 0 ? "+" : ""}{stats.revenueChange}%
+                </span>
+                <span className="ml-1 text-blue-700">from last {timeframe}</span>
+              </div>
+            </div>
+            
+            {/* Revenue visualization */}
+            <div className="mt-3 flex h-12 items-center">
+              <div className="h-12 w-12 rounded-full bg-blue-200 flex items-center justify-center">
+                <span className="text-blue-700 text-lg font-bold">₱</span>
+              </div>
+              <div className="flex-1 ml-2 h-1.5 bg-blue-200 rounded-full">
+                <div 
+                  className="h-full bg-blue-500 rounded-full" 
+                  style={{ width: `${Math.min(Math.abs(stats.revenueChange) + 30, 100)}%` }}
+                />
+              </div>
+            </div>
           </CardContent>
         </Card>
       </div>
 
-      {/* Charts */}
-      <div className="grid gap-4 md:grid-cols-2">
-        <Card>
+      {/* Charts row */}
+      <div className="grid gap-6 md:grid-cols-2">
+        {/* Contacts by Category */}
+        <Card className="overflow-hidden bg-gradient-to-br from-green-50 to-green-100 border-green-200">
           <CardHeader>
-            <CardTitle>Contacts by Category</CardTitle>
-            <CardDescription>
-              Distribution of user contacts across service categories
+            <CardTitle className="text-green-900">By category:</CardTitle>
+            <CardDescription className="text-green-700">
+              Distribution of contacts across service categories
             </CardDescription>
           </CardHeader>
-          <CardContent className="h-[300px]">
+          <CardContent className="h-[250px]">
             <div className="h-full w-full">
-              <div className="flex h-full flex-col justify-center space-y-2">
-                {mockCategoryData.map((item) => (
+              {categoryData.length > 0 ? (
+                <div className="flex h-full flex-col justify-center space-y-3">
+                {categoryData.map((item) => (
                   <div key={item.name} className="space-y-1">
                     <div className="flex items-center justify-between">
-                      <span className="text-sm">{item.name}</span>
-                      <span className="text-sm font-medium">{item.value}%</span>
+                        <span className="text-sm text-green-900">{item.name}</span>
+                        <span className="text-sm font-medium text-green-900">{item.value}%</span>
                     </div>
-                    <div className="h-2 w-full overflow-hidden rounded-full bg-muted">
+                      <div className="h-2.5 w-full overflow-hidden rounded-full bg-green-200">
                       <div
-                        className="h-full bg-primary"
+                          className="h-full bg-green-600"
                         style={{ width: `${item.value}%` }}
                       ></div>
                     </div>
                   </div>
                 ))}
               </div>
+              ) : (
+                <div className="flex h-full items-center justify-center">
+                  <p className="text-sm text-green-700">No data available</p>
+                </div>
+              )}
             </div>
           </CardContent>
         </Card>
 
-        <Card>
+        {/* Performance Over Time */}
+        <Card className="overflow-hidden bg-gradient-to-br from-blue-50 to-blue-100 border-blue-200">
           <CardHeader>
-            <CardTitle>Performance Over Time</CardTitle>
-            <CardDescription>
-              Contacts and successful transactions over time
+            <CardTitle className="text-blue-900">Performance Metrics</CardTitle>
+            <CardDescription className="text-blue-700">
+              Contacts and transactions over time
             </CardDescription>
           </CardHeader>
-          <CardContent className="h-[300px]">
+          <CardContent className="h-[250px]">
             <div className="h-full w-full">
-              <div className="flex h-full items-end justify-between">
-                {mockTimelineData.map((item) => (
-                  <div key={item.date} className="flex flex-col items-center">
-                    <div className="flex flex-col items-center space-y-1">
-                      <div
-                        className="w-8 bg-primary"
-                        style={{ height: `${item.transactions * 3}px` }}
-                      ></div>
-                      <div
-                        className="w-8 bg-primary/30"
-                        style={{
-                          height: `${(item.contacts - item.transactions) * 3}px`,
-                        }}
-                      ></div>
+              {timelineData.length > 0 ? (
+                <div className="h-full pt-4">
+                  {/* Legend with standardized styling */}
+                  <div className="mb-4 flex justify-end space-x-4">
+                    <div className="flex items-center">
+                      <div className="mr-2 h-3 w-3 rounded-sm bg-blue-600"></div>
+                      <span className="text-xs font-medium text-blue-900">Transactions</span>
                     </div>
-                    <span className="mt-2 text-xs">{item.date}</span>
+                    <div className="flex items-center">
+                      <div className="mr-2 h-3 w-3 rounded-sm bg-blue-300"></div>
+                      <span className="text-xs font-medium text-blue-900">Contacts</span>
+                    </div>
                   </div>
-                ))}
-              </div>
-              <div className="mt-4 flex justify-center space-x-4">
-                <div className="flex items-center">
-                  <div className="mr-2 h-3 w-3 bg-primary"></div>
-                  <span className="text-xs">Transactions</span>
+                
+                  <div className="relative h-[180px] w-full">
+                    {/* Y-axis */}
+                    <div className="absolute left-0 top-0 h-full flex flex-col justify-between">
+                      {[...Array(5)].map((_, i) => {
+                        const value = Math.ceil(Math.max(...timelineData.map(d => Math.max(d.contacts, d.transactions * 2))) / 4) * (4 - i);
+                        return (
+                          <div key={i} className="flex items-center h-8">
+                            <span className="text-[10px] text-blue-500 pr-2">{value}</span>
+                          </div>
+                        );
+                      })}
+                    </div>
+                    
+                    {/* Grid lines */}
+                    <div className="absolute inset-y-0 left-6 right-0">
+                      {[...Array(5)].map((_, i) => (
+                        <div 
+                          key={i} 
+                          className="absolute w-full border-t border-blue-100" 
+                          style={{ top: `${i * 25}%` }}
+                        />
+                      ))}
+                      
+                      {/* Chart area with cleaner styling */}
+                      <svg className="h-full w-full" viewBox="0 0 100 50" preserveAspectRatio="none">
+                        {/* Area fill for contacts */}
+                        <path
+                          d={`M0,50 L0,${50 - (timelineData[0]?.contacts || 0)} ${timelineData.map((item, i) => 
+                            `L${(i / (timelineData.length - 1)) * 100},${50 - (item.contacts)}`).join(' ')} L100,50 Z`}
+                          fill="rgba(147, 197, 253, 0.2)"
+                        />
+                        
+                        {/* Area fill for transactions */}
+                        <path
+                          d={`M0,50 L0,${50 - (timelineData[0]?.transactions || 0) * 2} ${timelineData.map((item, i) => 
+                            `L${(i / (timelineData.length - 1)) * 100},${50 - (item.transactions * 2)}`).join(' ')} L100,50 Z`}
+                          fill="rgba(37, 99, 235, 0.1)"
+                        />
+                        
+                        {/* Contacts line */}
+                        <path
+                          d={`M0,${50 - (timelineData[0]?.contacts || 0)} ${timelineData.map((item, i) => 
+                            `L${(i / (timelineData.length - 1)) * 100},${50 - (item.contacts)}`).join(' ')}`}
+                          fill="none"
+                          stroke="rgba(147, 197, 253, 0.8)"
+                          strokeWidth="1.5"
+                          strokeLinecap="round"
+                          strokeLinejoin="round"
+                        />
+                        
+                        {/* Transactions line */}
+                        <path
+                          d={`M0,${50 - (timelineData[0]?.transactions || 0) * 2} ${timelineData.map((item, i) => 
+                            `L${(i / (timelineData.length - 1)) * 100},${50 - (item.transactions * 2)}`).join(' ')}`}
+                          fill="none"
+                          stroke="rgba(37, 99, 235, 0.8)"
+                          strokeWidth="1.5"
+                          strokeLinecap="round"
+                          strokeLinejoin="round"
+                        />
+                        
+                        {/* Data points for contacts */}
+                        {timelineData.map((item, i) => (
+                          <circle
+                            key={`c-${i}`}
+                            cx={`${(i / (timelineData.length - 1)) * 100}`}
+                            cy={`${50 - (item.contacts)}`}
+                            r="2"
+                            className="fill-blue-300 stroke-white stroke-1"
+                          />
+                        ))}
+                        
+                        {/* Data points for transactions */}
+                        {timelineData.map((item, i) => (
+                          <circle
+                            key={`t-${i}`}
+                            cx={`${(i / (timelineData.length - 1)) * 100}`}
+                            cy={`${50 - (item.transactions * 2)}`}
+                            r="2"
+                            className="fill-blue-600 stroke-white stroke-1"
+                          />
+                        ))}
+                      </svg>
+                    </div>
+                    
+                    {/* X-axis with improved labels */}
+                    <div className="absolute bottom-[-20px] left-6 right-0 flex justify-between">
+                      {timelineData.filter((_, i) => i % Math.ceil(timelineData.length / 6) === 0 || i === timelineData.length - 1).map((item, i) => (
+                        <div key={i} className="text-xs text-blue-500">
+                          {item.date}
+                        </div>
+                      ))}
+                    </div>
+                  </div>
                 </div>
-                <div className="flex items-center">
-                  <div className="mr-2 h-3 w-3 bg-primary/30"></div>
-                  <span className="text-xs">Contacts</span>
+              ) : (
+                <div className="flex h-full items-center justify-center">
+                  <p className="text-sm text-blue-700">No data available</p>
                 </div>
-              </div>
+              )}
             </div>
           </CardContent>
         </Card>
       </div>
+
+      {/* Performance Calendar */}
+      <Card className="overflow-hidden bg-gradient-to-br from-purple-50 to-purple-100 border-purple-200">
+        <CardHeader>
+          <div className="flex items-center justify-between">
+            <div>
+              <CardTitle className="text-purple-900">Performance Calendar</CardTitle>
+              <CardDescription className="text-purple-700">
+                View your historical performance by date
+              </CardDescription>
+            </div>
+            <div className="text-center">
+              <h3 className="text-lg font-bold text-purple-900">
+                {new Date(calendarYear, calendarMonth).toLocaleDateString('en-US', { month: 'long', year: 'numeric' })}
+              </h3>
+              <div className="flex items-center mt-1">
+                <button 
+                  onClick={() => {
+                    const newDate = new Date(calendarYear, calendarMonth - 1);
+                    setCalendarMonth(newDate.getMonth());
+                    setCalendarYear(newDate.getFullYear());
+                  }} 
+                  className="p-1 text-purple-700 hover:text-purple-900 hover:bg-purple-100 rounded transition-colors" 
+                  aria-label="Previous month"
+                >
+                  <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                    <path d="M15 18l-6-6 6-6" />
+                  </svg>
+                </button>
+                <span className="text-xs text-purple-700 mx-2">Change month</span>
+                <button 
+                  onClick={() => {
+                    const newDate = new Date(calendarYear, calendarMonth + 1);
+                    setCalendarMonth(newDate.getMonth());
+                    setCalendarYear(newDate.getFullYear());
+                  }} 
+                  className="p-1 text-purple-700 hover:text-purple-900 hover:bg-purple-100 rounded transition-colors" 
+                  aria-label="Next month"
+                >
+                  <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                    <path d="M9 18l6-6-6-6" />
+                  </svg>
+                </button>
+              </div>
+            </div>
+          </div>
+        </CardHeader>
+        <CardContent>
+          <div className="grid grid-cols-7 gap-1 text-center mb-2">
+            {['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'].map((day) => (
+              <div key={day} className="text-xs font-medium text-purple-900 py-1">
+                {day}
+              </div>
+            ))}
+          </div>
+          
+          <div className="grid grid-cols-7 gap-1">
+            {generateCalendarDays(calendarMonth, calendarYear, timelineData).map((day, i) => {
+              // Get activity level based on transactions and contacts
+              const activityLevel = day.transactions > 3 ? 'high' : 
+                                    day.transactions > 1 ? 'medium' : 
+                                    day.transactions > 0 ? 'low' : 'none';
+              
+              const bgColor = activityLevel === 'high' ? 'bg-purple-500' :
+                              activityLevel === 'medium' ? 'bg-purple-400' :
+                              activityLevel === 'low' ? 'bg-purple-300' : 'bg-purple-100';
+              
+              // Check if this is today's date
+              const isToday = day.date.toDateString() === new Date().toDateString();
+              
+              return (
+                <div key={i} className="relative aspect-square">
+                  <div className={`${day.isCurrentMonth ? bgColor : 'bg-gray-100'} w-full h-full rounded-md flex items-center justify-center group cursor-pointer hover:ring-2 hover:ring-purple-400 transition-all ${isToday ? 'ring-2 ring-purple-600' : ''}`}>
+                    <span className={`text-sm font-semibold ${
+                      day.isCurrentMonth 
+                        ? activityLevel === 'none' 
+                          ? 'text-purple-900' // Dark text on light background for no activity
+                          : 'text-white' // White text on colored background
+                        : 'text-gray-400' // Gray text for non-current month
+                    } ${isToday ? 'text-base' : ''}`}>
+                      {day.date.getDate()}
+                    </span>
+                    
+                    {/* Activity indicators */}
+                    {day.isCurrentMonth && day.contacts > 0 && (
+                      <div className="absolute top-1 right-1 w-1.5 h-1.5 rounded-full bg-blue-500"></div>
+                    )}
+                    
+                    {/* Activity tooltip */}
+                    <div className="absolute bottom-full left-1/2 -translate-x-1/2 z-10 hidden group-hover:block bg-white rounded-md shadow-md p-2 border text-left min-w-[120px]">
+                      <p className="text-xs font-bold">{day.date.toLocaleDateString('en-US', { month: 'short', day: 'numeric' })}</p>
+                      <div className="mt-1 space-y-1 text-xs">
+                        <p>Contacts: {day.contacts}</p>
+                        <p>Transactions: {day.transactions}</p>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+              );
+            })}
+          </div>
+          
+          <div className="flex justify-between mt-4">
+            <div className="flex items-center space-x-2">
+              <div className="w-3 h-3 rounded-sm bg-purple-100"></div>
+              <span className="text-xs text-purple-900">No activity</span>
+            </div>
+            <div className="flex items-center space-x-2">
+              <div className="w-3 h-3 rounded-sm bg-purple-300"></div>
+              <span className="text-xs text-purple-900">Low</span>
+            </div>
+            <div className="flex items-center space-x-2">
+              <div className="w-3 h-3 rounded-sm bg-purple-400"></div>
+              <span className="text-xs text-purple-900">Medium</span>
+            </div>
+            <div className="flex items-center space-x-2">
+              <div className="w-3 h-3 rounded-sm bg-purple-500"></div>
+              <span className="text-xs text-purple-900">High</span>
+            </div>
+          </div>
+        </CardContent>
+      </Card>
     </div>
   );
+}
+
+function getTimeOfDay() {
+  const hour = new Date().getHours();
+  if (hour < 12) return "morning";
+  if (hour < 18) return "afternoon";
+  return "evening";
+}
+
+// Add helper function for calculating Y position (add this near other helper functions)
+function calculateYPosition(value: number, data: TimelineData[]) {
+  const maxValue = Math.max(...data.map(d => Math.max(d.contacts, d.transactions)));
+  return maxValue > 0 ? (value / maxValue) * 28 : 0;
+}
+
+// Update the generateCalendarDays function to use real data from timelineData
+function generateCalendarDays(month = new Date().getMonth(), year = new Date().getFullYear(), timelineData: TimelineData[] = []) {
+  // Generate days for selected month view
+  const daysInMonth = new Date(year, month + 1, 0).getDate();
+  const firstDayOfMonth = new Date(year, month, 1).getDay();
+  
+  // Initialize array with empty slots for days from previous month
+  const days = Array(firstDayOfMonth).fill(null).map((_, i) => {
+    const date = new Date(year, month, -firstDayOfMonth + i + 1);
+    return {
+      date,
+      isCurrentMonth: false,
+      contacts: 0,
+      transactions: 0
+    };
+  });
+  
+  // Add days for current month with real data if available
+  for (let i = 1; i <= daysInMonth; i++) {
+    const date = new Date(year, month, i);
+    const dayStr = date.getDate().toString();
+    
+    // Try to find matching data in timelineData for this day
+    // This assumes timelineData has day numbers as the date property when in "month" view
+    let contacts = 0;
+    let transactions = 0;
+    
+    if (month === new Date().getMonth() && year === new Date().getFullYear()) {
+      // For current month, try to match with timelineData if in month view
+      const matchingData = timelineData.find((item: TimelineData) => item.date === dayStr);
+      if (matchingData) {
+        contacts = matchingData.contacts;
+        transactions = matchingData.transactions;
+      }
+    }
+    
+    days.push({
+      date,
+      isCurrentMonth: true,
+      contacts,
+      transactions
+    });
+  }
+  
+  // Fill remaining slots with next month days to complete grid
+  const remainingDays = 7 - (days.length % 7);
+  if (remainingDays < 7) {
+    for (let i = 1; i <= remainingDays; i++) {
+      const date = new Date(year, month + 1, i);
+      days.push({
+        date,
+        isCurrentMonth: false,
+        contacts: 0,
+        transactions: 0
+      });
+    }
+  }
+  
+  return days;
 }

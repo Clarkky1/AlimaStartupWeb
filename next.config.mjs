@@ -21,6 +21,17 @@ const nextConfig = {
     parallelServerBuildTraces: true,
     parallelServerCompiles: true,
   },
+  webpack: (config, { dev, isServer }) => {
+    // Enable Fast Refresh
+    if (dev && !isServer) {
+      config.devServer = {
+        ...config.devServer,
+        hot: true,
+        liveReload: true,
+      };
+    }
+    return config;
+  },
 }
 
 mergeConfig(nextConfig, userConfig)

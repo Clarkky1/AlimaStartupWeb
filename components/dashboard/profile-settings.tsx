@@ -16,7 +16,7 @@ import { Check, UserRound } from "lucide-react"
 import { getDefaultAvatar, createImageErrorHandler } from "@/app/lib/avatar-utils"
 
 export function ProfileSettings() {
-  const { user, setUser } = useAuth()
+  const { user, setUser, refreshUserData } = useAuth()
   const { toast } = useToast()
   const [loading, setLoading] = useState(false)
   const [name, setName] = useState("")
@@ -39,8 +39,115 @@ export function ProfileSettings() {
   }, [user])
 
   const handleAvatarUpload = (url: string) => {
-    setAvatar(url)
+    // Add cache-busting parameter to the avatar URL
+    const cacheBustedUrl = url.includes('?') 
+      ? `${url}&_t=${Date.now()}` 
+      : `${url}?_t=${Date.now()}`;
+    
+    setAvatar(cacheBustedUrl)
+    
+    // After setting the avatar URL, immediately update the user data
+    // This ensures the profile picture is visible throughout the app
+    if (url && user) {
+      updateProfilePicture(url);
+    }
   }
+  
+  // New function to update just the profile picture in Firestore and auth context
+  const updateProfilePicture = async (imageUrl: string) => {
+    if (!user) return;
+
+    try {
+      const { db } = await initializeFirebase()
+      if (!db) {
+        console.error("Failed to initialize Firebase")
+        return;
+      }
+
+      const { doc, updateDoc } = await import("firebase/firestore")
+      
+      // Only update the profile picture fields - store original URL in DB
+      const updateData = {
+        profilePicture: imageUrl, // Store clean URL without cache-busting
+        avatar: imageUrl,         // Store clean URL without cache-busting
+        updatedAt: new Date().toISOString(),
+      }
+
+      // Update user document in Firestore (without cache parameters)
+      await updateDoc(doc(db, "users", user.uid), updateData)
+      
+      // Create cache-busted version for the UI with unique timestamp
+      const uniqueTimestamp = Date.now();
+      const cacheBustedUrl = imageUrl.includes('?') 
+        ? `${imageUrl}&t=${uniqueTimestamp}&forceRefresh=true` 
+        : `${imageUrl}?t=${uniqueTimestamp}&forceRefresh=true`;
+        
+      // Update local state with cache-busted version
+      setUser({
+        ...user,
+        ...updateData,
+        avatar: cacheBustedUrl, // Use cache-busted version for the UI
+      })
+      
+      // Immediately update the avatar in the component state to force a re-render
+      setAvatar(cacheBustedUrl);
+
+      // Force reload all images in the DOM with this source
+      if (typeof window !== 'undefined') {
+        // This stronger approach will update ALL images that might show the user's avatar
+        const allImages = document.querySelectorAll('img');
+        allImages.forEach(img => {
+          if (img instanceof HTMLImageElement) {
+            const imgSrc = img.src;
+            // Check if this is likely a profile image for this user
+            if (imgSrc.includes(user.uid) || 
+                imgSrc.includes('avatar') || 
+                imgSrc.includes('profile') ||
+                (imgSrc.includes('cloudinary') && imgSrc.includes(imageUrl.split('/').pop()?.split('.')[0] || ''))) {
+              
+              // Force a reload by setting a new src with cache busting
+              const newSrc = imgSrc.includes('?') 
+                ? `${imgSrc.split('?')[0]}?t=${uniqueTimestamp}&nocache=true` 
+                : `${imgSrc}?t=${uniqueTimestamp}&nocache=true`;
+              
+              img.src = newSrc;
+              
+              // Also update the key attribute if it exists
+              if (img.parentElement && img.parentElement.hasAttribute('key')) {
+                img.parentElement.setAttribute('key', `img-${uniqueTimestamp}`);
+              }
+            }
+          }
+        });
+      }
+      
+      // Refresh user data globally
+      if (refreshUserData) {
+        await refreshUserData();
+        
+        // Add a small delay and try again to ensure all components are updated
+        setTimeout(async () => {
+          try {
+            await refreshUserData();
+          } catch (e) {
+            console.error("Error in delayed refresh:", e);
+          }
+        }, 500);
+      }
+      
+      // Force a browser repaint to show the new image
+      if (typeof window !== 'undefined') {
+        // This forces a reflow/repaint
+        document.body.style.display = 'none';
+        // This line causes the browser to re-render
+        void document.body.offsetHeight;
+        document.body.style.display = '';
+      }
+      
+    } catch (error) {
+      console.error("Error updating profile picture:", error)
+    }
+  };
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
@@ -105,6 +212,11 @@ export function ProfileSettings() {
         ...user,
         ...updatedUserData,
       })
+      
+      // Refresh user data to ensure all components are updated
+      if (refreshUserData) {
+        await refreshUserData();
+      }
 
       toast({
         title: "Profile updated",
@@ -158,10 +270,15 @@ export function ProfileSettings() {
                 <div className="relative">
                   <div className="h-40 w-40 overflow-hidden rounded-full border-4 border-background shadow-xl">
                     <img
-                      src={avatar || defaultAvatar}
+                      key={`avatar-${Date.now()}-${Math.random().toString(36).substring(2, 9)}`}
+                      src={`${avatar || defaultAvatar}${avatar && avatar.includes('?') ? '&' : '?'}forceReload=${Date.now()}`}
                       alt={name || "Profile"}
                       className="h-full w-full object-cover"
                       onError={handleImageError}
+                      onLoad={() => console.log("Profile image loaded:", avatar)}
+                      crossOrigin="anonymous"
+                      loading="eager"
+                      fetchPriority="high"
                     />
                   </div>
                   {(avatar || user?.profilePicture || user?.avatar) && (

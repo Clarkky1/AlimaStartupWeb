@@ -83,6 +83,7 @@ interface RelatedConversation {
   serviceId?: string;
   serviceTitle?: string;
   lastMessageTime?: any;
+  price?: number | string;
 }
 
 // Mock data for initial render
@@ -822,10 +823,10 @@ export function MessageCenter() {
         const { collection, query, where, orderBy, onSnapshot, limit, or, and } = await import("firebase/firestore");
 
         // Find the correct conversation ID and service ID based on active service
-        let targetConversationId = selectedConversation.id;
+        let targetConversationId = selectedConversation!.id;
         
-        if (activeService && activeService !== selectedConversation.serviceId) {
-          const relatedConv = selectedConversation.relatedConversations?.find(
+        if (activeService && activeService !== selectedConversation!.serviceId) {
+          const relatedConv = selectedConversation!.relatedConversations?.find(
             (conv) => conv.serviceId === activeService
           );
           if (relatedConv) {
@@ -838,8 +839,8 @@ export function MessageCenter() {
           and(
             where("conversationId", "==", targetConversationId),
             or(
-              where("senderId", "==", user.uid),
-              where("receiverId", "==", user.uid)
+              where("senderId", "==", user!.uid),
+              where("receiverId", "==", user!.uid)
             )
           ),
           orderBy("timestamp", "asc"),
@@ -926,8 +927,8 @@ export function MessageCenter() {
   }, [selectedConversation, user, messages])
 
   const getOtherParticipantId = (conversation: ConversationData) => {
-    if (!user) return null
-    return conversation.otherParticipantId || conversation.participants.find((id: string) => id !== user.uid)
+    if (!user) return null;
+    return conversation.participants.find(id => id !== user.uid) || null;
   }
 
   // Handle sending a message
@@ -1130,7 +1131,7 @@ export function MessageCenter() {
         id: conv.serviceId,
         title: conv.serviceTitle,
         conversationId: conv.id,
-        price: conv.price
+        price: conv.price || 0
       })) || [])
     ].filter(service => service.id && service.title); // Filter out undefined services
     
@@ -1150,7 +1151,11 @@ export function MessageCenter() {
                   key={service.id}
                   variant={service.id === activeService ? "default" : "outline"}
                   className="cursor-pointer text-xs hover:bg-muted"
-                  onClick={() => setActiveService(service.id)}
+                  onClick={() => {
+                    if (service.id) {
+                      setActiveService(service.id);
+                    }
+                  }}
                 >
                   {service.title}
                 </Badge>

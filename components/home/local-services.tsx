@@ -200,7 +200,7 @@ export function LocalServices({ category = 'recent', expandable = false }: Local
           category: data.category,
           image: data.image || "https://via.placeholder.com/300",
           providerId: data.providerId,
-          provider,
+          provider: provider as Provider, // Type assertion to fix type error
           isLocalService: true,
           rating: data.rating || 4.0,
         });

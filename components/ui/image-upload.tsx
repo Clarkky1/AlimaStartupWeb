@@ -55,10 +55,29 @@ export function ImageUpload({
       // Log successful upload
       console.log("Cloudinary upload successful:", result.url)
       
-      // Update preview with Cloudinary URL
-      setImagePreview(result.url)
+      // Add stronger cache busting parameters
+      const uniqueTime = Date.now();
+      const cacheBustUrl = `${result.url}?timestamp=${uniqueTime}&nocache=true&forceReload=1`
       
-      // Notify parent component
+      // Update preview with cache-busted Cloudinary URL
+      setImagePreview(cacheBustUrl)
+      
+      // Clear any existing image with this path from browser cache
+      if (typeof window !== 'undefined' && 'caches' in window) {
+        try {
+          // Try to clear cache entry for this image
+          const cacheNames = await window.caches.keys();
+          for (const cacheName of cacheNames) {
+            const cache = await window.caches.open(cacheName);
+            await cache.delete(result.url);
+            await cache.delete(cacheBustUrl);
+          }
+        } catch (e) {
+          console.error('Error clearing image cache:', e);
+        }
+      }
+      
+      // Notify parent component with both URLs
       onUploadComplete(result.url)
       
       toast({

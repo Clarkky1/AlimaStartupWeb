@@ -136,16 +136,36 @@ export function ContactModal({ isOpen, onClose, provider, service }: ContactModa
       const { collection, addDoc, serverTimestamp, doc, getDoc, setDoc } = await import("firebase/firestore")
 
       // Get user profile data first
-      const userDoc = await getDoc(doc(db, "users", user.uid))
-      const userData = userDoc.data() || {}
-      const userName = userData?.displayName || userData?.name || user.displayName || "Anonymous"
+      let userDoc, userData, userName;
+      
+      try {
+        userDoc = await getDoc(doc(db, "users", user.uid))
+        userData = userDoc.data() || {}
+      } catch (error) {
+        console.error("Error fetching user data:", error)
+        // Create basic user document if it doesn't exist
+        userData = {
+          uid: user.uid,
+          email: user.email,
+          displayName: user.displayName || user.email?.split('@')[0] || "User"
+        }
+        
+        // Try to save user data
+        try {
+          await setDoc(doc(db, "users", user.uid), userData, { merge: true })
+        } catch (saveError) {
+          console.error("Error saving user data:", saveError)
+        }
+      }
+      
+      userName = userData?.displayName || userData?.name || user.displayName || user.email?.split('@')[0] || "Anonymous"
 
       // Create conversation ID and participants array
       const participants = [user.uid, provider.id].sort()
       const conversationId = participants.join('_')
       const timestamp = serverTimestamp()
 
-      // Create/update conversation data with service information if available
+      // Create/update conversation data with service information
       const conversationData: any = {
         participants,
         lastMessage: paymentProofUrl ? "Payment proof attached" : message,
@@ -222,13 +242,13 @@ export function ContactModal({ isOpen, onClose, provider, service }: ContactModa
         description: "Your message has been sent successfully",
       })
 
-      // Close the modal instead of redirecting
+      // Close the modal
       onClose()
     } catch (error) {
       console.error("Error sending message:", error)
       toast({
         title: "Error",
-        description: "Failed to send message",
+        description: "Failed to send message. Please try again.",
         variant: "destructive",
       })
     } finally {
@@ -238,7 +258,7 @@ export function ContactModal({ isOpen, onClose, provider, service }: ContactModa
 
   return (
     <Dialog open={isOpen} onOpenChange={onClose}>
-      <DialogContent className="sm:max-w-[500px]">
+      <DialogContent className="sm:max-w-[500px] w-[95%] max-h-[90vh] overflow-y-auto">
         <DialogHeader>
           <DialogTitle>Contact Service Provider</DialogTitle>
           <DialogDescription>
@@ -267,7 +287,7 @@ export function ContactModal({ isOpen, onClose, provider, service }: ContactModa
             <div className="rounded-md border overflow-hidden bg-muted/10">
               <div className="p-3 flex flex-col sm:flex-row gap-3">
                 {service.image && (
-                  <div className="sm:w-1/4">
+                  <div className="sm:w-1/4 max-h-[120px] overflow-hidden">
                     <img 
                       src={service.image} 
                       alt={service.title} 
@@ -280,9 +300,9 @@ export function ContactModal({ isOpen, onClose, provider, service }: ContactModa
                   </div>
                 )}
                 <div className="sm:w-3/4">
-                  <h3 className="font-medium">{service.title}</h3>
+                  <h3 className="font-medium text-base">{service.title}</h3>
                   {service.description && (
-                    <p className="text-sm text-muted-foreground mb-2">{service.description}</p>
+                    <p className="text-sm text-muted-foreground mb-2 line-clamp-2">{service.description}</p>
                   )}
                   <div className="flex justify-between items-center">
                     <span className="text-sm font-bold">₱{service.price}</span>
@@ -329,7 +349,7 @@ export function ContactModal({ isOpen, onClose, provider, service }: ContactModa
                 </div>
               )}
               
-              <div className="flex justify-between items-center">
+              <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-2">
                 <div>
                   <input
                     type="file"
@@ -349,7 +369,7 @@ export function ContactModal({ isOpen, onClose, provider, service }: ContactModa
                     variant="outline"
                     onClick={() => document.getElementById('payment-proof')?.click()}
                     disabled={isSending || isUploading}
-                    className="flex items-center"
+                    className="flex items-center w-full sm:w-auto"
                   >
                     <Upload className="mr-2 h-4 w-4" />
                     {isUploading ? 'Uploading...' : 'Upload Payment Proof'}
@@ -359,7 +379,7 @@ export function ContactModal({ isOpen, onClose, provider, service }: ContactModa
                 <Button 
                   type="submit" 
                   disabled={(!message.trim() && !paymentProofUrl) || authLoading || isSending || isUploading}
-                  className="flex items-center"
+                  className="flex items-center w-full sm:w-auto"
                 >
                   {isSending ? (
                     <>

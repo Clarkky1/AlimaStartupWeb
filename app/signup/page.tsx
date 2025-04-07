@@ -2,7 +2,7 @@
 
 import type React from "react"
 import { useState } from "react"
-import { useRouter } from "next/navigation"
+import { useRouter, useSearchParams } from "next/navigation"
 import Link from "next/link"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
@@ -22,6 +22,8 @@ export default function SignupPage() {
   const [loading, setLoading] = useState(false)
   const { toast } = useToast()
   const router = useRouter()
+  const searchParams = useSearchParams()
+  const returnUrl = searchParams.get('returnUrl')
   const { setUser } = useAuth()
 
   const handleSignup = async (e: React.FormEvent) => {
@@ -84,8 +86,9 @@ export default function SignupPage() {
         description: "Welcome to our platform!",
       })
 
-      if (role === "provider") {
-        router.push("/dashboard")
+      // Navigate based on returnUrl or default to homepage
+      if (returnUrl) {
+        router.push(returnUrl)
       } else {
         router.push("/")
       }
@@ -125,10 +128,16 @@ export default function SignupPage() {
               {/* Updated Tabs */}
               <Tabs defaultValue="user" className="mb-3 sm:mb-4" onValueChange={setRole}>
                 <TabsList className="grid w-full grid-cols-2 bg-gray-800 p-1 rounded-lg">
-                  <TabsTrigger value="user" className="text-sm sm:text-base text-white bg-transparent data-[state=active]:bg-white data-[state=active]:text-black rounded-md">
+                  <TabsTrigger 
+                    value="user" 
+                    className="text-sm sm:text-base text-white bg-transparent data-[state=active]:bg-white data-[state=active]:text-black rounded-md py-1"
+                  >
                     User
                   </TabsTrigger>
-                  <TabsTrigger value="provider" className="text-sm sm:text-base text-white bg-transparent data-[state=active]:bg-white data-[state=active]:text-black rounded-md">
+                  <TabsTrigger 
+                    value="provider" 
+                    className="text-sm sm:text-base text-white bg-transparent data-[state=active]:bg-white data-[state=active]:text-black rounded-md py-1"
+                  >
                     Service Provider
                   </TabsTrigger>
                 </TabsList>
@@ -194,7 +203,10 @@ export default function SignupPage() {
             <CardFooter className="flex justify-center p-0 pt-3 sm:pt-4">
               <p className="text-xs sm:text-sm text-gray-300">
                 Already have an account?{" "}
-                <Link href="/login" className="text-blue-400 hover:underline">
+                <Link 
+                  href={returnUrl ? `/login?returnUrl=${encodeURIComponent(returnUrl)}` : "/login"} 
+                  className="text-blue-400 hover:underline"
+                >
                   Login
                 </Link>
               </p>

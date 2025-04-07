@@ -10,6 +10,42 @@ body {
   .text-balance {
     text-wrap: balance;
   }
+  
+  .responsive-container {
+    @apply w-full px-4 sm:px-6 md:px-8 mx-auto max-w-7xl;
+  }
+  
+  .responsive-padding {
+    @apply p-4 sm:p-6 md:p-8;
+  }
+  
+  .responsive-grid {
+    @apply grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4 sm:gap-6 md:gap-8;
+  }
+  
+  .responsive-flex {
+    @apply flex flex-col sm:flex-row gap-4 sm:gap-6;
+  }
+  
+  .responsive-text {
+    @apply text-sm sm:text-base;
+  }
+  
+  .responsive-heading {
+    @apply text-xl sm:text-2xl md:text-3xl font-bold;
+  }
+  
+  .responsive-hide-mobile {
+    @apply hidden sm:block;
+  }
+  
+  .responsive-hide-desktop {
+    @apply block sm:hidden;
+  }
+  
+  .responsive-max-w {
+    @apply max-w-full sm:max-w-[540px] md:max-w-[720px] lg:max-w-[960px] xl:max-w-[1140px] 2xl:max-w-[1320px] mx-auto;
+  }
 }
 
 @layer base {
@@ -166,5 +202,58 @@ body {
   }
   body {
     @apply bg-background text-foreground;
+  }
+}
+
+/* Scrollbar customization for better mobile experience */
+::-webkit-scrollbar {
+  width: 8px;
+  height: 8px;
+}
+
+::-webkit-scrollbar-track {
+  background: transparent;
+}
+
+::-webkit-scrollbar-thumb {
+  background: #ccc;
+  border-radius: 4px;
+}
+
+::-webkit-scrollbar-thumb:hover {
+  background: #999;
+}
+
+/* Media queries for specific device types */
+@media (max-width: 640px) {
+  html, body {
+    font-size: 14px;
+  }
+  
+  .modal-content {
+    width: 90% !important;
+    max-height: 80vh !important;
+    overflow-y: auto !important;
+  }
+}
+
+@media (min-width: 641px) and (max-width: 1024px) {
+  .modal-content {
+    width: 80% !important;
+    max-height: 85vh !important;
+  }
+}
+
+/* Touch device optimizations */
+@media (hover: none) {
+  /* Increase tap target sizes on touch devices */
+  button, a, [role="button"] {
+    min-height: 44px;
+    min-width: 44px;
+  }
+  
+  /* Improve form elements on touch devices */
+  input, select, textarea {
+    font-size: 16px !important; /* Prevents iOS zoom */
   }
 }

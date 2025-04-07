@@ -1,8 +1,8 @@
 "use client"
 
 import type React from "react"
-import { useState } from "react"
-import { useRouter } from "next/navigation"
+import { useState, useEffect } from "react"
+import { useRouter, useSearchParams } from "next/navigation"
 import Link from "next/link"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
@@ -11,6 +11,7 @@ import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle }
 import { useToast } from "@/components/ui/use-toast"
 import { useAuth } from "@/app/context/auth-context"
 import { initializeFirebase } from "@/app/lib/firebase"
+import { Checkbox } from "@/components/ui/checkbox"
 
 export default function LoginPage() {
   const [email, setEmail] = useState("")
@@ -19,8 +20,11 @@ export default function LoginPage() {
   const [showForgotPassword, setShowForgotPassword] = useState(false)
   const [forgotPasswordEmail, setForgotPasswordEmail] = useState("")
   const [resetLoading, setResetLoading] = useState(false)
+  const [rememberMe, setRememberMe] = useState(false)
   const { toast } = useToast()
   const router = useRouter()
+  const searchParams = useSearchParams()
+  const returnUrl = searchParams.get('returnUrl')
   const { setUser } = useAuth()
 
   const handleLogin = async (e: React.FormEvent) => {
@@ -40,8 +44,11 @@ export default function LoginPage() {
         return
       }
 
-      const { signInWithEmailAndPassword } = await import("firebase/auth")
+      const { signInWithEmailAndPassword, setPersistence, browserSessionPersistence, browserLocalPersistence } = await import("firebase/auth")
       const { doc, getDoc } = await import("firebase/firestore")
+
+      // Set the appropriate persistence based on user choice
+      await setPersistence(auth, rememberMe ? browserLocalPersistence : browserSessionPersistence)
 
       const userCredential = await signInWithEmailAndPassword(auth, email, password)
       const userDoc = await getDoc(doc(db, "users", userCredential.user.uid))
@@ -59,7 +66,10 @@ export default function LoginPage() {
         description: "Welcome back!",
       })
 
-      if (userData?.role === "provider") {
+      // Redirect based on returnUrl or user role
+      if (returnUrl) {
+        router.push(returnUrl)
+      } else if (userData?.role === "provider") {
         router.push("/dashboard")
       } else {
         router.push("/")
@@ -179,6 +189,23 @@ export default function LoginPage() {
                         />
                       </div>
 
+                      <div className="flex items-center justify-between">
+                        <div className="flex-1"></div> {/* Empty div to push remember me to the right */}
+                        <div className="flex items-center space-x-2">
+                          <Checkbox 
+                            id="remember" 
+                            checked={rememberMe}
+                            onCheckedChange={(checked) => setRememberMe(checked === true)}
+                          />
+                          <label
+                            htmlFor="remember"
+                            className="text-sm font-medium leading-none text-white peer-disabled:cursor-not-allowed peer-disabled:opacity-70"
+                          >
+                            Remember me
+                          </label>
+                        </div>
+                      </div>
+
                       {/* Blue Button with White Text */}
                       <Button
                         type="submit"
@@ -193,7 +220,10 @@ export default function LoginPage() {
                 <CardFooter className="flex justify-center p-0 pt-3 sm:pt-4">
                   <p className="text-xs sm:text-sm text-gray-300">
                     Don't have an account?{" "}
-                    <Link href="/signup" className="text-blue-400 hover:underline">
+                    <Link 
+                      href={returnUrl ? `/signup?returnUrl=${encodeURIComponent(returnUrl)}` : "/signup"} 
+                      className="text-blue-400 hover:underline"
+                    >
                       Sign up
                     </Link>
                   </p>

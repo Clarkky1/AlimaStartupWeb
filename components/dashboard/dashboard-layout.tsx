@@ -1,7 +1,7 @@
 "use client"
 
 import * as React from "react"
-import { useState } from "react"
+import { useState, useEffect } from "react"
 import { useRouter, usePathname } from "next/navigation"
 import Link from "next/link"
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar"
@@ -15,10 +15,13 @@ import {
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu"
 import { Sheet, SheetContent, SheetTrigger } from "@/components/ui/sheet"
+import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog"
 import { Home, Settings, MessageSquare, Bell, Wallet, Menu, LogOut, User, LayoutDashboard, ListIcon } from "lucide-react"
 import { useAuth } from "@/app/context/auth-context"
 import { cn } from "@/lib/utils"
 import { ScrollArea } from "@/components/ui/scroll-area"
+import { useUnreadCounts } from "@/app/hooks/useUnreadCounts"
+import { Badge } from "@/components/ui/badge"
 
 interface DashboardLayoutProps {
   children: React.ReactNode
@@ -28,6 +31,7 @@ interface NavItem {
   title: string
   path: string
   icon: React.ReactElement
+  badge?: number
 }
 
 const navItems: NavItem[] = [
@@ -61,12 +65,72 @@ const navItems: NavItem[] = [
 export function DashboardLayout({ children }: DashboardLayoutProps) {
   const { user, logout } = useAuth()
   const router = useRouter()
-  const pathname = usePathname()
+  const [currentPath, setCurrentPath] = useState<string>("")
+  
+  // Prevent invoking usePathname in Server Components or outside a Client Component
+  const [pathname, setPathname] = useState<string>('')
   const [isMobileSidebarOpen, setIsMobileSidebarOpen] = useState(false)
+  const [isSignoutDialogOpen, setIsSignoutDialogOpen] = useState(false)
+  const [isClient, setIsClient] = useState(false)
+  const { messageCounts, notificationCounts } = useUnreadCounts(user?.uid)
+
+  // Set isClient to true when component mounts (client-side only)
+  useEffect(() => {
+    setIsClient(true)
+    // Only access usePathname on the client side
+    try {
+      const path = window.location.pathname
+      setPathname(path)
+      setCurrentPath(path)
+    } catch (e) {
+      console.error("Path detection error:", e);
+    }
+  }, [])
+
+  // Use usePathname safely inside useEffect
+  useEffect(() => {
+    if (isClient) {
+      try {
+        const path = usePathname() || ''
+        setPathname(path)
+        setCurrentPath(path)
+      } catch (e) {
+        console.error("Path detection error:", e);
+      }
+    }
+  }, [isClient])
+
+  // Add badge counts to the navItems
+  const navItemsWithCounts = navItems.map(item => {
+    if (item.title === "Messages") {
+      return { ...item, badge: messageCounts > 0 ? messageCounts : undefined };
+    }
+    if (item.title === "Notifications") {
+      return { ...item, badge: notificationCounts > 0 ? notificationCounts : undefined };
+    }
+    return item;
+  });
 
   const handleSignOut = async () => {
+    setIsSignoutDialogOpen(true)
+  }
+
+  const confirmSignOut = async () => {
     await logout()
     router.push("/")
+  }
+
+  // Render a minimal layout until client-side code is running
+  if (!isClient) {
+    return (
+      <div className="flex min-h-screen flex-col">
+        <main className="flex-1">
+          <div className="container mx-auto p-4">
+            {children}
+          </div>
+        </main>
+      </div>
+    )
   }
 
   return (
@@ -91,8 +155,8 @@ export function DashboardLayout({ children }: DashboardLayoutProps) {
                 </div>
                 <ScrollArea className="flex-1 overflow-auto py-4">
                   <nav className="grid gap-1 px-2">
-                    {navItems.map((item) => {
-                      const isActive = pathname === item.path
+                    {navItemsWithCounts.map((item) => {
+                      const isActive = currentPath === item.path
                       return (
                         <Link
                           key={item.path}
@@ -106,6 +170,11 @@ export function DashboardLayout({ children }: DashboardLayoutProps) {
                         >
                           {item.icon}
                           {item.title}
+                          {item.badge && (
+                            <Badge variant="destructive" className="ml-auto animate-pulse">
+                              {item.badge}
+                            </Badge>
+                          )}
                         </Link>
                       )
                     })}
@@ -152,7 +221,7 @@ export function DashboardLayout({ children }: DashboardLayoutProps) {
             </DropdownMenuItem>
             <DropdownMenuItem onClick={handleSignOut}>
               <LogOut className="mr-2 h-4 w-4" />
-              Sign Out
+              <span>Sign out</span>
             </DropdownMenuItem>
           </DropdownMenuContent>
         </DropdownMenu>
@@ -168,8 +237,8 @@ export function DashboardLayout({ children }: DashboardLayoutProps) {
         </div>
         <ScrollArea className="flex-1 py-4">
           <nav className="grid gap-1 px-2">
-            {navItems.map((item) => {
-              const isActive = pathname === item.path
+            {navItemsWithCounts.map((item) => {
+              const isActive = currentPath === item.path
               return (
                 <Link
                   key={item.path}
@@ -182,6 +251,11 @@ export function DashboardLayout({ children }: DashboardLayoutProps) {
                 >
                   {item.icon}
                   {item.title}
+                  {item.badge && (
+                    <Badge variant="destructive" className="ml-auto animate-pulse">
+                      {item.badge}
+                    </Badge>
+                  )}
                 </Link>
               )
             })}
@@ -211,6 +285,24 @@ export function DashboardLayout({ children }: DashboardLayoutProps) {
           {children}
         </div>
       </main>
+      <Dialog open={isSignoutDialogOpen} onOpenChange={setIsSignoutDialogOpen}>
+        <DialogContent>
+          <DialogHeader>
+            <DialogTitle>Confirm Sign Out</DialogTitle>
+            <DialogDescription>
+              Are you sure you want to sign out? This will end your current session.
+            </DialogDescription>
+          </DialogHeader>
+          <div className="flex justify-end space-x-2">
+            <Button variant="outline" onClick={() => setIsSignoutDialogOpen(false)}>
+              Cancel
+            </Button>
+            <Button variant="destructive" onClick={confirmSignOut}>
+              Sign Out
+            </Button>
+          </div>
+        </DialogContent>
+      </Dialog>
     </div>
   )
 }

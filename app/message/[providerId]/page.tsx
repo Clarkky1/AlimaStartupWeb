@@ -13,11 +13,10 @@ import { useToast } from "@/components/ui/use-toast"
 import { initializeFirebase } from "@/app/lib/firebase"
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription, DialogTrigger } from "@/components/ui/dialog"
 import { Badge } from "@/components/ui/badge"
+import { Loading } from "@/components/loading"
 
 export default function MessagePage({ params }: { params: { providerId: string } }) {
-  // Create a properly typed version of params to use with React.use()
-  const unwrappedParams = React.use(params as unknown as Promise<{ providerId: string }>);
-  const { providerId } = unwrappedParams;
+  const { providerId } = params;
   const { user, loading: authLoading } = useAuth()
   const router = useRouter()
   const { toast } = useToast()
@@ -48,12 +47,8 @@ export default function MessagePage({ params }: { params: { providerId: string }
       if (authLoading) return
 
       if (!user) {
-        toast({
-          title: "Authentication required",
-          description: "Please log in to send messages",
-          variant: "destructive",
-        })
-        // Remove the router.push("/login") to prevent navigation when already logged in
+        // Skip provider data fetching - we'll show login UI instead
+        setLoading(false)
         return
       }
 
@@ -102,38 +97,12 @@ export default function MessagePage({ params }: { params: { providerId: string }
           servicesSnapshot.forEach((doc) => {
             servicesData.push({
               id: doc.id,
-              ...doc.data()
+              ...doc.data(),
             })
           })
           
           setProviderServices(servicesData)
-          
-          // Check if there's a service associated with an existing conversation
-          const participants = [user.uid, providerId].sort()
-          const conversationId = participants.join('_')
-          const conversationDoc = await getDoc(doc(db, "conversations", conversationId))
-          
-          if (conversationDoc.exists() && conversationDoc.data().serviceId) {
-            const serviceId = conversationDoc.data().serviceId
-            const serviceDoc = await getDoc(doc(db, "services", serviceId))
-            
-            if (serviceDoc.exists()) {
-              setSelectedService({
-                id: serviceDoc.id,
-                ...serviceDoc.data()
-              })
-            }
-          } else if (servicesData.length > 0) {
-            // Default to first service if no service is associated with conversation
-            setSelectedService(servicesData[0])
-          }
-        } else {
-          toast({
-            title: "Provider not found",
-            description: "The service provider you're trying to contact doesn't exist",
-            variant: "destructive",
-          })
-          router.push("/")
+          setLoading(false)
         }
       } catch (error) {
         console.error("Error fetching provider data:", error)
@@ -142,17 +111,21 @@ export default function MessagePage({ params }: { params: { providerId: string }
           description: "Failed to load provider information",
           variant: "destructive",
         })
-      } finally {
         setLoading(false)
       }
     }
 
     fetchProviderData()
-  }, [providerId, user, authLoading, router, toast])
+  }, [providerId, authLoading, user])
 
   useEffectState(() => {
     async function fetchMessages() {
-      if (!user || !providerId) return;
+      if (authLoading) return;
+      
+      if (!user || !providerId) {
+        // Skip fetching messages if user is not logged in
+        return;
+      }
 
       try {
         const { db } = await initializeFirebase();
@@ -204,7 +177,7 @@ export default function MessagePage({ params }: { params: { providerId: string }
     }
 
     fetchMessages();
-  }, [user, providerId]);
+  }, [user, providerId, authLoading]);
 
   const handleSendMessage = async (e: React.FormEvent) => {
     e.preventDefault()
@@ -368,12 +341,57 @@ export default function MessagePage({ params }: { params: { providerId: string }
   }
   
   if (loading || authLoading) {
+    return <Loading />
+  }
+
+  if (!user) {
     return (
-      <div className="flex min-h-screen items-center justify-center">
-        <div className="text-center">
-          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-primary mx-auto"></div>
-          <p className="mt-4 text-muted-foreground">Loading...</p>
-        </div>
+      <div className="container mx-auto px-4 py-8">
+        <Button variant="ghost" className="h-8 px-2 mb-4 flex items-center" onClick={() => router.back()}>
+          <ArrowLeft className="mr-1 h-3 w-3" />
+          Back
+        </Button>
+        
+        <Card className="max-w-md mx-auto">
+          <CardHeader>
+            <CardTitle className="text-xl">Authentication Required</CardTitle>
+            <CardDescription>
+              Please log in or create an account to message this service provider.
+            </CardDescription>
+          </CardHeader>
+          <CardContent className="flex flex-col items-center">
+            <img src="/AlimaLOGO.svg" alt="Alima Logo" className="h-16 w-16 mb-4" />
+            <p className="text-center mb-6">
+              Connecting with service providers requires an account to ensure secure and reliable communications.
+            </p>
+            <div className="flex gap-4 w-full">
+              <Button 
+                className="flex-1" 
+                onClick={() => router.push(`/login?returnUrl=/message/${providerId}`)}
+              >
+                Login
+              </Button>
+              <Button 
+                variant="outline" 
+                className="flex-1"
+                onClick={() => router.push(`/signup?returnUrl=/message/${providerId}`)}
+              >
+                Sign Up
+              </Button>
+            </div>
+          </CardContent>
+        </Card>
+      </div>
+    )
+  }
+
+  if (!provider) {
+    return (
+      <div className="flex flex-col items-center justify-center min-h-screen">
+        <h2 className="text-2xl font-bold mb-4">Provider Not Found</h2>
+        <Button onClick={() => router.push("/dashboard")}>
+          Back to Dashboard
+        </Button>
       </div>
     )
   }
@@ -388,18 +406,18 @@ export default function MessagePage({ params }: { params: { providerId: string }
   }
 
   return (
-    <div className="container mx-auto py-8 px-4">
-      <Button variant="ghost" className="mb-4 flex items-center" onClick={() => router.back()}>
-        <ArrowLeft className="mr-2 h-4 w-4" />
+    <div className="container mx-auto px-0 py-0">
+      <Button variant="ghost" className="h-8 px-2 mb-0 flex items-center" onClick={() => router.back()}>
+        <ArrowLeft className="mr-1 h-3 w-3" />
         Back
       </Button>
 
-      <div className="grid gap-6 md:grid-cols-3">
+      <div className="grid gap-2 md:grid-cols-3 overflow-hidden">
         {/* Message Card */}
         <div className="md:col-span-2">
           <Card>
-            <CardHeader>
-              <div className="space-y-4">
+            <CardHeader className="p-3">
+              <div className="space-y-2">
                 <div className="flex items-center gap-4">
                   <Avatar className="h-12 w-12">
                     <AvatarImage
@@ -433,7 +451,7 @@ export default function MessagePage({ params }: { params: { providerId: string }
               </div>
             </CardHeader>
             <CardContent>
-              <div className="mb-4 h-[400px] overflow-y-auto border rounded-md p-4">
+              <div className="mb-2 h-[calc(100vh-300px)] overflow-y-auto border rounded-md p-4">
                 {messages.map((msg) => (
                   <div
                     key={msg.id}
@@ -463,7 +481,7 @@ export default function MessagePage({ params }: { params: { providerId: string }
                 ))}
                 <div ref={messagesEndRef} /> {/* Add this div at the end of messages */}
               </div>
-              <form onSubmit={handleSendMessage} className="space-y-4">
+              <form onSubmit={handleSendMessage} className="space-y-2">
                 {providerServices.length > 1 && (
                   <div className="space-y-2">
                     <label className="text-sm font-medium">Select Service</label>
@@ -514,13 +532,67 @@ export default function MessagePage({ params }: { params: { providerId: string }
                   </div>
                 )}
 
-                <div>
-                  <Textarea
-                    placeholder="Write your message here..."
-                    value={message}
-                    onChange={(e) => setMessage(e.target.value)}
-                    className="min-h-[120px]"
-                  />
+                <div className="flex flex-col gap-2">
+                  <div className="flex items-center gap-2">
+                    <Textarea
+                      placeholder="Write your message here..."
+                      value={message}
+                      onChange={(e) => setMessage(e.target.value)}
+                      className="min-h-[60px] flex-1"
+                    />
+                    <Button 
+                      type="submit" 
+                      onClick={handleSendMessage} 
+                      disabled={!message.trim() && !paymentProofUrl} 
+                      className="h-12 w-12 flex-shrink-0 rounded-md p-0"
+                      aria-label="Send Message"
+                    >
+                      <Send className="h-5 w-5" />
+                    </Button>
+                  </div>
+                  
+                  {/* Payment proof upload button */}
+                  {(!user?.role || user?.role !== 'provider') && (
+                    <Dialog>
+                      <DialogTrigger asChild>
+                        <Button type="button" variant="outline" size="sm" className="flex items-center self-start">
+                          <Upload className="mr-2 h-4 w-4" />
+                          Upload Payment Proof
+                        </Button>
+                      </DialogTrigger>
+                      <DialogContent>
+                        <DialogHeader>
+                          <DialogTitle>Upload Payment Proof</DialogTitle>
+                          <DialogDescription>
+                            Upload an image that shows your payment transaction details.
+                          </DialogDescription>
+                        </DialogHeader>
+                        <div className="grid w-full max-w-sm items-center gap-1.5">
+                          <label htmlFor="payment-proof">
+                            Upload payment proof image
+                          </label>
+                          <input
+                            id="payment-proof"
+                            type="file"
+                            accept="image/*"
+                            className="w-full"
+                            onChange={(e) => {
+                              const file = e.target.files?.[0]
+                              if (file) {
+                                handlePaymentProofUpload(file)
+                              }
+                            }}
+                            disabled={isUploading}
+                          />
+                          {isUploading && (
+                            <div className="flex justify-center mt-2">
+                              <div className="animate-spin rounded-full h-6 w-6 border-b-2 border-primary"></div>
+                            </div>
+                          )}
+                        </div>
+                      </DialogContent>
+                    </Dialog>
+                  )}
                 </div>
                 
                 {paymentProofUrl && (
@@ -543,53 +615,6 @@ export default function MessagePage({ params }: { params: { providerId: string }
                     </div>
                   </div>
                 )}
-                
-                <div className="flex justify-between items-center">
-                  <Dialog>
-                    <DialogTrigger asChild>
-                      <Button type="button" variant="outline" className="flex items-center">
-                        <Upload className="mr-2 h-4 w-4" />
-                        Upload Payment Proof
-                      </Button>
-                    </DialogTrigger>
-                    <DialogContent>
-                      <DialogHeader>
-                        <DialogTitle>Upload Payment Proof</DialogTitle>
-                        <DialogDescription>
-                          Upload an image that shows your payment transaction details.
-                        </DialogDescription>
-                      </DialogHeader>
-                      <div className="grid w-full max-w-sm items-center gap-1.5">
-                        <label htmlFor="payment-proof">
-                          Upload payment proof image
-                        </label>
-                        <input
-                          id="payment-proof"
-                          type="file"
-                          accept="image/*"
-                          className="w-full"
-                          onChange={(e) => {
-                            const file = e.target.files?.[0]
-                            if (file) {
-                              handlePaymentProofUpload(file)
-                            }
-                          }}
-                          disabled={isUploading}
-                        />
-                        {isUploading && (
-                          <div className="flex justify-center mt-2">
-                            <div className="animate-spin rounded-full h-6 w-6 border-b-2 border-primary"></div>
-                          </div>
-                        )}
-                      </div>
-                    </DialogContent>
-                  </Dialog>
-                  
-                  <Button type="submit" onClick={handleSendMessage} disabled={!message.trim() && !paymentProofUrl} className="flex items-center">
-                    <Send className="mr-2 h-4 w-4" />
-                    Send Message
-                  </Button>
-                </div>
               </form>
             </CardContent>
           </Card>
@@ -598,13 +623,13 @@ export default function MessagePage({ params }: { params: { providerId: string }
         {/* Provider Info Card */}
         <div className="md:col-span-1">
           <Card>
-            <CardHeader>
+            <CardHeader className="p-3">
               <CardTitle>About Provider</CardTitle>
             </CardHeader>
-            <CardContent>
+            <CardContent className="p-3 pt-0">
               <div className="space-y-4">
-                <div className="text-center mb-4">
-                  <Avatar className="h-24 w-24 mx-auto">
+                <div className="text-center mb-3">
+                  <Avatar className="h-16 w-16 mx-auto">
                     <AvatarImage
                       src={provider?.avatar || provider?.profilePicture || "/person-male-1.svg"}
                       alt={provider?.name || "Provider"}

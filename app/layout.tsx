@@ -8,6 +8,7 @@ import { cn } from "@/lib/utils";
 import { ThemeProvider } from "@/components/theme-provider";
 import { Toaster } from "@/components/ui/toaster";
 import { AuthProvider } from "@/app/context/auth-context";
+import { CategoryProvider } from "@/app/context/category-context";
 import { CustomThemeProvider } from "@/themes/theme-context";
 import { ClientLayout } from "@/components/layout/client-layout";
 
@@ -63,9 +64,11 @@ export default function RootLayout({
         >
           <CustomThemeProvider defaultVariant="default">
             <AuthProvider>
-              <ClientLayout>
-                {children}
-              </ClientLayout>
+              <CategoryProvider>
+                <ClientLayout>
+                  {children}
+                </ClientLayout>
+              </CategoryProvider>
               <Toaster />
             </AuthProvider>
           </CustomThemeProvider>

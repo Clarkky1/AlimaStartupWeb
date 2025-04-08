@@ -175,19 +175,23 @@ export function Navbar() {
                     </div>
                   </DropdownMenuLabel>
                   <DropdownMenuSeparator />
-                  <DropdownMenuItem onClick={() => router.push('/dashboard')}>
-                    Dashboard
-                  </DropdownMenuItem>
-                  <DropdownMenuItem onClick={() => router.push('/dashboard/notifications')} className="relative">
-                    Notifications
-                    {unreadCount > 0 && (
-                      <Badge 
-                        className="ml-2 h-5 w-5 flex items-center justify-center p-0 bg-red-500 text-white" 
-                        variant="destructive"
-                      >
-                        {unreadCount}
-                      </Badge>
-                    )}
+                  {user.role === "provider" && (
+                    <DropdownMenuItem onClick={() => router.push('/dashboard')}>
+                      Dashboard
+                    </DropdownMenuItem>
+                  )}
+                  <DropdownMenuItem onClick={() => user.role === "provider" ? router.push('/dashboard/notifications') : router.push('/notifications')} className="relative">
+                    <span className="flex items-center">
+                      Notifications
+                      {unreadCount > 0 && (
+                        <Badge 
+                          className="ml-2 h-5 w-5 flex items-center justify-center p-0 bg-red-500 text-white shadow-[0_0_5px_rgba(239,68,68,0.5)]" 
+                          variant="destructive"
+                        >
+                          {unreadCount}
+                        </Badge>
+                      )}
+                    </span>
                   </DropdownMenuItem>
                   <DropdownMenuItem onClick={() => router.push('/profile')}>
                     Profile
@@ -257,27 +261,31 @@ export function Navbar() {
               
               {user ? (
                 <div className="flex flex-col space-y-2 pt-4 border-t border-white/10">
+                  {user.role === "provider" && (
+                    <Link
+                      href="/dashboard"
+                      className="text-sm font-medium px-4 py-2 rounded-lg transition-all text-foreground/70 hover:bg-white/5 hover:text-foreground/90"
+                      onClick={() => setIsMenuOpen(false)}
+                    >
+                      Dashboard
+                    </Link>
+                  )}
                   <Link
-                    href="/dashboard"
-                    className="text-sm font-medium px-4 py-2 rounded-lg transition-all text-foreground/70 hover:bg-white/5 hover:text-foreground/90"
-                    onClick={() => setIsMenuOpen(false)}
-                  >
-                    Dashboard
-                  </Link>
-                  <Link
-                    href="/dashboard/notifications"
+                    href={user.role === "provider" ? "/dashboard/notifications" : "/notifications"}
                     className="flex items-center text-sm font-medium px-4 py-2 rounded-lg transition-all text-foreground/70 hover:bg-white/5 hover:text-foreground/90"
                     onClick={() => setIsMenuOpen(false)}
                   >
-                    Notifications
-                    {unreadCount > 0 && (
-                      <Badge 
-                        className="ml-2 h-5 w-5 flex items-center justify-center p-0 bg-red-500 text-white" 
-                        variant="destructive"
-                      >
-                        {unreadCount}
-                      </Badge>
-                    )}
+                    <span className="flex items-center">
+                      Notifications
+                      {unreadCount > 0 && (
+                        <Badge 
+                          className="ml-2 h-5 w-5 flex items-center justify-center p-0 bg-red-500 text-white shadow-[0_0_5px_rgba(239,68,68,0.5)]" 
+                          variant="destructive"
+                        >
+                          {unreadCount}
+                        </Badge>
+                      )}
+                    </span>
                   </Link>
                 </div>
               ) : (

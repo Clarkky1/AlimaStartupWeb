@@ -16,7 +16,8 @@ export function ClientLayout({ children }: { children: React.ReactNode }) {
                                 pathname === '/login' || 
                                 pathname === '/signup' ||
                                 pathname === '/signin' ||
-                                pathname === '/register'
+                                pathname === '/register' ||
+                                pathname === '/notifications'
 
   // Initialize AOS with custom settings
   useEffect(() => {

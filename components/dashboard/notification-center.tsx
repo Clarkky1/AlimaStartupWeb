@@ -37,7 +37,11 @@ interface Notification {
   }
 }
 
-export function NotificationCenter() {
+interface NotificationCenterProps {
+  userOnly?: boolean
+}
+
+export function NotificationCenter({ userOnly = false }: NotificationCenterProps) {
   const { user } = useAuth()
   const { toast } = useToast()
   const router = useRouter()
@@ -273,77 +277,100 @@ export function NotificationCenter() {
   const filteredNotifications = notifications.filter((notification) => {
     if (activeTab === "all") return true
     if (activeTab === "unread") return !notification.read
+    if (userOnly && (notification.type === "payment_proof" || notification.type === "review" || notification.type === "rating")) {
+      return false
+    }
     return notification.type === activeTab
   })
 
   const hasUnread = notifications.some(notification => !notification.read)
 
   return (
-    <div className="space-y-4">
+    <div className="space-y-4 px-4 sm:px-0 py-4 sm:py-0">
       <div className="flex items-center justify-between">
-        <h1 className="text-2xl font-semibold tracking-tight">Notifications</h1>
+        {!userOnly && (
+          <h1 className="text-2xl font-semibold tracking-tight">Notifications</h1>
+        )}
         {hasUnread && (
-          <Button variant="outline" size="sm" onClick={markAllAsRead}>
+          <Button variant="outline" size="sm" onClick={markAllAsRead} className={userOnly ? "ml-auto" : ""}>
             Mark all as read
           </Button>
         )}
       </div>
 
-      <Tabs value={activeTab} onValueChange={setActiveTab}>
-        <TabsList className="grid w-full grid-cols-5">
-          <TabsTrigger value="all">All</TabsTrigger>
-          <TabsTrigger value="unread">Unread</TabsTrigger>
-          <TabsTrigger value="message">Messages</TabsTrigger>
-          <TabsTrigger value="payment_proof">Payments</TabsTrigger>
-          <TabsTrigger value="review">Reviews</TabsTrigger>
-        </TabsList>
+      <Tabs value={activeTab} onValueChange={setActiveTab} className="w-full">
+        {userOnly ? (
+          <TabsList className="grid w-full grid-cols-3">
+            <TabsTrigger value="all" className="text-xs sm:text-sm">All</TabsTrigger>
+            <TabsTrigger value="unread" className="text-xs sm:text-sm">Unread</TabsTrigger>
+            <TabsTrigger value="message" className="text-xs sm:text-sm">Messages</TabsTrigger>
+          </TabsList>
+        ) : (
+          <TabsList className="grid w-full grid-cols-5">
+            <TabsTrigger value="all" className="text-xs sm:text-sm">All</TabsTrigger>
+            <TabsTrigger value="unread" className="text-xs sm:text-sm">Unread</TabsTrigger>
+            <TabsTrigger value="message" className="text-xs sm:text-sm">Messages</TabsTrigger>
+            <TabsTrigger value="payment_proof" className="text-xs sm:text-sm">Payments</TabsTrigger>
+            <TabsTrigger value="review" className="text-xs sm:text-sm">Reviews</TabsTrigger>
+          </TabsList>
+        )}
 
         <TabsContent value={activeTab} className="mt-4">
           {loading ? (
-            <div className="space-y-4">
-              {[1, 2, 3].map((i) => (
-                <Skeleton key={i} className="h-[72px] w-full" />
-              ))}
-            </div>
-          ) : filteredNotifications.length === 0 ? (
-            <div className="flex h-[200px] items-center justify-center rounded-lg border bg-muted/50">
-              <p className="text-center text-muted-foreground">
-                No notifications to display
-              </p>
-            </div>
-          ) : (
-            <div className="space-y-4">
-              {filteredNotifications.map((notification) => (
-                <div
-                  key={notification.id}
-                  className={`flex cursor-pointer items-start gap-4 p-4 hover:bg-muted ${
-                    !notification.read ? 'bg-primary/10 border-l-4 border-primary' : ''
-                  }`}
-                  onClick={() => handleNotificationClick(notification)}
-                >
-                  <div className={`p-2 rounded-full ${
-                    !notification.read ? 'bg-primary/20 text-primary' : 'bg-muted'
-                  }`}>
-                    {getNotificationIcon(notification.type)}
-                  </div>
-                  <div className="flex-1 space-y-1">
-                    <div className="flex items-center justify-between gap-4">
-                      <p className={`font-medium leading-none ${!notification.read ? "font-semibold text-primary" : ""}`}>
-                        {notification.title}
-                      </p>
-                      <p className="text-sm text-muted-foreground whitespace-nowrap">
-                        {formatTime(notification.timestamp)}
-                      </p>
-                    </div>
-                    <p className="text-sm text-muted-foreground">
-                      {notification.description}
-                    </p>
-                    <div className="flex justify-end">
-                      <ChevronRight className="h-4 w-4 text-muted-foreground" />
-                    </div>
-                  </div>
+            Array.from({ length: 3 }).map((_, i) => (
+              <div key={i} className="flex items-start space-x-4 p-4 border-b last:border-0">
+                <Skeleton className="h-10 w-10 rounded-full" />
+                <div className="space-y-2 flex-1">
+                  <Skeleton className="h-4 w-3/4" />
+                  <Skeleton className="h-3 w-1/2" />
                 </div>
-              ))}
+              </div>
+            ))
+          ) : filteredNotifications.length > 0 ? (
+            filteredNotifications.map((notification) => (
+              <div
+                key={notification.id}
+                className={`group flex items-start space-x-3 p-3 sm:p-4 border-b last:border-0 transition-colors ${
+                  notification.read ? "bg-background" : "bg-accent/10"
+                } hover:bg-accent/20 cursor-pointer relative`}
+                onClick={() => handleNotificationClick(notification)}
+              >
+                {!notification.read && (
+                  <span className="absolute left-0 top-1/2 -translate-y-1/2 w-1.5 h-1.5 rounded-full bg-destructive animate-pulse" />
+                )}
+                <div className="h-10 w-10 flex-shrink-0">
+                  {notification.data?.senderAvatar ? (
+                    <Avatar className="h-10 w-10 border border-white/10">
+                      <AvatarImage src={notification.data.senderAvatar} alt={notification.data.senderName || ""} />
+                      <AvatarFallback>
+                        {notification.data.senderName?.charAt(0) || "U"}
+                      </AvatarFallback>
+                    </Avatar>
+                  ) : (
+                    <div className="h-10 w-10 rounded-full bg-primary/10 flex items-center justify-center text-primary">
+                      {getNotificationIcon(notification.type)}
+                    </div>
+                  )}
+                </div>
+                <div className="flex-1 min-w-0">
+                  <div className="flex items-center justify-between gap-2">
+                    <p className="font-medium text-sm leading-tight truncate">
+                      {notification.title}
+                    </p>
+                    <p className="text-xs text-muted-foreground whitespace-nowrap flex-shrink-0">
+                      {formatTime(notification.timestamp)}
+                    </p>
+                  </div>
+                  <p className="text-xs sm:text-sm text-muted-foreground mt-1 line-clamp-2">
+                    {notification.description}
+                  </p>
+                </div>
+                <ChevronRight className="h-4 w-4 text-muted-foreground opacity-0 group-hover:opacity-100 transition-opacity flex-shrink-0 mt-1.5 sm:block hidden" />
+              </div>
+            ))
+          ) : (
+            <div className="p-8 text-center">
+              <p className="text-muted-foreground">No notifications to display</p>
             </div>
           )}
         </TabsContent>

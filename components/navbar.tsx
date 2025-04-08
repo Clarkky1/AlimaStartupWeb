@@ -230,6 +230,7 @@ export function Navbar() {
   const navItems = [
     { name: "Home", href: "/" },
     { name: "Popular Today", href: "/popular-today" },
+    { name: "About", href: "/about" },
   ]
 
   return (

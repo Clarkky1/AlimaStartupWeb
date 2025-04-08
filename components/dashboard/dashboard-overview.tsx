@@ -19,7 +19,7 @@ import {
 } from "lucide-react";
 import { useAuth } from "@/app/context/auth-context";
 import { initializeFirebase } from "@/app/lib/firebase";
-import { getDoc, doc, collection, query, where, getDocs, orderBy, limit, Timestamp, documentId } from "firebase/firestore";
+import { getDoc, doc, collection, query, where, getDocs, orderBy, limit, Timestamp, documentId, onSnapshot, DocumentData, QuerySnapshot, CollectionReference, Firestore } from "firebase/firestore";
 import { DashboardStats, TimelineData } from "@/types";
 import { Skeleton } from "@/components/ui/skeleton";
 import { Badge } from "@/components/ui/badge";
@@ -62,6 +62,20 @@ interface CategoryData {
   revenue?: number;
 }
 
+// Add interface for document data
+interface ConversationData extends DocumentData {
+  participants: string[];
+  serviceId?: string;
+  updatedAt?: any;
+}
+
+interface TransactionData extends DocumentData {
+  providerId: string;
+  serviceId?: string;
+  amount: number | string;
+  createdAt?: any;
+}
+
 export function DashboardOverview() {
   const { user } = useAuth();
   const [timeframe, setTimeframe] = useState<"week" | "month" | "year">("month");
@@ -100,301 +114,139 @@ export function DashboardOverview() {
           where("participants", "array-contains", user.uid),
           orderBy("updatedAt", "desc")
         );
-        const conversationsSnap = await getDocs(conversationsQuery);
-        const uniqueProviders = new Set(conversationsSnap.docs.map(doc => {
-          const data = doc.data();
-          return data.participants.find((p: string) => p !== user.uid);
-        }));
-
-        // Get total services count and calculate average rating
-        const servicesRef = collection(firebase.db, "services");
-        const servicesQuery = query(servicesRef, where("providerId", "==", user.uid));
-        const servicesSnap = await getDocs(servicesQuery);
-        const totalServices = servicesSnap.size;
         
-        // Map service data with proper typing
-        const services = servicesSnap.docs.map(doc => {
-          const docData = doc.data();
-          return {
-            id: doc.id,
-            providerId: docData.providerId || "",
-            title: docData.title || "",
-            description: docData.description || "",
-            price: docData.price || 0,
-            category: docData.category || "Other",
-            rating: docData.rating || 0,
-            // Include all other properties
-            ...docData
+        // Set up real-time listener for conversations
+        const conversationsUnsubscribe = onSnapshot(conversationsQuery, (conversationsSnap) => {
+          const uniqueProviders = new Set(conversationsSnap.docs.map(doc => {
+            const data = doc.data() as ConversationData;
+            return data.participants.find((p: string) => p !== user.uid);
+          }));
+
+          // Get total services count and calculate average rating
+          const db = firebase.db;
+          if (!db) return;
+          
+          const servicesRef = collection(db, "services");
+          const servicesQuery = query(servicesRef, where("providerId", "==", user.uid));
+          
+          // Set up real-time listener for services
+          getDocs(servicesQuery).then((servicesSnap) => {
+            const totalServices = servicesSnap.size;
+            
+            // Map service data with proper typing
+            const services = servicesSnap.docs.map(doc => {
+              const docData = doc.data();
+              return {
+                id: doc.id,
+                providerId: docData.providerId || "",
+                title: docData.title || "",
+                description: docData.description || "",
+                price: docData.price || 0,
+                category: docData.category || "Other",
+                rating: docData.rating || 0,
+                // Include all other properties
+                ...docData
+              };
+            });
+
+            // Calculate average rating from services
+            let totalRating = 0;
+            let ratedServices = 0;
+            servicesSnap.docs.forEach(doc => {
+              const data = doc.data();
+              if (data.rating && data.rating > 0) {
+                totalRating += data.rating;
+                ratedServices++;
+              }
+            });
+            const averageRating = ratedServices > 0 ? totalRating / ratedServices : 0;
+
+            // Set up previous period date for comparisons
+            const previousPeriod = new Date();
+            previousPeriod.setMonth(previousPeriod.getMonth() - 1);
+
+            // Get previous period ratings
+            const previousRatingsQuery = query(
+              servicesRef,
+              where("providerId", "==", user.uid),
+              where("updatedAt", "<=", previousPeriod)
+            );
+            
+            getDocs(previousRatingsQuery).then((previousRatingsSnap) => {
+              let previousTotalRating = 0;
+              let previousRatedServices = 0;
+              previousRatingsSnap.docs.forEach(doc => {
+                const data = doc.data();
+                if (data.rating && data.rating > 0) {
+                  previousTotalRating += data.rating;
+                  previousRatedServices++;
+                }
+              });
+              const previousAverageRating = previousRatedServices > 0 ? previousTotalRating / previousRatedServices : 0;
+              const ratingChange = previousAverageRating > 0 
+                ? ((averageRating - previousAverageRating) / previousAverageRating) * 100 
+                : 0;
+
+              // Get transactions where the provider is receiving payment - using real-time listener
+              const transactionsRef = collection(db, "transactions");
+              const transactionsQuery = query(
+                transactionsRef,
+                where("providerId", "==", user.uid),
+                where("status", "==", "confirmed")
+              );
+              
+              // Set up real-time listener for transactions
+              const transactionsUnsubscribe = onSnapshot(transactionsQuery, (transactionsSnap) => {
+                console.log("Live transaction update received, count:", transactionsSnap.size);
+                
+                // Calculate revenue from completed transactions where user is the provider
+                // Also track revenue by service
+                const serviceRevenueMap = new Map<string, number>();
+                const revenue = transactionsSnap.docs.reduce((sum, doc) => {
+                  const data = doc.data() as TransactionData;
+                  const amount = typeof data.amount === 'string' ? parseFloat(data.amount) : data.amount;
+                  
+                  // Record revenue for each service
+                  if (data.serviceId && amount) {
+                    // Get current total for this service, or 0 if not yet recorded
+                    const currentServiceTotal = serviceRevenueMap.get(data.serviceId) || 0;
+                    serviceRevenueMap.set(data.serviceId, currentServiceTotal + amount);
+                  }
+                  
+                  return sum + (amount || 0);
+                }, 0);
+
+                // Process all the data and update state
+                if (db) {
+                  processAndUpdateDashboardData(
+                    db,
+                    user.uid,
+                    timeframe,
+                    conversationsSnap,
+                    transactionsSnap,
+                    services,
+                    serviceRevenueMap,
+                    uniqueProviders.size,
+                    totalServices,
+                    averageRating,
+                    ratingChange,
+                    revenue
+                  );
+                }
+              });
+              
+              // Return cleanup function for transaction listener
+              return () => {
+                transactionsUnsubscribe();
+              };
+            });
+          });
+          
+          // Return cleanup function for conversations listener
+          return () => {
+            conversationsUnsubscribe();
           };
         });
-
-        // Calculate average rating from services
-        let totalRating = 0;
-        let ratedServices = 0;
-        servicesSnap.docs.forEach(doc => {
-          const data = doc.data();
-          if (data.rating && data.rating > 0) {
-            totalRating += data.rating;
-            ratedServices++;
-          }
-        });
-        const averageRating = ratedServices > 0 ? totalRating / ratedServices : 0;
-
-        // Set up previous period date for comparisons
-        const previousPeriod = new Date();
-        previousPeriod.setMonth(previousPeriod.getMonth() - 1);
-
-        // Get previous period ratings
-        const previousRatingsQuery = query(
-          servicesRef,
-          where("providerId", "==", user.uid),
-          where("updatedAt", "<=", previousPeriod)
-        );
-        const previousRatingsSnap = await getDocs(previousRatingsQuery);
-        let previousTotalRating = 0;
-        let previousRatedServices = 0;
-        previousRatingsSnap.docs.forEach(doc => {
-          const data = doc.data();
-          if (data.rating && data.rating > 0) {
-            previousTotalRating += data.rating;
-            previousRatedServices++;
-          }
-        });
-        const previousAverageRating = previousRatedServices > 0 ? previousTotalRating / previousRatedServices : 0;
-        const ratingChange = previousAverageRating > 0 
-          ? ((averageRating - previousAverageRating) / previousAverageRating) * 100 
-          : 0;
-
-        // Get transactions where the provider is receiving payment
-        const transactionsRef = collection(firebase.db, "transactions");
-        const transactionsQuery = query(
-          transactionsRef,
-          where("providerId", "==", user.uid),
-          where("status", "==", "completed")
-        );
-        const transactionsSnap = await getDocs(transactionsQuery);
-
-        // Calculate revenue from completed transactions where user is the provider
-        // Also track revenue by service
-        const serviceRevenueMap = new Map<string, number>();
-        const revenue = transactionsSnap.docs.reduce((sum, doc) => {
-          const data = doc.data();
-          const amount = typeof data.amount === 'string' ? parseFloat(data.amount) : data.amount;
-          
-          // Record revenue for each service
-          if (data.serviceId && amount) {
-            // Get current total for this service, or 0 if not yet recorded
-            const currentServiceTotal = serviceRevenueMap.get(data.serviceId) || 0;
-            serviceRevenueMap.set(data.serviceId, currentServiceTotal + amount);
-          }
-          
-          return sum + (amount || 0);
-        }, 0);
-
-        // Get previous period transactions
-        const previousTransactionsQuery = query(
-          transactionsRef,
-          where("providerId", "==", user.uid),
-          where("status", "==", "completed"),
-          where("createdAt", "<=", previousPeriod)
-        );
-        const previousTransactionsSnap = await getDocs(previousTransactionsQuery);
-        const previousRevenue = previousTransactionsSnap.docs.reduce((sum, doc) => {
-          const data = doc.data();
-          const amount = typeof data.amount === 'string' ? parseFloat(data.amount) : data.amount;
-          return sum + (amount || 0);
-        }, 0);
-
-        const revenueChange = previousRevenue > 0 
-          ? ((revenue - previousRevenue) / previousRevenue) * 100 
-          : 0;
-
-        // Calculate service contact percentage
-        const serviceContactPercentage = totalServices > 0 
-          ? (uniqueProviders.size / totalServices) * 100 
-          : 0;
-
-        // Generate dynamic category data based on service categories
-        // Group services by category and count conversations for each
-        const categoryMap = new Map<string, number>();
-        const categoryContactsMap = new Map<string, number>();
-        const categoryRevenueMap = new Map<string, number>();
-        
-        // Initialize all categories first with count of services in each category
-        services.forEach(service => {
-          const category = service.category || "Other";
-          if (!categoryMap.has(category)) {
-            categoryMap.set(category, 0);
-            categoryContactsMap.set(category, 0);
-            categoryRevenueMap.set(category, 0);
-          }
-          categoryMap.set(category, categoryMap.get(category)! + 1);
-          
-          // Add service revenue to its category
-          if (serviceRevenueMap.has(service.id)) {
-            const categoryRevenue = categoryRevenueMap.get(category) || 0;
-            categoryRevenueMap.set(category, categoryRevenue + serviceRevenueMap.get(service.id)!);
-          }
-        });
-        
-        // Count conversations by category
-        for (const conversation of conversationsSnap.docs.map(doc => doc.data())) {
-          if (conversation.serviceId) {
-            // Find the service this conversation is about
-            const serviceQuery = query(
-              servicesRef,
-              where(documentId(), "==", conversation.serviceId),
-              limit(1)
-            );
-            const serviceSnap = await getDocs(serviceQuery);
-            
-            if (!serviceSnap.empty) {
-              const serviceData = serviceSnap.docs[0].data() as ServiceData;
-              const category = serviceData.category || "Other";
-              if (categoryContactsMap.has(category)) {
-                categoryContactsMap.set(category, categoryContactsMap.get(category)! + 1);
-              }
-            }
-          }
-        }
-        
-        // Calculate percentage of contacts for each category
-        const dynamicCategoryData: CategoryData[] = [];
-        let totalContacts = 0;
-        
-        categoryContactsMap.forEach(contacts => {
-          totalContacts += contacts;
-        });
-        
-        Array.from(categoryMap.keys()).forEach(category => {
-          const serviceCount = categoryMap.get(category) || 0;
-          const contactCount = categoryContactsMap.get(category) || 0;
-          // Calculate contact percentage for this category
-          const contactPercentage = totalContacts > 0 
-            ? Math.round((contactCount / totalContacts) * 100) 
-            : 0;
-          
-          // Only add categories that have services
-          if (serviceCount > 0) {
-            dynamicCategoryData.push({
-              name: formatCategoryName(category),
-              value: serviceCount,
-              contactPercentage: contactPercentage,
-              revenue: categoryRevenueMap.get(category) || 0
-            });
-          }
-        });
-        
-        // Sort by service count descending
-        dynamicCategoryData.sort((a, b) => b.value - a.value);
-        
-        // Don't add a default "No Data" entry when there's no data
-        setCategoryData(dynamicCategoryData);
-        
-        // Generate timeline data based on real conversations and transactions
-        const timelineData: TimelineData[] = [];
-        const periodCount = timeframe === "year" ? 12 : timeframe === "month" ? 30 : 7;
-        const endDate = new Date();
-        
-        // Generate date ranges based on selected timeframe
-        for (let i = 0; i < periodCount; i++) {
-          const startDate = new Date();
-          let label = "";
-          
-          if (timeframe === "year") {
-            // For yearly view, go back by months
-            startDate.setMonth(endDate.getMonth() - (periodCount - i - 1));
-            startDate.setDate(1);
-            label = startDate.toLocaleDateString('en-US', { month: 'short' });
-          } else if (timeframe === "month") {
-            // For monthly view, go back by days
-            startDate.setDate(endDate.getDate() - (periodCount - i - 1));
-            label = startDate.getDate().toString();
-          } else {
-            // For weekly view, go back by days and use day name
-            startDate.setDate(endDate.getDate() - (periodCount - i - 1));
-            label = startDate.toLocaleDateString('en-US', { weekday: 'short' });
-          }
-          
-          // Create entry with empty counts
-          timelineData.push({
-            date: label,
-            contacts: 0,
-            transactions: 0
-          });
-        }
-        
-        // Count conversations per time period
-        conversationsSnap.docs.forEach(doc => {
-          const data = doc.data();
-          if (data.updatedAt) {
-            const date = data.updatedAt.toDate ? data.updatedAt.toDate() : new Date(data.updatedAt);
-            let index = -1;
-            
-            if (timeframe === "year") {
-              // Find matching month
-              const month = date.toLocaleDateString('en-US', { month: 'short' });
-              index = timelineData.findIndex(item => item.date === month);
-            } else if (timeframe === "month") {
-              // Find matching day
-              const day = date.getDate().toString();
-              index = timelineData.findIndex(item => item.date === day);
-            } else {
-              // Find matching weekday
-              const weekday = date.toLocaleDateString('en-US', { weekday: 'short' });
-              index = timelineData.findIndex(item => item.date === weekday);
-            }
-            
-            if (index !== -1) {
-              timelineData[index].contacts++;
-            }
-          }
-        });
-        
-        // Count transactions per time period
-        transactionsSnap.docs.forEach(doc => {
-          const data = doc.data();
-          if (data.createdAt) {
-            const date = data.createdAt.toDate ? data.createdAt.toDate() : new Date(data.createdAt);
-            let index = -1;
-            
-            if (timeframe === "year") {
-              // Find matching month
-              const month = date.toLocaleDateString('en-US', { month: 'short' });
-              index = timelineData.findIndex(item => item.date === month);
-            } else if (timeframe === "month") {
-              // Find matching day
-              const day = date.getDate().toString();
-              index = timelineData.findIndex(item => item.date === day);
-            } else {
-              // Find matching weekday
-              const weekday = date.toLocaleDateString('en-US', { weekday: 'short' });
-              index = timelineData.findIndex(item => item.date === weekday);
-            }
-            
-            if (index !== -1) {
-              timelineData[index].transactions++;
-            }
-          }
-        });
-        
-        setTimelineData(timelineData);
-
-        setStats({
-          contacts: uniqueProviders.size,
-          contactsChange: 0,
-          transactions: transactionsSnap.size,
-          transactionsChange: 0,
-          rating: averageRating,
-          ratingChange: Math.round(ratingChange),
-          revenue: revenue.toLocaleString(),
-          revenueChange: Math.round(revenueChange),
-          serviceContactPercentage: Math.round(serviceContactPercentage),
-          totalServices,
-          contactedServices: uniqueProviders.size
-        });
-        
-        setIsLoading(false);
       } catch (err) {
         console.error("Error fetching dashboard data:", err);
         setError("Failed to load dashboard data. Please try again later.");
@@ -404,6 +256,229 @@ export function DashboardOverview() {
 
     fetchDashboardData();
   }, [user, timeframe]);
+
+  // Separate function to process and update dashboard data to avoid duplication
+  const processAndUpdateDashboardData = async (
+    db: Firestore,
+    userId: string,
+    timeframe: string,
+    conversationsSnap: QuerySnapshot<DocumentData>,
+    transactionsSnap: QuerySnapshot<DocumentData>,
+    services: ServiceData[],
+    serviceRevenueMap: Map<string, number>,
+    uniqueProvidersCount: number,
+    totalServices: number,
+    averageRating: number,
+    ratingChange: number,
+    revenue: number
+  ) => {
+    try {
+      // Get previous period transactions for comparison
+      const previousPeriod = new Date();
+      previousPeriod.setMonth(previousPeriod.getMonth() - 1);
+      
+      const previousTransactionsQuery = query(
+        collection(db, "transactions"),
+        where("providerId", "==", userId),
+        where("status", "==", "completed"),
+        where("createdAt", "<=", previousPeriod)
+      );
+      const previousTransactionsSnap = await getDocs(previousTransactionsQuery);
+      
+      // Calculate percentage change in revenue
+      let previousRevenue = 0;
+      previousTransactionsSnap.docs.forEach(doc => {
+        const data = doc.data() as TransactionData;
+        const amount = typeof data.amount === 'string' ? parseFloat(data.amount) : data.amount;
+        previousRevenue += amount || 0;
+      });
+      
+      const revenueChange = previousRevenue > 0 
+        ? ((revenue - previousRevenue) / previousRevenue) * 100 
+        : 0;
+      
+      // Build category data
+      const categoryCounts = new Map<string, number>();
+      const categoryContactPercentage = new Map<string, number>();
+      const categoryRevenue = new Map<string, number>();
+      
+      services.forEach(service => {
+        // Get normalized category name
+        const category = service.category ? formatCategoryName(service.category) : "Other";
+        
+        // Count services per category
+        categoryCounts.set(category, (categoryCounts.get(category) || 0) + 1);
+        
+        // Set revenue per category
+        if (serviceRevenueMap.has(service.id)) {
+          categoryRevenue.set(
+            category,
+            (categoryRevenue.get(category) || 0) + (serviceRevenueMap.get(service.id) || 0)
+          );
+        }
+      });
+      
+      // Calculate total conversations per service
+      const serviceContactsMap = new Map<string, number>();
+      let contactedServices = 0;
+      
+      conversationsSnap.docs.forEach((doc) => {
+        const data = doc.data() as ConversationData;
+        if (data.serviceId) {
+          serviceContactsMap.set(data.serviceId, (serviceContactsMap.get(data.serviceId) || 0) + 1);
+          contactedServices++;
+        }
+      });
+      
+      // Calculate percentage of services with contacts
+      const serviceContactPercentage = totalServices > 0 
+        ? (contactedServices / totalServices) * 100 
+        : 0;
+      
+      // Calculate contacts percentage per category
+      services.forEach(service => {
+        const category = service.category ? formatCategoryName(service.category) : "Other";
+        
+        // Count contacts per category 
+        if (serviceContactsMap.has(service.id)) {
+          categoryContactPercentage.set(
+            category,
+            (categoryContactPercentage.get(category) || 0) + (serviceContactsMap.get(service.id) || 0)
+          );
+        }
+      });
+      
+      // Consolidate category data for display
+      const newCategoryData: CategoryData[] = [];
+      
+      categoryCounts.forEach((count, category) => {
+        newCategoryData.push({
+          name: category,
+          value: count,
+          contactPercentage: Math.round((categoryContactPercentage.get(category) || 0) / uniqueProvidersCount * 100) || 0,
+          revenue: categoryRevenue.get(category) || 0
+        });
+      });
+      
+      // Sort by value in descending order
+      newCategoryData.sort((a, b) => b.value - a.value);
+      
+      setCategoryData(newCategoryData);
+      
+      // Timeline data calculation
+      const endDate = new Date();
+      const periodCount = timeframe === "year" ? 12 : timeframe === "month" ? 30 : 7;
+      const timelineData: TimelineData[] = [];
+      
+      for (let i = 0; i < periodCount; i++) {
+        const startDate = new Date();
+        let label = "";
+        
+        if (timeframe === "year") {
+          // For yearly view, go back by months
+          startDate.setMonth(endDate.getMonth() - (periodCount - i - 1));
+          startDate.setDate(1);
+          label = startDate.toLocaleDateString('en-US', { month: 'short' });
+        } else if (timeframe === "month") {
+          // For monthly view, go back by days
+          startDate.setDate(endDate.getDate() - (periodCount - i - 1));
+          label = startDate.getDate().toString();
+        } else {
+          // For weekly view, go back by days and use day name
+          startDate.setDate(endDate.getDate() - (periodCount - i - 1));
+          label = startDate.toLocaleDateString('en-US', { weekday: 'short' });
+        }
+        
+        // Create entry with empty counts
+        timelineData.push({
+          date: label,
+          contacts: 0,
+          transactions: 0
+        });
+      }
+      
+      // Count conversations per time period
+      conversationsSnap.docs.forEach((doc) => {
+        const data = doc.data() as ConversationData;
+        if (data.updatedAt) {
+          const date = data.updatedAt.toDate ? data.updatedAt.toDate() : new Date(data.updatedAt);
+          let index = -1;
+          
+          if (timeframe === "year") {
+            // Find matching month
+            const month = date.toLocaleDateString('en-US', { month: 'short' });
+            index = timelineData.findIndex(item => item.date === month);
+          } else if (timeframe === "month") {
+            // Find matching day
+            const day = date.getDate().toString();
+            index = timelineData.findIndex(item => item.date === day);
+          } else {
+            // Find matching weekday
+            const weekday = date.toLocaleDateString('en-US', { weekday: 'short' });
+            index = timelineData.findIndex(item => item.date === weekday);
+          }
+          
+          if (index !== -1) {
+            timelineData[index].contacts++;
+          }
+        }
+      });
+      
+      // Count transactions per time period
+      transactionsSnap.docs.forEach((doc) => {
+        const data = doc.data() as TransactionData;
+        if (data.createdAt) {
+          const date = data.createdAt.toDate ? data.createdAt.toDate() : new Date(data.createdAt);
+          let index = -1;
+          
+          if (timeframe === "year") {
+            // Find matching month
+            const month = date.toLocaleDateString('en-US', { month: 'short' });
+            index = timelineData.findIndex(item => item.date === month);
+          } else if (timeframe === "month") {
+            // Find matching day
+            const day = date.getDate().toString();
+            index = timelineData.findIndex(item => item.date === day);
+          } else {
+            // Find matching weekday
+            const weekday = date.toLocaleDateString('en-US', { weekday: 'short' });
+            index = timelineData.findIndex(item => item.date === weekday);
+          }
+          
+          if (index !== -1) {
+            timelineData[index].transactions++;
+          }
+        }
+      });
+      
+      setTimelineData(timelineData);
+
+      // Calculate transaction change percentage
+      const transactionsChange = previousTransactionsSnap.size > 0 
+        ? ((transactionsSnap.size - previousTransactionsSnap.size) / previousTransactionsSnap.size) * 100 
+        : 0;
+
+      // Update state with all dashboard data
+      setStats({
+        contacts: uniqueProvidersCount,
+        contactsChange: 0, // Calculate this similarly if needed
+        transactions: transactionsSnap.size,
+        transactionsChange: Math.round(transactionsChange),
+        rating: averageRating,
+        ratingChange: Math.round(ratingChange),
+        revenue: revenue.toLocaleString(),
+        revenueChange: Math.round(revenueChange),
+        serviceContactPercentage: Math.round(serviceContactPercentage),
+        totalServices,
+        contactedServices: uniqueProvidersCount
+      });
+      
+      setIsLoading(false);
+    } catch (error) {
+      console.error("Error processing dashboard data:", error);
+      setIsLoading(false);
+    }
+  };
 
   // Function to format currency with peso sign
   const formatCurrency = (value: string | number) => {

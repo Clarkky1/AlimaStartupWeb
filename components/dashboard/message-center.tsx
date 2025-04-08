@@ -1153,8 +1153,8 @@ export function MessageCenter() {
       const notificationData = {
         userId: message.senderId,
         type: "payment_confirmed_rating", // Special type to trigger rating dialog
-        title: "Payment Confirmed - Rate Service",
-        description: `Your payment of ₱${paymentAmount} for ${serviceTitle} has been confirmed. Please rate your experience.`,
+        title: `Payment Confirmed: ${serviceTitle} - ₱${typeof paymentAmount === 'number' ? paymentAmount.toLocaleString() : paymentAmount}`,
+        description: `Your payment of ₱${typeof paymentAmount === 'number' ? paymentAmount.toLocaleString() : paymentAmount} for ${serviceTitle} has been confirmed. Please rate your experience.`,
         timestamp: serverTimestamp(),
         read: false,
         data: {
@@ -2398,7 +2398,9 @@ export function MessageCenter() {
                                                   onClick={() => handleConfirmPayment(message)}
                                                 >
                                                   <CheckCircle className="mr-1 h-3 w-3" />
-                                                  Confirm Payment (₱{message.paymentAmount})
+                                                  Confirm Payment (₱{typeof message.paymentAmount === 'number' 
+                                                    ? message.paymentAmount.toLocaleString() 
+                                                    : message.paymentAmount})
                                                 </Button>
                                               </div>
                                             )}
@@ -2407,7 +2409,9 @@ export function MessageCenter() {
                                             {message.paymentConfirmed && (
                                               <div className="mt-2 flex items-center text-xs text-green-600">
                                                 <CheckCircle className="mr-1 h-3 w-3" />
-                                                Payment Confirmed (₱{message.paymentAmount})
+                                                Payment Confirmed (₱{typeof message.paymentAmount === 'number' 
+                                                  ? message.paymentAmount.toLocaleString() 
+                                                  : message.paymentAmount})
                                               </div>
                                             )}
                                           </div>

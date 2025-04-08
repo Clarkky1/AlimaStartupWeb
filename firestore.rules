@@ -193,6 +193,11 @@ service cloud.firestore {
         (resource.data.userId == request.auth.uid || 
          resource.data.providerId == request.auth.uid);
       
+      // Allow reading all transactions for dashboard (query-level rule)
+      allow list: if isAuthenticated() &&
+         (request.query.limit <= 100 && 
+         (request.query.filters.fieldPaths.hasAny(['providerId']) || request.query.filters.fieldPaths.hasAny(['userId'])));
+      
       // Users can create transactions for existing services
       allow create: if isAuthenticated() && 
         exists(/databases/$(database)/documents/services/$(request.resource.data.serviceId));

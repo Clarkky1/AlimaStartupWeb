@@ -102,6 +102,7 @@ interface Category {
 }
 
 const globalCategories: Category[] = [
+  { name: "All Categories", value: "all" },
   { name: "Development", icon: Code, value: "development" },
   { name: "Design", icon: PenTool, value: "design" },
   { name: "Marketing", icon: BarChart, value: "marketing" },

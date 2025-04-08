@@ -11,8 +11,12 @@ import AOS from 'aos'
 export function ClientLayout({ children }: { children: React.ReactNode }) {
   const pathname = usePathname()
   
-  // Check if current path is a dashboard path
-  const isDashboardPage = pathname?.startsWith('/dashboard')
+  // Check if current path is a dashboard, login, or signup path
+  const shouldHideNavAndFooter = pathname?.startsWith('/dashboard') || 
+                                pathname === '/login' || 
+                                pathname === '/signup' ||
+                                pathname === '/signin' ||
+                                pathname === '/register'
 
   // Initialize AOS with custom settings
   useEffect(() => {
@@ -52,11 +56,11 @@ export function ClientLayout({ children }: { children: React.ReactNode }) {
   return (
     <>
       <HydrationFix />
-      {!isDashboardPage && <Navbar />}
-      <main className={`min-h-screen ${isDashboardPage ? 'dashboard-layout' : ''}`}>
+      {!shouldHideNavAndFooter && <Navbar />}
+      <main className={`min-h-screen ${pathname?.startsWith('/dashboard') ? 'dashboard-layout' : ''}`}>
         {children}
       </main>
-      {!isDashboardPage && <Footer />}
+      {!shouldHideNavAndFooter && <Footer />}
     </>
   )
 } 

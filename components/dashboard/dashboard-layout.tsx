@@ -191,7 +191,7 @@ export function DashboardLayout({ children }: DashboardLayoutProps) {
                       <p className="text-xs text-muted-foreground">{user?.email}</p>
                     </div>
                   </div>
-                  <Button variant="outline" className="w-full" onClick={handleSignOut}>
+                  <Button variant="destructive" className="w-full" onClick={handleSignOut}>
                     <LogOut className="mr-2 h-4 w-4" />
                     Sign Out
                   </Button>
@@ -219,7 +219,7 @@ export function DashboardLayout({ children }: DashboardLayoutProps) {
               <User className="mr-2 h-4 w-4" />
               Profile
             </DropdownMenuItem>
-            <DropdownMenuItem onClick={handleSignOut}>
+            <DropdownMenuItem onClick={handleSignOut} className="text-red-500 hover:bg-red-50 hover:text-red-600">
               <LogOut className="mr-2 h-4 w-4" />
               <span>Sign out</span>
             </DropdownMenuItem>
@@ -272,7 +272,7 @@ export function DashboardLayout({ children }: DashboardLayoutProps) {
               <p className="text-xs text-muted-foreground">{user?.email}</p>
             </div>
           </div>
-          <Button variant="outline" className="w-full" onClick={handleSignOut}>
+          <Button variant="destructive" className="w-full" onClick={handleSignOut}>
             <LogOut className="mr-2 h-4 w-4" />
             Sign Out
           </Button>

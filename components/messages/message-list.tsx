@@ -119,10 +119,6 @@ export default function MessageList({ conversations, userId, emptyMessage = "No 
                     </div>
                   )}
                 </div>
-                
-                {isUnread && !conversation.unread?.[userId] && (
-                  <Circle className="h-2 w-2 absolute top-4 right-4 fill-primary text-primary" />
-                )}
               </div>
             </Link>
           )

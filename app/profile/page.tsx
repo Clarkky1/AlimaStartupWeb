@@ -12,36 +12,13 @@ import { Label } from "@/components/ui/label"
 import { Textarea } from "@/components/ui/textarea"
 import { initializeFirebase } from "@/app/lib/firebase"
 import { ArrowLeft } from "lucide-react"
-
-// Utility functions moved outside the component
-const handleProfileImageUpload = async (file: File, userId: string): Promise<string> => {
-  try {
-    const formData = new FormData()
-    formData.append("file", file)
-    formData.append("folder", `users/${userId}`)
-
-    const response = await fetch("/api/upload", {
-      method: "POST",
-      body: formData,
-    })
-
-    if (!response.ok) {
-      throw new Error("Upload failed")
-    }
-
-    const data = await response.json()
-    return data.secure_url // Make sure the property name matches what your API returns
-  } catch (error) {
-    console.error("Error uploading profile image:", error)
-    throw error
-  }
-}
+import { ImageUpload } from "@/components/ui/image-upload"
 
 export default function ProfilePage() {
   const { user, loading, setUser } = useAuth()
   const router = useRouter()
   const { toast } = useToast()
-  const [profileImageFile, setProfileImageFile] = useState<File | null>(null)
+  const [avatar, setAvatar] = useState<string>("")
   const [isUpdating, setIsUpdating] = useState(false)
   
   // Form state
@@ -64,8 +41,84 @@ export default function ProfilePage() {
       setBio(user.bio || "")
       setPhone(user.phone || "")
       setLocation(user.location || "")
+      setAvatar(user.profilePicture || user.photoURL || "")
     }
   }, [user])
+
+  // Handle avatar upload complete
+  const handleAvatarUpload = async (imageUrl: string) => {
+    // Add cache-busting parameter to the avatar URL
+    const uniqueTimestamp = Date.now();
+    const cacheBustedUrl = imageUrl.includes('?') 
+      ? `${imageUrl}&t=${uniqueTimestamp}&forceRefresh=true` 
+      : `${imageUrl}?t=${uniqueTimestamp}&forceRefresh=true`;
+    
+    setAvatar(cacheBustedUrl)
+    
+    // Immediately update the profile picture in Firestore
+    if (imageUrl && user) {
+      try {
+        const { db } = await initializeFirebase()
+        if (!db) {
+          console.error("Failed to initialize Firebase")
+          return;
+        }
+
+        const { doc, updateDoc } = await import("firebase/firestore")
+        
+        // Only update the profile picture fields - store original URL in DB
+        const updateData = {
+          profilePicture: imageUrl, // Store clean URL without cache-busting
+          updatedAt: new Date().toISOString(),
+        }
+
+        // Update user document in Firestore (without cache parameters)
+        await updateDoc(doc(db, "users", user.uid), updateData)
+        
+        // Update local state with cache-busted version
+        setUser({
+          ...user,
+          ...updateData,
+          profilePicture: cacheBustedUrl, // Use cache-busted version for the UI
+        })
+        
+        // Force reload all images in the DOM with this source
+        if (typeof window !== 'undefined') {
+          const allImages = document.querySelectorAll('img');
+          allImages.forEach(img => {
+            if (img instanceof HTMLImageElement) {
+              const imgSrc = img.src;
+              // Check if this is likely a profile image for this user
+              if (imgSrc.includes(user.uid) || 
+                  imgSrc.includes('avatar') || 
+                  imgSrc.includes('profile') ||
+                  (imgSrc.includes('cloudinary') && imgSrc.includes(imageUrl.split('/').pop()?.split('.')[0] || ''))) {
+                
+                // Force a reload by setting a new src with cache busting
+                const newSrc = imgSrc.includes('?') 
+                  ? `${imgSrc.split('?')[0]}?t=${uniqueTimestamp}&nocache=true` 
+                  : `${imgSrc}?t=${uniqueTimestamp}&nocache=true`;
+                
+                img.src = newSrc;
+              }
+            }
+          });
+        }
+        
+        toast({
+          title: "Profile picture updated",
+          description: "Your profile picture has been updated successfully",
+        });
+      } catch (error) {
+        console.error("Error updating profile picture:", error);
+        toast({
+          title: "Error updating profile picture",
+          description: "There was an error updating your profile picture",
+          variant: "destructive"
+        });
+      }
+    }
+  }
 
   const updateProfile = async () => {
     if (!user) {
@@ -96,21 +149,35 @@ export default function ProfilePage() {
         updatedAt: new Date().toISOString()
       }
 
-      // Upload profile image if provided
-      if (profileImageFile) {
-        const imageUrl = await handleProfileImageUpload(profileImageFile, user.uid)
-        updateData.profilePicture = imageUrl
+      // Include profile picture if available - strip any cache-busting parameters first
+      if (avatar) {
+        // Remove any cache-busting query parameters before storing in DB
+        const cleanAvatarUrl = avatar.includes('?') ? avatar.split('?')[0] : avatar;
+        updateData.profilePicture = cleanAvatarUrl;
       }
 
       // Update the user document in Firestore
       const userDocRef = doc(db, "users", user.uid)
       await updateDoc(userDocRef, updateData)
 
-      // Update local user state
+      // Add cache-busting for UI display
+      const uniqueTimestamp = Date.now();
+      if (avatar) {
+        updateData.profilePicture = avatar.includes('?')
+          ? `${avatar.split('?')[0]}?t=${uniqueTimestamp}`
+          : `${avatar}?t=${uniqueTimestamp}`;
+      }
+      
+      // Update local user state with cache-busted version for UI
       setUser({
         ...user,
         ...updateData
       })
+      
+      // Also refresh the avatar state with cache-busting
+      if (avatar) {
+        setAvatar(updateData.profilePicture);
+      }
 
       toast({
         title: "Profile updated",
@@ -157,29 +224,28 @@ export default function ProfilePage() {
         <CardContent className="space-y-6">
           <div className="flex flex-col items-center space-y-4">
             <Avatar className="h-24 w-24">
-              <AvatarImage src={user.photoURL || user.profilePicture || ""} alt={user.displayName || "User"} />
+              <AvatarImage 
+                key={`avatar-${Date.now()}-${Math.random().toString(36).substring(2, 9)}`}
+                src={`${avatar || ""}${avatar && avatar.includes('?') ? '&' : '?'}forceReload=${Date.now()}`}
+                alt={user.displayName || "User"} 
+                onError={(e) => {
+                  const imgElement = e.currentTarget;
+                  imgElement.style.display = 'none';
+                  console.error("Avatar image failed to load:", avatar);
+                }}
+              />
               <AvatarFallback>{user.displayName?.[0] || "U"}</AvatarFallback>
             </Avatar>
             
-            <div>
-              <input 
-                type="file" 
-                id="profile-image" 
-                className="hidden" 
-                accept="image/*"
-                onChange={(e) => {
-                  const file = e.target.files?.[0]
-                  if (file) {
-                    setProfileImageFile(file)
-                  }
-                }}
-              />
-              <Button 
-                variant="outline" 
-                onClick={() => document.getElementById('profile-image')?.click()}
-              >
-                Change Profile Picture
-              </Button>
+            <div className="w-full flex justify-center">
+              <div className="max-w-[250px]">
+                <ImageUpload
+                  onUploadComplete={handleAvatarUpload}
+                  defaultImage={avatar}
+                  folder={`users/${user?.uid || "unknown"}`}
+                  hidePreview={true}
+                />
+              </div>
             </div>
           </div>
 

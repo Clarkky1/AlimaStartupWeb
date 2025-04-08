@@ -287,11 +287,16 @@ export function ProfileSettings() {
                     </div>
                   )}
                 </div>
-                <ImageUpload
-                  onUploadComplete={handleAvatarUpload}
-                  defaultImage={avatar || defaultAvatar}
-                  folder={`users/${user?.uid || "unknown"}`}
-                />
+                <div className="flex justify-center w-full">
+                  <div className="max-w-[250px] w-full">
+                    <ImageUpload
+                      onUploadComplete={handleAvatarUpload}
+                      defaultImage={avatar || defaultAvatar}
+                      folder={`users/${user?.uid || "unknown"}`}
+                      hidePreview={true}
+                    />
+                  </div>
+                </div>
                 <p className="text-sm text-muted-foreground text-center max-w-[200px]">
                   Recommended: Square JPG, PNG, or GIF, at least 300x300px.
                 </p>

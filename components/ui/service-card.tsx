@@ -67,8 +67,10 @@ export function ServiceCard({
 
   // Handle service image error
   const handleServiceImageError = (e: React.SyntheticEvent<HTMLImageElement>) => {
-    e.currentTarget.src = "/placeholder.jpg"
-    e.currentTarget.onerror = null // Prevent infinite loop
+    console.log(`Image failed to load: ${image}`);
+    // Use a single reliable fallback and prevent further errors
+    e.currentTarget.src = "/placeholder.jpg";
+    e.currentTarget.onerror = null; // Prevent infinite loop
   }
 
   return (

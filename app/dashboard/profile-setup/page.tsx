@@ -279,11 +279,16 @@ export default function ProfileSetupPage() {
                   
                   <div className="w-full md:w-1/3 space-y-2">
                     <Label>Profile Picture</Label>
-                    <ImageUpload
-                      onUploadComplete={handleProfilePictureUpload}
-                      defaultImage={profileData.profilePicture}
-                      folder={`profile-pictures/${user?.uid || "unknown"}`}
-                    />
+                    <div className="flex justify-center w-full">
+                      <div className="max-w-[250px] w-full">
+                        <ImageUpload
+                          onUploadComplete={handleProfilePictureUpload}
+                          defaultImage={profileData.profilePicture}
+                          folder={`profile-pictures/${user?.uid || "unknown"}`}
+                          hidePreview={true}
+                        />
+                      </div>
+                    </div>
                     <p className="text-xs text-muted-foreground">
                       Upload a professional profile picture to increase client trust
                     </p>

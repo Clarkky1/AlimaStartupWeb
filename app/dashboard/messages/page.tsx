@@ -106,6 +106,14 @@ export default function MessagesPage() {
     return true
   })
 
+  // Check if there are any unread messages
+  const hasUnreadMessages = user?.uid 
+    ? filteredConversations.some(conv => {
+        const unreadCount = conv.unread?.[user.uid];
+        return typeof unreadCount === 'number' && unreadCount > 0;
+      })
+    : false;
+
   if (loading) {
     return (
       <DashboardLayout>
@@ -129,9 +137,6 @@ export default function MessagesPage() {
                   disabled
                 />
               </div>
-              <Button variant="outline" size="icon" className="h-9 w-9 flex-shrink-0" disabled>
-                <SlidersHorizontal className="h-4 w-4" />
-              </Button>
             </div>
           </div>
 
@@ -188,9 +193,6 @@ export default function MessagesPage() {
                 onChange={(e) => setSearchQuery(e.target.value)}
               />
             </div>
-            <Button variant="outline" size="icon" className="h-9 w-9 flex-shrink-0">
-              <SlidersHorizontal className="h-4 w-4" />
-            </Button>
           </div>
         </div>
 
@@ -199,7 +201,9 @@ export default function MessagesPage() {
             <TabsList className="grid w-full grid-cols-2 h-10 p-1 mb-2">
               <TabsTrigger value="all" className="text-xs sm:text-sm flex items-center justify-center">All Messages</TabsTrigger>
               <TabsTrigger value="unread" className="text-xs sm:text-sm flex items-center justify-center">
-                <Circle className="mr-1 h-2 w-2 fill-current text-red-500" />
+                {hasUnreadMessages && (
+                  <Circle className="mr-1 h-2 w-2 fill-current text-red-500" />
+                )}
                 Unread
               </TabsTrigger>
             </TabsList>

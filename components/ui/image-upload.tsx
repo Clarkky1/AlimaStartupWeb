@@ -15,6 +15,7 @@ interface ImageUploadProps {
   defaultImage?: string
   folder?: string
   className?: string
+  hidePreview?: boolean
 }
 
 export function ImageUpload({
@@ -22,6 +23,7 @@ export function ImageUpload({
   defaultImage = "",
   folder = "uploads",
   className = "",
+  hidePreview = false,
 }: ImageUploadProps) {
   const [imagePreview, setImagePreview] = useState<string>(defaultImage)
   const [uploading, setUploading] = useState<boolean>(false)
@@ -116,32 +118,7 @@ export function ImageUpload({
 
   return (
     <div className={`space-y-4 ${className}`}>
-      {imagePreview ? (
-        <div className="relative">
-          <img 
-            src={imagePreview} 
-            alt="Preview" 
-            className="h-40 w-full rounded-md object-cover"
-            onError={handleImageError}
-          />
-          <Button
-            type="button"
-            variant="destructive"
-            size="icon"
-            className="absolute right-2 top-2"
-            onClick={clearImage}
-          >
-            <X className="h-4 w-4" />
-          </Button>
-        </div>
-      ) : (
-        <div className="flex h-40 flex-col items-center justify-center rounded-md border border-dashed border-gray-300 bg-gray-50 p-4">
-          <Image className="mb-2 h-8 w-8 text-gray-400" />
-          <p className="text-sm text-gray-500">No image selected</p>
-        </div>
-      )}
-
-      <div className="flex items-center gap-2">
+      <div className="flex justify-center w-full">
         <Input
           ref={fileInputRef}
           type="file"
@@ -160,6 +137,26 @@ export function ImageUpload({
           {uploading ? "Uploading..." : "Upload Image"}
         </Button>
       </div>
+
+      {imagePreview && !hidePreview && (
+        <div className="relative">
+          <img 
+            src={imagePreview} 
+            alt="Preview" 
+            className="h-40 w-full rounded-md object-cover"
+            onError={handleImageError}
+          />
+          <Button
+            type="button"
+            variant="destructive"
+            size="icon"
+            className="absolute right-2 top-2"
+            onClick={clearImage}
+          >
+            <X className="h-4 w-4" />
+          </Button>
+        </div>
+      )}
     </div>
   )
 }

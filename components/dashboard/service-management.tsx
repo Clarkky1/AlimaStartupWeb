@@ -431,8 +431,15 @@ export function ServiceManagement() {
   }
 
   // Format price with peso sign
-  const formatPrice = (price: number | string): string => {
-    return `₱${Number(price).toLocaleString('en-PH')}`
+  const formatPrice = (price: number | string) => {
+    // First ensure we have a number
+    const numValue = typeof price === 'string' ? parseFloat(price.replace(/,/g, '')) : price;
+    
+    // Check if it's a valid number
+    if (isNaN(numValue)) return '₱0';
+    
+    // Format with thousand separators
+    return `₱${numValue.toLocaleString('en-PH')}`;
   }
 
   return (

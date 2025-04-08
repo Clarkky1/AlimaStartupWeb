@@ -6,7 +6,7 @@ import { Footer } from "@/components/footer"
 import { HydrationFix } from "@/components/ui/hydration-fix"
 import { usePathname } from "next/navigation"
 import AOS from 'aos'
-import { NavigationHandler } from "@/app/components/navigation-handler"
+import { NavigationHandler } from "@/components/navigation-handler"
 
 // This is a client component that wraps children
 export function ClientLayout({ children }: { children: React.ReactNode }) {
@@ -20,6 +20,7 @@ export function ClientLayout({ children }: { children: React.ReactNode }) {
                           pathname === '/signin' ||
                           pathname === '/register' ||
                           pathname === '/notifications' ||
+                          pathname === '/profile' ||
                           pathname?.startsWith('/message');
                           
   // Hide navbar only on dashboard, login, signup, and notifications pages

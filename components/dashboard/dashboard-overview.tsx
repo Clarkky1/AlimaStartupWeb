@@ -492,7 +492,11 @@ export function DashboardOverview() {
 
   // Function to format currency with peso sign
   const formatCurrency = (value: string | number) => {
-    return `₱${value}`;
+    // First ensure we have a number to work with
+    const numericValue = typeof value === 'string' ? parseFloat(value.replace(/,/g, '')) : value;
+    
+    // Format with thousand separators
+    return `₱${numericValue.toLocaleString()}`;
   };
 
   if (error) {

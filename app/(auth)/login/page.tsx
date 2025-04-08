@@ -21,6 +21,7 @@ export default function LoginPage() {
   const [forgotPasswordEmail, setForgotPasswordEmail] = useState("")
   const [resetLoading, setResetLoading] = useState(false)
   const [rememberMe, setRememberMe] = useState(false)
+  const [errorMsg, setErrorMsg] = useState<string | null>(null)
   const { toast } = useToast()
   const router = useRouter()
   const searchParams = useSearchParams()
@@ -75,11 +76,51 @@ export default function LoginPage() {
         router.push("/")
       }
     } catch (error: any) {
-      toast({
-        title: "Login failed",
-        description: error.message,
-        variant: "destructive",
-      })
+      console.error("Login error:", error);
+      
+      // Reset any previous error message
+      setErrorMsg(null);
+      
+      // Show more specific error messages based on Firebase error codes
+      let errorMessage = "An error occurred during login. Please try again.";
+      
+      // Handle specific error codes with improved detection
+      const errorCode = error.code || '';
+      console.log("Firebase error code:", errorCode);
+      
+      if (errorCode.includes('user-not-found')) {
+        errorMessage = "Account does not exist. Please create an account first.";
+      } else if (
+        errorCode.includes('wrong-password') || 
+        errorCode.includes('invalid-credential') || 
+        errorCode.includes('invalid-login-credentials')
+      ) {
+        errorMessage = "Email or password is incorrect. Please try again.";
+      } else if (errorCode.includes('invalid-email')) {
+        errorMessage = "Invalid email format. Please check your email.";
+      } else if (errorCode.includes('too-many-requests')) {
+        errorMessage = "Too many failed login attempts. Please try again later.";
+      } else if (errorCode.includes('user-disabled')) {
+        errorMessage = "This account has been disabled. Please contact support.";
+      } else {
+        // For any other error, include the original error message for debugging
+        errorMessage = `Login failed: ${error.message || "Unknown error"}`;
+      }
+      
+      // Set the error message state for direct display in UI
+      setErrorMsg(errorMessage);
+      
+      // Add a delay to ensure toast is visible
+      setTimeout(() => {
+        toast({
+          title: "Login failed",
+          description: errorMessage,
+          variant: "destructive",
+          duration: 5000, // Show toast for 5 seconds
+        });
+      }, 100);
+      
+      console.log("Showing toast with message:", errorMessage);
     } finally {
       setLoading(false)
     }
@@ -136,12 +177,12 @@ export default function LoginPage() {
         <Button 
           variant="ghost" 
           onClick={() => router.push('/')}
-          className="flex items-center text-white bg-black/30 hover:bg-black/40 backdrop-blur-sm rounded-full p-2"
+          className="flex items-center text-white bg-black/30 hover:bg-black/40 backdrop-blur-sm rounded-full px-4 py-2 min-w-24"
         >
           <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="h-5 w-5">
             <path d="m15 18-6-6 6-6"/>
           </svg>
-          <span className="ml-1">Back</span>
+          <span className="ml-2">Back</span>
         </Button>
       </div>
 
@@ -184,13 +225,6 @@ export default function LoginPage() {
                           <Label htmlFor="password" className="text-white text-sm">
                             Password
                           </Label>
-                          <button
-                            type="button"
-                            onClick={() => setShowForgotPassword(true)}
-                            className="text-xs text-gray-300 hover:underline"
-                          >
-                            Forgot password?
-                          </button>
                         </div>
                         <Input
                           id="password"
@@ -201,24 +235,41 @@ export default function LoginPage() {
                           required
                           className="h-9 sm:h-10 w-full rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-ring focus:ring-offset-2"
                         />
-                      </div>
-
-                      <div className="flex items-center justify-between">
-                        <div className="flex-1"></div> {/* Empty div to push remember me to the right */}
-                        <div className="flex items-center space-x-2">
-                          <Checkbox 
-                            id="remember" 
-                            checked={rememberMe}
-                            onCheckedChange={(checked) => setRememberMe(checked === true)}
-                          />
-                          <label
-                            htmlFor="remember"
-                            className="text-sm font-medium leading-none text-white peer-disabled:cursor-not-allowed peer-disabled:opacity-70"
+                        
+                        {/* Move the Forgot password and Remember me on the same line */}
+                        <div className="flex items-center justify-between mt-1">
+                          {/* Remember me on the left */}
+                          <div className="flex items-center space-x-2">
+                            <Checkbox 
+                              id="remember" 
+                              checked={rememberMe}
+                              onCheckedChange={(checked) => setRememberMe(checked === true)}
+                            />
+                            <label
+                              htmlFor="remember"
+                              className="text-sm font-medium leading-none text-white peer-disabled:cursor-not-allowed peer-disabled:opacity-70"
+                            >
+                              Remember me
+                            </label>
+                          </div>
+                          
+                          {/* Forgot password on the right */}
+                          <button
+                            type="button"
+                            onClick={() => setShowForgotPassword(true)}
+                            className="text-xs text-gray-300 hover:underline"
                           >
-                            Remember me
-                          </label>
+                            Forgot password?
+                          </button>
                         </div>
                       </div>
+
+                      {/* Error message display */}
+                      {errorMsg && (
+                        <div className="p-3 rounded-md bg-red-500/10 border border-red-500/50 text-red-600">
+                          {errorMsg}
+                        </div>
+                      )}
 
                       {/* Blue Button with White Text */}
                       <Button

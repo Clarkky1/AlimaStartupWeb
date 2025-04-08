@@ -5,16 +5,48 @@ import { GlobalServices } from "@/components/home/featured-services"
 import { TopProviders } from "@/components/popular/top-providers"
 import { buttonVariants } from "@/components/ui/button"
 import Link from "next/link"
-import { Suspense } from "react"
+import { Suspense, useEffect, useState, useCallback } from "react"
 import { CheckCircle, Search, MessageSquare, CreditCard, Plus, Circle } from "lucide-react"
 import { Button } from "@/components/ui/button"
 import { useStatistics } from "@/app/hooks/useStatistics"
 import { useNetworkStatus } from "@/app/context/network-status-context";
+import { PlaceholderImage } from "@/components/ui/placeholder-image";
+import { usePathname } from "next/navigation";
 
 export default function Home() {
   const { isOnline } = useNetworkStatus();
   const placeholderImg = "/placeholder.jpg";
-  const { userCount, serviceCount, providerCount, isLoading } = useStatistics()
+  const [loadKey, setLoadKey] = useState(Date.now());
+  const pathname = usePathname();
+  
+  // Reset the component on each visit by forcing a complete remount
+  useEffect(() => {
+    // Scroll to top on each mount of this component
+    window.scrollTo(0, 0);
+    
+    // Check if this is a navigation back to the home page
+    if (typeof window !== 'undefined') {
+      // Get the navigation state from sessionStorage
+      const hasBeenLoaded = sessionStorage.getItem('homeLoaded');
+      
+      // If the page hasn't been loaded before in this session,
+      // or it's been more than 5 minutes, trigger a refresh
+      const lastLoadTime = parseInt(sessionStorage.getItem('homeLoadTime') || '0');
+      const fiveMinutesAgo = Date.now() - 5 * 60 * 1000;
+      
+      if (!hasBeenLoaded || lastLoadTime < fiveMinutesAgo) {
+        // Set home as loaded and update the load time
+        sessionStorage.setItem('homeLoaded', 'true');
+        sessionStorage.setItem('homeLoadTime', Date.now().toString());
+        
+        // Set a new key to force remount
+        setLoadKey(Date.now());
+      }
+    }
+  }, []); // Only run on initial mount
+  
+  // Fetch statistics with the loadKey to force refresh
+  const { userCount, serviceCount, providerCount, isLoading } = useStatistics();
   
   // Format numbers with K suffix (e.g., 15300 -> 15.3K)
   const formatStatNumber = (num: number): string => {
@@ -25,7 +57,7 @@ export default function Home() {
   }
 
   return (
-    <div className="flex min-h-screen flex-col bg-white text-black dark:bg-black dark:text-white relative overflow-hidden">
+    <div className="flex min-h-screen flex-col bg-white text-black dark:bg-black dark:text-white relative overflow-hidden" key={loadKey}>
       {/* Background elements */}
       <div className="absolute top-0 left-0 w-full h-full pointer-events-none overflow-hidden">
         {/* Flowing curved lines background */}
@@ -330,7 +362,7 @@ export default function Home() {
               
               <div className="relative" data-aos="fade-up" data-aos-delay="200">
                 <Suspense fallback={<div className="h-[300px] w-full bg-neutral-100 dark:bg-neutral-900 rounded-3xl" />}>
-                  <TopProviders />
+                  <TopProviders key={`providers-${loadKey}`} />
                 </Suspense>
               </div>
             </div>
@@ -348,11 +380,12 @@ export default function Home() {
                 <div className="bg-white dark:bg-neutral-900 p-6 rounded-xl shadow-sm border border-neutral-200 dark:border-neutral-800" data-aos="fade-up" data-aos-delay="100">
                   <div className="flex items-center mb-4">
                     <div className="h-12 w-12 rounded-full bg-neutral-200 dark:bg-neutral-700 mr-4 overflow-hidden">
-                      <img 
-                        // Use placeholder if offline, original src if online
-                        src={isOnline ? "/testimonial-1.jpg" : placeholderImg} 
+                      <PlaceholderImage
+                        src="/testimonial-1.jpg"
                         alt="User" 
-                        className="h-full w-full object-cover" 
+                        width={48}
+                        height={48}
+                        className="h-full w-full object-cover"
                       />
                     </div>
                     <div>
@@ -374,10 +407,12 @@ export default function Home() {
                 <div className="bg-white dark:bg-neutral-900 p-6 rounded-xl shadow-sm border border-neutral-200 dark:border-neutral-800" data-aos="fade-up" data-aos-delay="200">
                   <div className="flex items-center mb-4">
                     <div className="h-12 w-12 rounded-full bg-neutral-200 dark:bg-neutral-700 mr-4 overflow-hidden">
-                      <img 
-                        // Use placeholder if offline, original src if online
-                        src={isOnline ? "/testimonial-2.jpg" : placeholderImg} 
-                        alt="User" 
+                      <PlaceholderImage
+                        src="/testimonial-2.jpg"
+                        alt="User"
+                        width={48}
+                        height={48}
+                        className="h-full w-full object-cover"
                       />
                     </div>
                     <div>
@@ -399,10 +434,12 @@ export default function Home() {
                 <div className="bg-white dark:bg-neutral-900 p-6 rounded-xl shadow-sm border border-neutral-200 dark:border-neutral-800" data-aos="fade-up" data-aos-delay="300">
                   <div className="flex items-center mb-4">
                     <div className="h-12 w-12 rounded-full bg-neutral-200 dark:bg-neutral-700 mr-4 overflow-hidden">
-                      <img 
-                        // Use placeholder if offline, original src if online
-                        src={isOnline ? "/testimonial-3.jpg" : placeholderImg} 
-                        alt="User" 
+                      <PlaceholderImage
+                        src="/testimonial-3.jpg"
+                        alt="User"
+                        width={48}
+                        height={48}
+                        className="h-full w-full object-cover"
                       />
                     </div>
                     <div>
@@ -460,10 +497,11 @@ export default function Home() {
                   <div className="bg-white dark:bg-neutral-900 rounded-xl p-6 md:p-8 shadow-md border border-neutral-200 dark:border-neutral-800 w-full">
                     <div className="text-center mb-6">
                       <div className="relative mx-auto h-32 w-32 md:h-40 md:w-40 overflow-hidden rounded-full mb-4 md:mb-6">
-                        <img 
-                          // Use placeholder if offline, original src if online
-                          src={isOnline ? "/team/lead-founder.jpg" : placeholderImg} 
-                          alt="Eduardo Empelis Jr." 
+                        <PlaceholderImage
+                          src="/team/lead-founder.jpg"
+                          alt="Eduardo Empelis Jr."
+                          width={160}
+                          height={160}
                           className="h-full w-full object-cover"
                         />
                       </div>
@@ -496,10 +534,11 @@ export default function Home() {
                        data-aos="fade-up" data-aos-delay="150">
                     <div className="text-center mb-6">
                       <div className="relative mx-auto h-32 w-32 overflow-hidden rounded-full mb-4">
-                        <img 
-                          // Use placeholder if offline, original src if online
-                          src={isOnline ? "/team/founder.jpg" : placeholderImg} 
-                          alt="Kin Clark Perez" 
+                        <PlaceholderImage
+                          src="/team/founder.jpg"
+                          alt="Kin Clark Perez"
+                          width={128}
+                          height={128}
                           className="h-full w-full object-cover"
                         />
                       </div>
@@ -530,10 +569,11 @@ export default function Home() {
                        data-aos="fade-up" data-aos-delay="200">
                     <div className="text-center mb-6">
                       <div className="relative mx-auto h-32 w-32 overflow-hidden rounded-full mb-4">
-                        <img 
-                          // Use placeholder if offline, original src if online
-                          src={isOnline ? "/team/dev1.jpg" : placeholderImg} 
-                          alt="Kent Veloso" 
+                        <PlaceholderImage
+                          src="/team/dev1.jpg"
+                          alt="Kent Veloso"
+                          width={128}
+                          height={128}
                           className="h-full w-full object-cover"
                         />
                       </div>
@@ -557,10 +597,11 @@ export default function Home() {
                        data-aos="fade-up" data-aos-delay="250">
                     <div className="text-center mb-6">
                       <div className="relative mx-auto h-32 w-32 overflow-hidden rounded-full mb-4">
-                        <img 
-                          // Use placeholder if offline, original src if online
-                          src={isOnline ? "/team/design1.jpg" : placeholderImg} 
-                          alt="Kyle Florendo" 
+                        <PlaceholderImage
+                          src="/team/design1.jpg"
+                          alt="Kyle Florendo"
+                          width={128}
+                          height={128}
                           className="h-full w-full object-cover"
                         />
                       </div>
@@ -586,10 +627,11 @@ export default function Home() {
                        data-aos="fade-up" data-aos-delay="300">
                     <div className="text-center mb-6">
                       <div className="relative mx-auto h-32 w-32 overflow-hidden rounded-full mb-4">
-                        <img 
-                          // Use placeholder if offline, original src if online
-                          src={isOnline ? "/team/marketing.jpg" : placeholderImg} 
-                          alt="Alex Marketing" 
+                        <PlaceholderImage
+                          src="/team/marketing.jpg"
+                          alt="Alex Marketing"
+                          width={128}
+                          height={128}
                           className="h-full w-full object-cover"
                         />
                       </div>

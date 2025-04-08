@@ -6,6 +6,7 @@ import { Footer } from "@/components/footer"
 import { HydrationFix } from "@/components/ui/hydration-fix"
 import { usePathname } from "next/navigation"
 import AOS from 'aos'
+import { NavigationHandler } from "@/app/components/navigation-handler"
 
 // This is a client component that wraps children
 export function ClientLayout({ children }: { children: React.ReactNode }) {
@@ -64,13 +65,13 @@ export function ClientLayout({ children }: { children: React.ReactNode }) {
   }, []);
 
   return (
-    <>
+    <NavigationHandler>
       <HydrationFix />
       {!shouldHideNavbar && <Navbar />}
       <main className={`min-h-screen ${pathname?.startsWith('/dashboard') ? 'dashboard-layout' : ''}`}>
         {children}
       </main>
       {!shouldHideFooter && <Footer />}
-    </>
+    </NavigationHandler>
   )
 } 

@@ -15,6 +15,19 @@ const nextConfig = {
       },
     ];
   },
+  images: {
+    domains: ['firebasestorage.googleapis.com', 'placehold.co'],
+    remotePatterns: [
+      {
+        protocol: 'https',
+        hostname: 'firebasestorage.googleapis.com',
+      },
+      {
+        protocol: 'https',
+        hostname: 'placehold.co',
+      },
+    ],
+  },
 }
 
 module.exports = nextConfig

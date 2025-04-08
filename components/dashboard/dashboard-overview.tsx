@@ -107,8 +107,11 @@ export function DashboardOverview() {
         const firebase = await initializeFirebase();
         if (!firebase.db || !user?.uid) throw new Error("Failed to initialize database or user not authenticated");
 
+        console.log("Setting up listeners for user:", user.uid);
+        
         // Get user's conversations
         const conversationsRef = collection(firebase.db, "conversations");
+        console.log("Attempting to query conversations");
         const conversationsQuery = query(
           conversationsRef,
           where("participants", "array-contains", user.uid),
@@ -117,6 +120,7 @@ export function DashboardOverview() {
         
         // Set up real-time listener for conversations
         const conversationsUnsubscribe = onSnapshot(conversationsQuery, (conversationsSnap) => {
+          console.log("Conversations snapshot received, count:", conversationsSnap.size);
           const uniqueProviders = new Set(conversationsSnap.docs.map(doc => {
             const data = doc.data() as ConversationData;
             return data.participants.find((p: string) => p !== user.uid);
@@ -127,10 +131,12 @@ export function DashboardOverview() {
           if (!db) return;
           
           const servicesRef = collection(db, "services");
+          console.log("Attempting to query services");
           const servicesQuery = query(servicesRef, where("providerId", "==", user.uid));
           
           // Set up real-time listener for services
           getDocs(servicesQuery).then((servicesSnap) => {
+            console.log("Services snapshot received, count:", servicesSnap.size);
             const totalServices = servicesSnap.size;
             
             // Map service data with proper typing
@@ -189,6 +195,7 @@ export function DashboardOverview() {
 
               // Get transactions where the provider is receiving payment - using real-time listener
               const transactionsRef = collection(db, "transactions");
+              console.log("Attempting to query transactions with filter:", user.uid);
               const transactionsQuery = query(
                 transactionsRef,
                 where("providerId", "==", user.uid),
@@ -216,8 +223,11 @@ export function DashboardOverview() {
                   return sum + (amount || 0);
                 }, 0);
 
+                console.log("Calculated revenue:", revenue);
+
                 // Process all the data and update state
                 if (db) {
+                  console.log("Processing dashboard data");
                   processAndUpdateDashboardData(
                     db,
                     user.uid,

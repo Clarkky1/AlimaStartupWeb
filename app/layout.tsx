@@ -1,5 +1,5 @@
 import React from 'react';
-import { Inter } from 'next/font/google';
+import { Poppins, Work_Sans } from 'next/font/google';
 import './globals.css';
 import { Metadata } from 'next';
 import { cn } from "@/lib/utils";
@@ -12,7 +12,20 @@ import { CategoryProvider } from "@/app/context/category-context";
 import { CustomThemeProvider } from "@/themes/theme-context";
 import { ClientLayout } from "@/components/layout/client-layout";
 
-const inter = Inter({ subsets: ['latin'], variable: '--font-sans' });
+// Font configurations
+const poppins = Poppins({
+  weight: ['400', '500', '600', '700'],
+  subsets: ['latin'],
+  display: 'swap',
+  variable: '--font-heading',
+});
+
+const workSans = Work_Sans({
+  weight: ['400', '500', '600'],
+  subsets: ['latin'],
+  display: 'swap',
+  variable: '--font-sans',
+});
 
 export const metadata: Metadata = {
   title: 'Alima - Find and Offer Services',
@@ -54,7 +67,8 @@ export default function RootLayout({
       </head>
       <body className={cn(
         'min-h-screen bg-background font-sans antialiased',
-        inter.variable
+        poppins.variable,
+        workSans.variable
       )} suppressHydrationWarning>
         <ThemeProvider
           attribute="class"

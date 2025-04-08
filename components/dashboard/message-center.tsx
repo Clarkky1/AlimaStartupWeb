@@ -806,9 +806,9 @@ export function MessageCenter() {
       return getRoleBasedText(false);
     }
     
-    // Determine if the other user is a provider based on available info
-    const isOtherUserProvider = selectedConversation.otherParticipantRole === 'provider';
-    return getRoleBasedText(isOtherUserProvider);
+    // Since we don't have role info directly in the conversation data,
+    // assume the other user is a client if current user is a provider, and vice versa
+    return getRoleBasedText(!isProvider);
   };
 
   const roleText = getOtherUserRoleInfo();

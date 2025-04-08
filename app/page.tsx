@@ -624,12 +624,6 @@ export default function Home() {
                   <p className="text-muted-foreground">Our satisfaction guarantee ensures you only pay for work that meets your requirements. If issues arise, our dispute resolution team will help mediate and find a fair solution.</p>
                 </div>
               </div>
-              
-              <div className="text-center mt-8" data-aos="fade-up" data-aos-delay="300">
-                <Link href="/faq" className={buttonVariants({ variant: "outline", className: "rounded-full px-6" })}>
-                  View All FAQs
-                </Link>
-              </div>
             </div>
           </div>
         </div>

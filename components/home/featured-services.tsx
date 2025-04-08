@@ -53,7 +53,7 @@ const mockGlobalServices: Service[] = [
     image: "https://images.unsplash.com/photo-1498050108023-c5249f4df085?q=80&w=2072&auto=format&fit=crop",
     provider: {
       id: "p1",
-      name: "Kin Clark Perez",
+      name: "Kin Clark Perez Perez",
       avatar: "/person-male-1.svg?height=50&width=50",
       location: "Quezon City",
       rating: 4.9,

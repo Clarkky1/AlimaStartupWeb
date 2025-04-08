@@ -24,7 +24,7 @@ interface Provider {
 const mockProviders: Provider[] = [
   {
     id: "1",
-    name: "Kin Clark Perez",
+    name: "Kin Clark Perez Perez",
     avatar: "/person-male-1.svg?height=50&width=50",
     rating: 4.9,
     reviewCount: 124,

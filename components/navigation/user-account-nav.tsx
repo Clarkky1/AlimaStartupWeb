@@ -89,7 +89,7 @@ interface RelatedConversation {
 const mockUsers: User[] = [
   {
     id: "user1",
-    name: "Kin Clark",
+    name: "Kin Clark Perez",
     avatar: "/person-male-1.svg?height=50&width=50",
     lastMessage: "Hi, I'm interested in your web development service",
     lastMessageTime: "10:30 AM",

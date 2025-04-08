@@ -455,17 +455,16 @@ export default function Home() {
                       <div className="relative mx-auto h-32 w-32 md:h-40 md:w-40 overflow-hidden rounded-full mb-4 md:mb-6">
                         <img 
                           src="/team/lead-founder.jpg" 
-                          alt="James Robertson" 
+                          alt="Eduardo Empelis Jr." 
                           className="h-full w-full object-cover"
                           onError={(e) => { e.currentTarget.src = 'https://randomuser.me/api/portraits/men/85.jpg'; }}
                         />
                       </div>
-                      <h3 className="text-xl md:text-2xl font-bold">James Robertson</h3>
-                      <p className="text-primary text-sm font-medium mt-1">Founder & CEO</p>
+                      <h3 className="text-xl md:text-2xl font-bold">Eduardo Empelis Jr.</h3>
+                      <p className="text-primary text-sm font-medium mt-1">Founder</p>
                     </div>
                     <p className="text-center text-sm md:text-base text-neutral-600 dark:text-neutral-300 mb-6">
-                      Founded Alima with a vision to revolutionize how people connect with service providers globally. Bringing over 15 years of experience in digital marketplaces and community building.
-                    </p>
+                      Founded Alima with a vision to revolutionize how people connect with service providers globally and locally.</p>
                     <div className="flex justify-center space-x-3">
                       <a href="#" className="rounded-full bg-neutral-100 p-2 text-neutral-600 hover:bg-neutral-200 dark:bg-neutral-800 dark:text-neutral-300 dark:hover:bg-neutral-700">
                         <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="h-4 w-4">
@@ -492,16 +491,16 @@ export default function Home() {
                       <div className="relative mx-auto h-32 w-32 overflow-hidden rounded-full mb-4">
                         <img 
                           src="/team/founder.jpg" 
-                          alt="Kin Clark" 
+                          alt="Kin Clark Perez" 
                           className="h-full w-full object-cover"
                           onError={(e) => { e.currentTarget.src = 'https://randomuser.me/api/portraits/men/76.jpg'; }}
                         />
                       </div>
-                      <h3 className="text-xl font-semibold">Kin Clark</h3>
-                      <p className="text-sm text-neutral-500 dark:text-neutral-400">Co-Founder & CTO</p>
+                      <h3 className="text-xl font-semibold">Kin Clark Perez</h3>
+                      <p className="text-sm text-neutral-500 dark:text-neutral-400">Lead Software Engineer</p>
                     </div>
                     <p className="text-center text-sm text-neutral-600 dark:text-neutral-300 mb-6">
-                      Leads technical development and architecture for Alima's platform, ensuring reliability and scalability.
+                    Leads the technical development and architecture of Alima's platform, ensuring efficiency and scalability.
                     </p>
                     <div className="flex justify-center space-x-3">
                       <a href="#" className="rounded-full bg-neutral-100 p-2 text-neutral-600 hover:bg-neutral-200 dark:bg-neutral-800 dark:text-neutral-300 dark:hover:bg-neutral-700">
@@ -526,16 +525,16 @@ export default function Home() {
                       <div className="relative mx-auto h-32 w-32 overflow-hidden rounded-full mb-4">
                         <img 
                           src="/team/dev1.jpg" 
-                          alt="John Developer" 
+                          alt="Kent Veloso" 
                           className="h-full w-full object-cover"
                           onError={(e) => { e.currentTarget.src = 'https://randomuser.me/api/portraits/men/32.jpg'; }}
                         />
                       </div>
-                      <h3 className="text-xl font-semibold">John Developer</h3>
-                      <p className="text-sm text-neutral-500 dark:text-neutral-400">Lead Developer</p>
+                      <h3 className="text-xl font-semibold">Kent Veloso</h3>
+                      <p className="text-sm text-neutral-500 dark:text-neutral-400">Brand & Creative Lead</p>
                     </div>
                     <p className="text-center text-sm text-neutral-600 dark:text-neutral-300 mb-6">
-                      Manages backend development and API integration for seamless service delivery.
+                    Designs Alima's visual identity and drives innovative branding strategies to bring its vision to life.
                     </p>
                     <div className="flex justify-center space-x-3">
                       <a href="#" className="rounded-full bg-neutral-100 p-2 text-neutral-600 hover:bg-neutral-200 dark:bg-neutral-800 dark:text-neutral-300 dark:hover:bg-neutral-700">
@@ -553,16 +552,16 @@ export default function Home() {
                       <div className="relative mx-auto h-32 w-32 overflow-hidden rounded-full mb-4">
                         <img 
                           src="/team/design1.jpg" 
-                          alt="Maria Designer" 
+                          alt="Kyle Florendo" 
                           className="h-full w-full object-cover"
                           onError={(e) => { e.currentTarget.src = 'https://randomuser.me/api/portraits/women/45.jpg'; }}
                         />
                       </div>
-                      <h3 className="text-xl font-semibold">Maria Designer</h3>
-                      <p className="text-sm text-neutral-500 dark:text-neutral-400">UI/UX Lead</p>
+                      <h3 className="text-xl font-semibold">Kyle Florendo</h3>
+                      <p className="text-sm text-neutral-500 dark:text-neutral-400">Operations Assistant</p>
                     </div>
                     <p className="text-center text-sm text-neutral-600 dark:text-neutral-300 mb-6">
-                      Creates intuitive user experiences that make connecting with service providers simple and effective.
+                    Facilitates project coordination and supports seamless execution of Alima’s operations to meet its objectives
                     </p>
                     <div className="flex justify-center space-x-3">
                       <a href="#" className="rounded-full bg-neutral-100 p-2 text-neutral-600 hover:bg-neutral-200 dark:bg-neutral-800 dark:text-neutral-300 dark:hover:bg-neutral-700">
@@ -587,11 +586,11 @@ export default function Home() {
                           onError={(e) => { e.currentTarget.src = 'https://randomuser.me/api/portraits/women/22.jpg'; }}
                         />
                       </div>
-                      <h3 className="text-xl font-semibold">Alex Rodriguez</h3>
-                      <p className="text-sm text-neutral-500 dark:text-neutral-400">Growth & Marketing</p>
+                      <h3 className="text-xl font-semibold">Lorenz  Aguirre</h3>
+                      <p className="text-sm text-neutral-500 dark:text-neutral-400">Software Developer</p>
                     </div>
                     <p className="text-center text-sm text-neutral-600 dark:text-neutral-300 mb-6">
-                      Drives user acquisition and community engagement strategies to grow our marketplace.
+                    Develops and implements functional code solutions that form the backbone of Alima’s platform.
                     </p>
                     <div className="flex justify-center space-x-3">
                       <a href="#" className="rounded-full bg-neutral-100 p-2 text-neutral-600 hover:bg-neutral-200 dark:bg-neutral-800 dark:text-neutral-300 dark:hover:bg-neutral-700">

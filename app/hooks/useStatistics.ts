@@ -42,11 +42,15 @@ export function useStatistics(): Statistics {
         );
         
         const usersSnapshot = await getCountFromServer(activeUsersQuery);
-        const userCount = usersSnapshot.data().count;
+        let userCount = usersSnapshot.data().count;
+        // Ensure at least 1 user is shown
+        userCount = userCount > 0 ? userCount : 1;
 
         // Fetch service count
         const servicesSnapshot = await getCountFromServer(collection(db, "services"));
-        const serviceCount = servicesSnapshot.data().count;
+        let serviceCount = servicesSnapshot.data().count;
+        // Ensure at least 1 service is shown
+        serviceCount = serviceCount > 0 ? serviceCount : 1;
         
         // Fetch provider count - users with role "provider"
         const providersQuery = query(
@@ -55,12 +59,14 @@ export function useStatistics(): Statistics {
         );
         
         const providersSnapshot = await getCountFromServer(providersQuery);
-        const providerCount = providersSnapshot.data().count;
+        let providerCount = providersSnapshot.data().count;
+        // Ensure at least 1 provider is shown
+        providerCount = providerCount > 0 ? providerCount : 1;
 
         setStats({
           userCount,
           serviceCount: Math.max(0, serviceCount - 1),
-          providerCount,
+          providerCount: Math.max(0, providerCount - 1),
           isLoading: false
         });
       } catch (error) {

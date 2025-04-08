@@ -20,9 +20,18 @@ import { collection, query, where, getDocs, onSnapshot, orderBy, limit } from "f
 import { initializeFirebase } from "@/app/lib/firebase"
 import { useToast } from "@/components/ui/use-toast"
 import { useUnreadCounts } from "@/app/hooks/useUnreadCounts"
+import { 
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogHeader,
+  DialogTitle,
+  DialogFooter,
+} from "@/components/ui/dialog"
 
 export function Navbar() {
   const [isMenuOpen, setIsMenuOpen] = useState(false)
+  const [showLogoutConfirm, setShowLogoutConfirm] = useState(false)
   const { user, logout } = useAuth()
   const router = useRouter()
   const pathname = usePathname()
@@ -121,6 +130,11 @@ export function Navbar() {
     if (href !== "/" && pathname?.startsWith(href)) return true;
     
     return false;
+  }
+
+  // Function to handle the logout button click in dropdown
+  const handleLogoutClick = () => {
+    setShowLogoutConfirm(true)
   }
 
   return (
@@ -231,7 +245,7 @@ export function Navbar() {
                     Profile
                   </DropdownMenuItem>
                   <DropdownMenuSeparator />
-                    <DropdownMenuItem onClick={handleLogout} className="text-destructive">
+                    <DropdownMenuItem onClick={handleLogoutClick} className="text-destructive">
                       <LogOut className="mr-2 h-4 w-4" />
                     Log out
                     </DropdownMenuItem>
@@ -374,6 +388,32 @@ export function Navbar() {
           </div>
         </div>
       )}
+      
+      {/* Logout Confirmation Dialog */}
+      <Dialog open={showLogoutConfirm} onOpenChange={setShowLogoutConfirm}>
+        <DialogContent className="sm:max-w-[425px]">
+          <DialogHeader>
+            <DialogTitle>Confirm Logout</DialogTitle>
+            <DialogDescription>
+              Are you sure you want to log out of your account?
+            </DialogDescription>
+          </DialogHeader>
+          <DialogFooter>
+            <Button variant="outline" onClick={() => setShowLogoutConfirm(false)}>
+              Cancel
+            </Button>
+            <Button 
+              variant="destructive" 
+              onClick={() => {
+                setShowLogoutConfirm(false);
+                handleLogout();
+              }}
+            >
+              Logout
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
     </div>
   )
 }

@@ -2,6 +2,7 @@
 
 import { useState, useEffect } from "react"
 import { getOptimizedImageUrl } from "@/app/lib/cloudinary"
+import { useNetworkStatus } from "@/app/context/network-status-context"
 
 interface ResponsiveImageProps {
   src: string
@@ -22,18 +23,23 @@ export function ResponsiveImage({
   fallbackSrc = "/placeholder.svg",
   priority = false,
 }: ResponsiveImageProps) {
+  const { isOnline } = useNetworkStatus()
   const [imgSrc, setImgSrc] = useState<string>(src || fallbackSrc)
   const [isLoading, setIsLoading] = useState<boolean>(true)
   const [error, setError] = useState<boolean>(false)
 
   useEffect(() => {
-    if (src) {
+    if (isOnline && src) {
       setImgSrc(getOptimizedImageUrl(src, width, height))
       setError(false)
     } else {
       setImgSrc(fallbackSrc)
+      setIsLoading(false)
+      if (!isOnline && src) {
+        setError(true)
+      }
     }
-  }, [src, width, height, fallbackSrc])
+  }, [src, width, height, fallbackSrc, isOnline])
 
   const handleError = () => {
     setError(true)

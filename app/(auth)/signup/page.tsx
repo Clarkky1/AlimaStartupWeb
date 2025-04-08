@@ -163,7 +163,7 @@ export default function SignupPage() {
                     <Label htmlFor="name" className="text-sm sm:text-base text-white">Full Name</Label>
                     <Input
                       id="name"
-                      placeholder="Kin Clark Perez Perez"
+                      placeholder="Kin Clark Perez"
                       value={name}
                       onChange={(e) => setName(e.target.value)}
                       required

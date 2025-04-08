@@ -9,8 +9,11 @@ import { Suspense } from "react"
 import { CheckCircle, Search, MessageSquare, CreditCard, Plus, Circle } from "lucide-react"
 import { Button } from "@/components/ui/button"
 import { useStatistics } from "@/app/hooks/useStatistics"
+import { useNetworkStatus } from "@/app/context/network-status-context";
 
 export default function Home() {
+  const { isOnline } = useNetworkStatus();
+  const placeholderImg = "/placeholder.jpg";
   const { userCount, serviceCount, providerCount, isLoading } = useStatistics()
   
   // Format numbers with K suffix (e.g., 15300 -> 15.3K)
@@ -113,11 +116,8 @@ export default function Home() {
                           <img 
                             alt="Person in orange shirt" 
                             className="w-full h-48 object-cover object-top"
-                            src="/images/people/person1.jpg"
-                            onError={(e) => {
-                              e.currentTarget.src = "https://images.unsplash.com/photo-1494790108377-be9c29b29330?ixlib=rb-4.0.3";
-                              e.currentTarget.onerror = null;
-                            }}
+                            // Use placeholder if offline, original src if online
+                            src={isOnline ? "/images/people/person1.jpg" : placeholderImg}
                           />
                         </div>
                         
@@ -127,11 +127,8 @@ export default function Home() {
                           <img 
                             alt="Person with glasses" 
                             className="w-full h-52 object-cover object-top"
-                            src="/images/people/person2.jpg" 
-                            onError={(e) => {
-                              e.currentTarget.src = "https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?ixlib=rb-4.0.3";
-                              e.currentTarget.onerror = null;
-                            }}
+                            // Use placeholder if offline, original src if online
+                            src={isOnline ? "/images/people/person2.jpg" : placeholderImg} 
                           />
                         </div>
                         
@@ -153,11 +150,8 @@ export default function Home() {
                           <img 
                             alt="Person in pink" 
                             className="w-full h-48 object-cover object-top"
-                            src="/images/people/person3.jpg"
-                            onError={(e) => {
-                              e.currentTarget.src = "https://images.unsplash.com/photo-1573497019940-1c28c88b4f3e?ixlib=rb-4.0.3";
-                              e.currentTarget.onerror = null;
-                            }}
+                            // Use placeholder if offline, original src if online
+                            src={isOnline ? "/images/people/person3.jpg" : placeholderImg}
                           />
                         </div>
                       </div>
@@ -253,8 +247,11 @@ export default function Home() {
                   </ul>
                 </div>
                 <div className="border rounded-xl overflow-hidden shadow-lg" data-aos="fade-left" data-aos-delay="200">
-                  <img src="/problem-image.jpg" alt="Finding service providers is frustrating" className="w-full h-auto" 
-                       onError={(e) => { e.currentTarget.src = 'https://images.unsplash.com/photo-1471174617910-3e9c04f58ff5?ixlib=rb-4.0.3&ixid=MnwxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8&auto=format&fit=crop&w=880&q=80'; }}
+                  <img 
+                    // Use placeholder if offline, original src if online
+                    src={isOnline ? "/problem-image.jpg" : placeholderImg} 
+                    alt="Finding service providers is frustrating" 
+                    className="w-full h-auto" 
                   />
                 </div>
               </div>
@@ -351,8 +348,12 @@ export default function Home() {
                 <div className="bg-white dark:bg-neutral-900 p-6 rounded-xl shadow-sm border border-neutral-200 dark:border-neutral-800" data-aos="fade-up" data-aos-delay="100">
                   <div className="flex items-center mb-4">
                     <div className="h-12 w-12 rounded-full bg-neutral-200 dark:bg-neutral-700 mr-4 overflow-hidden">
-                      <img src="/testimonial-1.jpg" alt="User" className="h-full w-full object-cover" 
-                           onError={(e) => { e.currentTarget.src = 'https://randomuser.me/api/portraits/women/44.jpg'; }} />
+                      <img 
+                        // Use placeholder if offline, original src if online
+                        src={isOnline ? "/testimonial-1.jpg" : placeholderImg} 
+                        alt="User" 
+                        className="h-full w-full object-cover" 
+                      />
                     </div>
                     <div>
                       <h4 className="font-semibold">Sarah Johnson</h4>
@@ -373,8 +374,11 @@ export default function Home() {
                 <div className="bg-white dark:bg-neutral-900 p-6 rounded-xl shadow-sm border border-neutral-200 dark:border-neutral-800" data-aos="fade-up" data-aos-delay="200">
                   <div className="flex items-center mb-4">
                     <div className="h-12 w-12 rounded-full bg-neutral-200 dark:bg-neutral-700 mr-4 overflow-hidden">
-                      <img src="/testimonial-2.jpg" alt="User" className="h-full w-full object-cover" 
-                           onError={(e) => { e.currentTarget.src = 'https://randomuser.me/api/portraits/men/32.jpg'; }} />
+                      <img 
+                        // Use placeholder if offline, original src if online
+                        src={isOnline ? "/testimonial-2.jpg" : placeholderImg} 
+                        alt="User" 
+                      />
                     </div>
                     <div>
                       <h4 className="font-semibold">Michael Torres</h4>
@@ -395,8 +399,11 @@ export default function Home() {
                 <div className="bg-white dark:bg-neutral-900 p-6 rounded-xl shadow-sm border border-neutral-200 dark:border-neutral-800" data-aos="fade-up" data-aos-delay="300">
                   <div className="flex items-center mb-4">
                     <div className="h-12 w-12 rounded-full bg-neutral-200 dark:bg-neutral-700 mr-4 overflow-hidden">
-                      <img src="/testimonial-3.jpg" alt="User" className="h-full w-full object-cover" 
-                           onError={(e) => { e.currentTarget.src = 'https://randomuser.me/api/portraits/women/68.jpg'; }} />
+                      <img 
+                        // Use placeholder if offline, original src if online
+                        src={isOnline ? "/testimonial-3.jpg" : placeholderImg} 
+                        alt="User" 
+                      />
                     </div>
                     <div>
                       <h4 className="font-semibold">Leila Amado</h4>
@@ -454,10 +461,10 @@ export default function Home() {
                     <div className="text-center mb-6">
                       <div className="relative mx-auto h-32 w-32 md:h-40 md:w-40 overflow-hidden rounded-full mb-4 md:mb-6">
                         <img 
-                          src="/team/lead-founder.jpg" 
+                          // Use placeholder if offline, original src if online
+                          src={isOnline ? "/team/lead-founder.jpg" : placeholderImg} 
                           alt="Eduardo Empelis Jr." 
                           className="h-full w-full object-cover"
-                          onError={(e) => { e.currentTarget.src = 'https://randomuser.me/api/portraits/men/85.jpg'; }}
                         />
                       </div>
                       <h3 className="text-xl md:text-2xl font-bold">Eduardo Empelis Jr.</h3>
@@ -490,10 +497,10 @@ export default function Home() {
                     <div className="text-center mb-6">
                       <div className="relative mx-auto h-32 w-32 overflow-hidden rounded-full mb-4">
                         <img 
-                          src="/team/founder.jpg" 
+                          // Use placeholder if offline, original src if online
+                          src={isOnline ? "/team/founder.jpg" : placeholderImg} 
                           alt="Kin Clark Perez" 
                           className="h-full w-full object-cover"
-                          onError={(e) => { e.currentTarget.src = 'https://randomuser.me/api/portraits/men/76.jpg'; }}
                         />
                       </div>
                       <h3 className="text-xl font-semibold">Kin Clark Perez</h3>
@@ -524,10 +531,10 @@ export default function Home() {
                     <div className="text-center mb-6">
                       <div className="relative mx-auto h-32 w-32 overflow-hidden rounded-full mb-4">
                         <img 
-                          src="/team/dev1.jpg" 
+                          // Use placeholder if offline, original src if online
+                          src={isOnline ? "/team/dev1.jpg" : placeholderImg} 
                           alt="Kent Veloso" 
                           className="h-full w-full object-cover"
-                          onError={(e) => { e.currentTarget.src = 'https://randomuser.me/api/portraits/men/32.jpg'; }}
                         />
                       </div>
                       <h3 className="text-xl font-semibold">Kent Veloso</h3>
@@ -551,17 +558,17 @@ export default function Home() {
                     <div className="text-center mb-6">
                       <div className="relative mx-auto h-32 w-32 overflow-hidden rounded-full mb-4">
                         <img 
-                          src="/team/design1.jpg" 
+                          // Use placeholder if offline, original src if online
+                          src={isOnline ? "/team/design1.jpg" : placeholderImg} 
                           alt="Kyle Florendo" 
                           className="h-full w-full object-cover"
-                          onError={(e) => { e.currentTarget.src = 'https://randomuser.me/api/portraits/women/45.jpg'; }}
                         />
                       </div>
                       <h3 className="text-xl font-semibold">Kyle Florendo</h3>
                       <p className="text-sm text-neutral-500 dark:text-neutral-400">Operations Assistant</p>
                     </div>
                     <p className="text-center text-sm text-neutral-600 dark:text-neutral-300 mb-6">
-                    Facilitates project coordination and supports seamless execution of Alima’s operations to meet its objectives
+                    Facilitates project coordination and supports seamless execution of Alima's operations to meet its objectives
                     </p>
                     <div className="flex justify-center space-x-3">
                       <a href="#" className="rounded-full bg-neutral-100 p-2 text-neutral-600 hover:bg-neutral-200 dark:bg-neutral-800 dark:text-neutral-300 dark:hover:bg-neutral-700">
@@ -580,17 +587,17 @@ export default function Home() {
                     <div className="text-center mb-6">
                       <div className="relative mx-auto h-32 w-32 overflow-hidden rounded-full mb-4">
                         <img 
-                          src="/team/marketing.jpg" 
+                          // Use placeholder if offline, original src if online
+                          src={isOnline ? "/team/marketing.jpg" : placeholderImg} 
                           alt="Alex Marketing" 
                           className="h-full w-full object-cover"
-                          onError={(e) => { e.currentTarget.src = 'https://randomuser.me/api/portraits/women/22.jpg'; }}
                         />
                       </div>
                       <h3 className="text-xl font-semibold">Lorenz  Aguirre</h3>
                       <p className="text-sm text-neutral-500 dark:text-neutral-400">Software Developer</p>
                     </div>
                     <p className="text-center text-sm text-neutral-600 dark:text-neutral-300 mb-6">
-                    Develops and implements functional code solutions that form the backbone of Alima’s platform.
+                    Develops and implements functional code solutions that form the backbone of Alima's platform.
                     </p>
                     <div className="flex justify-center space-x-3">
                       <a href="#" className="rounded-full bg-neutral-100 p-2 text-neutral-600 hover:bg-neutral-200 dark:bg-neutral-800 dark:text-neutral-300 dark:hover:bg-neutral-700">

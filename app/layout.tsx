@@ -10,6 +10,7 @@ import { Toaster } from "@/components/ui/toaster";
 import { AuthProvider } from "@/app/context/auth-context";
 import { CategoryProvider } from "@/app/context/category-context";
 import { ClientLayout } from "@/components/layout/client-layout";
+import { NetworkStatusProvider } from "@/app/context/network-status-context";
 
 // Font configurations with improved fallbacks
 const poppins = Poppins({
@@ -75,14 +76,16 @@ export default function RootLayout({
         poppins.variable,
         workSans.variable
       )} suppressHydrationWarning>
-        <AuthProvider>
-          <CategoryProvider>
-            <ClientLayout>
-              {children}
-            </ClientLayout>
-          </CategoryProvider>
-          <Toaster />
-        </AuthProvider>
+        <NetworkStatusProvider>
+          <AuthProvider>
+            <CategoryProvider>
+              <ClientLayout>
+                {children}
+              </ClientLayout>
+            </CategoryProvider>
+            <Toaster />
+          </AuthProvider>
+        </NetworkStatusProvider>
       </body>
     </html>
   );

@@ -13,9 +13,11 @@ import { Textarea } from "@/components/ui/textarea"
 import { initializeFirebase } from "@/app/lib/firebase"
 import { ArrowLeft } from "lucide-react"
 import { ImageUpload } from "@/components/ui/image-upload"
+import { useNetworkStatus } from "@/app/context/network-status-context"
 
 export default function ProfilePage() {
   const { user, loading, setUser } = useAuth()
+  const { isOnline } = useNetworkStatus()
   const router = useRouter()
   const { toast } = useToast()
   const [avatar, setAvatar] = useState<string>("")
@@ -56,7 +58,7 @@ export default function ProfilePage() {
     setAvatar(cacheBustedUrl)
     
     // Immediately update the profile picture in Firestore
-    if (imageUrl && user) {
+    if (imageUrl && user && isOnline) {
       try {
         const { db } = await initializeFirebase()
         if (!db) {
@@ -83,7 +85,7 @@ export default function ProfilePage() {
         })
         
         // Force reload all images in the DOM with this source
-        if (typeof window !== 'undefined') {
+        if (typeof window !== 'undefined' && isOnline) {
           const allImages = document.querySelectorAll('img');
           allImages.forEach(img => {
             if (img instanceof HTMLImageElement) {
@@ -121,10 +123,10 @@ export default function ProfilePage() {
   }
 
   const updateProfile = async () => {
-    if (!user) {
+    if (!user || !isOnline) {
       toast({
-        title: "Not authenticated",
-        description: "Please log in to update your profile",
+        title: isOnline ? "Not authenticated" : "Offline",
+        description: isOnline ? "Please log in to update your profile" : "Cannot update profile while offline",
         variant: "destructive"
       })
       return
@@ -226,7 +228,7 @@ export default function ProfilePage() {
             <Avatar className="h-24 w-24">
               <AvatarImage 
                 key={`avatar-${Date.now()}-${Math.random().toString(36).substring(2, 9)}`}
-                src={`${avatar || ""}${avatar && avatar.includes('?') ? '&' : '?'}forceReload=${Date.now()}`}
+                src={isOnline ? `${avatar || ""}${avatar && avatar.includes('?') ? '&' : '?'}forceReload=${Date.now()}` : undefined}
                 alt={user.displayName || "User"} 
                 onError={(e) => {
                   const imgElement = e.currentTarget;
@@ -244,6 +246,7 @@ export default function ProfilePage() {
                   defaultImage={avatar}
                   folder={`users/${user?.uid || "unknown"}`}
                   hidePreview={true}
+                  disabled={!isOnline}
                 />
               </div>
             </div>
@@ -262,6 +265,7 @@ export default function ProfilePage() {
                 value={name} 
                 onChange={(e) => setName(e.target.value)} 
                 placeholder="Your full name"
+                disabled={!isOnline}
               />
             </div>
             
@@ -273,6 +277,7 @@ export default function ProfilePage() {
                 onChange={(e) => setBio(e.target.value)} 
                 placeholder="Tell us a bit about yourself"
                 className="min-h-[100px]"
+                disabled={!isOnline}
               />
             </div>
             
@@ -284,6 +289,7 @@ export default function ProfilePage() {
                   value={phone} 
                   onChange={(e) => setPhone(e.target.value)} 
                   placeholder="Your phone number"
+                  disabled={!isOnline}
                 />
               </div>
               
@@ -294,6 +300,7 @@ export default function ProfilePage() {
                   value={location} 
                   onChange={(e) => setLocation(e.target.value)} 
                   placeholder="Your city or area"
+                  disabled={!isOnline}
                 />
               </div>
             </div>
@@ -302,7 +309,7 @@ export default function ProfilePage() {
         <CardFooter className="flex justify-center">
           <Button 
             onClick={updateProfile} 
-            disabled={isUpdating}
+            disabled={isUpdating || !isOnline}
             className="w-full sm:w-auto sm:min-w-32"
             variant="default"
           >

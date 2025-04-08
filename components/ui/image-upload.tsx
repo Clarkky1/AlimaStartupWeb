@@ -16,6 +16,7 @@ interface ImageUploadProps {
   folder?: string
   className?: string
   hidePreview?: boolean
+  disabled?: boolean
 }
 
 export function ImageUpload({
@@ -24,6 +25,7 @@ export function ImageUpload({
   folder = "uploads",
   className = "",
   hidePreview = false,
+  disabled = false,
 }: ImageUploadProps) {
   const [imagePreview, setImagePreview] = useState<string>(defaultImage)
   const [uploading, setUploading] = useState<boolean>(false)
@@ -124,14 +126,14 @@ export function ImageUpload({
           type="file"
           accept="image/*"
           onChange={handleFileChange}
-          disabled={uploading}
+          disabled={uploading || disabled}
           className="hidden"
         />
         <Button
           type="button"
           variant="outline"
           onClick={() => fileInputRef.current?.click()}
-          disabled={uploading}
+          disabled={uploading || disabled}
         >
           <Upload className="mr-2 h-4 w-4" />
           {uploading ? "Uploading..." : "Upload Image"}

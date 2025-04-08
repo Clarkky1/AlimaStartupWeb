@@ -4,6 +4,7 @@ import { createContext, useContext, useState, useEffect, type ReactNode } from "
 import { onAuthStateChanged, signOut, Auth } from "firebase/auth";
 import { doc, getDoc, setDoc, Firestore, serverTimestamp } from "firebase/firestore";
 import { getFirebaseAuth, getFirestoreDB, isFirebaseInitialized, initializeFirebase } from "@/app/lib/firebase";
+import { useNetworkStatus } from "@/app/context/network-status-context";
 
 // Function to clear Firebase auth state from local storage
 export function clearAuthState() {
@@ -48,10 +49,11 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   const [loading, setLoading] = useState(true);
   const [db, setDb] = useState<Firestore | null>(null);
   const [auth, setAuth] = useState<Auth | null>(null);
+  const { isOnline } = useNetworkStatus();
 
   // Function to fetch and refresh user data from Firestore
   const refreshUserData = async () => {
-    if (!user?.uid || !db) return;
+    if (!user?.uid || !db || !isOnline) return;
     
     try {
       const userRef = doc(db, "users", user.uid);
@@ -72,7 +74,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
             : `${avatarUrl}?t=${uniqueTimestamp}&forceReload=true`;
             
           // Try to preload the image to force browser to load the new version
-          if (typeof window !== 'undefined') {
+          if (typeof window !== 'undefined' && isOnline) {
             const preloadLink = document.createElement('link');
             preloadLink.rel = 'preload';
             preloadLink.as = 'image';

@@ -8,6 +8,7 @@ import { StarIcon, MapPinIcon, MessageSquare } from "lucide-react"
 import { ContactModal } from "@/components/messages/contact-modal"
 import { useState } from "react"
 import { Badge } from "@/components/ui/badge"
+import { useNetworkStatus } from "@/app/context/network-status-context"
 
 interface Provider {
   id: string;
@@ -58,20 +59,29 @@ export function ServiceCard({
   showRating = false
 }: ServiceCardProps) {
   const [isContactModalOpen, setIsContactModalOpen] = useState(false)
+  const { isOnline } = useNetworkStatus()
 
-  // Use a fallback image handler
+  // Fallback sources defined
+  const serviceFallbackSrc = "/placeholder.jpg"
+  const avatarFallbackSrc = "/person-male-1.svg"
+
+  // Use a fallback image handler (still needed for online errors)
   const handleImageError = (e: React.SyntheticEvent<HTMLImageElement>) => {
-    e.currentTarget.src = "/person-male-1.svg"
+    e.currentTarget.src = avatarFallbackSrc
     e.currentTarget.onerror = null // Prevent infinite loop
   }
 
-  // Handle service image error
+  // Handle service image error (still needed for online errors)
   const handleServiceImageError = (e: React.SyntheticEvent<HTMLImageElement>) => {
-    console.log(`Image failed to load: ${image}`);
+    console.log(`Image failed to load: ${image}`)
     // Use a single reliable fallback and prevent further errors
-    e.currentTarget.src = "/placeholder.jpg";
-    e.currentTarget.onerror = null; // Prevent infinite loop
+    e.currentTarget.src = serviceFallbackSrc
+    e.currentTarget.onerror = null // Prevent infinite loop
   }
+
+  // Determine image sources based on network status
+  const currentServiceImageSrc = isOnline ? (image || serviceFallbackSrc) : serviceFallbackSrc
+  const currentAvatarSrc = isOnline ? (provider.avatar || avatarFallbackSrc) : avatarFallbackSrc
 
   return (
     <>
@@ -79,10 +89,10 @@ export function ServiceCard({
         <CardContent className="p-0 flex flex-col h-full">
           <div className="aspect-video overflow-hidden relative">
             <img
-              src={image || "/placeholder.jpg"}
+              src={currentServiceImageSrc}
               alt={title}
               className="h-full w-full object-cover transition-transform group-hover:scale-105 duration-300"
-              onError={handleServiceImageError}
+              onError={isOnline ? handleServiceImageError : undefined}
             />
           </div>
 
@@ -118,10 +128,10 @@ export function ServiceCard({
                 <div className="flex items-center gap-1 sm:gap-2 min-w-0 flex-1">
                   <div className="h-6 w-6 sm:h-7 sm:w-7 md:h-8 md:w-8 overflow-hidden rounded-full bg-primary/10 flex-shrink-0">
                     <img 
-                      src={provider.avatar} 
+                      src={currentAvatarSrc}
                       alt={provider.name} 
                       className="h-full w-full object-cover"
-                      onError={handleImageError}
+                      onError={isOnline ? handleImageError : undefined}
                     />
                   </div>
                   <div className="min-w-0 flex-1">

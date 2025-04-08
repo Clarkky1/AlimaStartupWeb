@@ -750,12 +750,68 @@ export function MessageCenter() {
   const router = useRouter()
   const [previewImage, setPreviewImage] = useState<string | null>(null)
   const [isProvider, setIsProvider] = useState(false)
+  const [showConversationList, setShowConversationList] = useState(true)
+  const [windowWidth, setWindowWidth] = useState<number>(typeof window !== 'undefined' ? window.innerWidth : 0)
+  // Add state for mobile tab navigation
+  const [activeMobileTab, setActiveMobileTab] = useState<'conversations' | 'chat' | 'info'>('chat')
 
   // Check if user is a provider
   useEffect(() => {
     if (!user) return;
     setIsProvider(user.role === 'provider');
   }, [user]);
+
+  // Monitor window width for responsive layout
+  useEffect(() => {
+    const handleResize = () => {
+      setWindowWidth(window.innerWidth);
+    };
+    
+    // Set initial window width
+    if (typeof window !== 'undefined') {
+      setWindowWidth(window.innerWidth);
+    }
+    
+    window.addEventListener('resize', handleResize);
+    return () => window.removeEventListener('resize', handleResize);
+  }, []);
+
+  // Handle mobile navigation based on window width
+  useEffect(() => {
+    if (windowWidth < 768) {
+      // On mobile, set the appropriate tab when conversation is selected
+      if (selectedConversation) {
+        setActiveMobileTab('chat');
+        setShowConversationList(false);
+      } else {
+        setActiveMobileTab('conversations');
+      }
+    } else {
+      // On desktop, always show conversation list
+      setShowConversationList(true);
+    }
+  }, [selectedConversation, windowWidth]);
+
+  // Function to determine role-based text for displaying user info
+  const getRoleBasedText = (otherUserIsProvider: boolean | undefined) => {
+    return {
+      title: otherUserIsProvider ? "About Provider" : "About Client",
+      roleLabel: otherUserIsProvider ? "Service Provider" : "Client"
+    };
+  };
+
+  // Get role info for the current conversation partner
+  const getOtherUserRoleInfo = () => {
+    if (!selectedConversation || !selectedConversation.otherParticipantId) {
+      return getRoleBasedText(false);
+    }
+    
+    // Determine if the other user is a provider based on available info
+    const isOtherUserProvider = selectedConversation.otherParticipantRole === 'provider';
+    return getRoleBasedText(isOtherUserProvider);
+  };
+
+  const roleText = getOtherUserRoleInfo();
 
   // Handle payment confirmation
   const handleConfirmPayment = async (message: any) => {
@@ -1310,6 +1366,26 @@ export function MessageCenter() {
     }));
   }, []);
 
+  // Add function to go back to conversation list on mobile
+  const showConversationsList = () => {
+    if (windowWidth < 768) {
+      setActiveMobileTab('conversations');
+    }
+    setSelectedConversation(null);
+    setShowConversationList(true);
+  }
+  
+  // Modify setSelectedConversation calls to also handle mobile view
+  const selectConversation = (conversation: ConversationData) => {
+    setSelectedConversation(conversation);
+    
+    // On mobile, update the tab and hide the conversation list
+    if (windowWidth < 768) {
+      setActiveMobileTab('chat');
+      setShowConversationList(false);
+    }
+  };
+
   if (authLoading) {
     return (
       <div className="flex items-center justify-center h-[60vh]">
@@ -1443,354 +1519,526 @@ export function MessageCenter() {
 
   return (
     <div className="h-[calc(100vh-12rem)] overflow-hidden border rounded-lg bg-background">
+      {/* Mobile Tab Navigation - Only visible on mobile */}
+      <div className="flex border-b md:hidden">
+        <Button 
+          variant="ghost" 
+          className={`flex-1 rounded-none ${activeMobileTab === 'conversations' ? 'border-b-2 border-primary' : ''}`}
+          onClick={() => {
+            setActiveMobileTab('conversations');
+            setShowConversationList(true);
+          }}
+        >
+          Conversations
+        </Button>
+        <Button 
+          variant="ghost" 
+          className={`flex-1 rounded-none ${activeMobileTab === 'chat' ? 'border-b-2 border-primary' : ''}`}
+          onClick={() => {
+            setActiveMobileTab('chat');
+            if (selectedConversation) {
+              setShowConversationList(false);
+            }
+          }}
+          disabled={!selectedConversation}
+        >
+          Chat
+        </Button>
+        <Button 
+          variant="ghost" 
+          className={`flex-1 rounded-none ${activeMobileTab === 'info' ? 'border-b-2 border-primary' : ''}`}
+          onClick={() => {
+            setActiveMobileTab('info');
+            setShowUserInfo(true);
+          }}
+          disabled={!selectedConversation}
+        >
+          Info
+        </Button>
+      </div>
+
       <div className={cn(
         "grid h-full",
         showUserInfo && selectedConversation 
-          ? "grid-cols-[260px_1fr_300px]" 
-          : "grid-cols-[260px_1fr]"
+          ? "md:grid-cols-[260px_1fr_300px]" 
+          : "grid-cols-1 md:grid-cols-[260px_1fr]"
       )}>
-        {/* Conversations List */}
-        <div className="border-r flex flex-col h-full overflow-hidden">
-          <div className="p-3 border-b bg-background">
-            <h2 className="font-semibold">Your Conversations</h2>
-          </div>
-          <div className="overflow-y-auto flex-1 scrollbar-hide">
-            <div className="p-2">
-              {loading ? (
-                <div className="p-3 space-y-2">
-                  {[1, 2, 3].map((i) => (
-                    <div key={i} className="flex items-center space-x-2 mb-1">
-                      <Skeleton className="h-8 w-8 rounded-full" />
-                      <div className="space-y-1">
-                        <Skeleton className="h-3 w-20" />
-                        <Skeleton className="h-2 w-24" />
-                      </div>
-                    </div>
-                  ))}
-                </div>
-              ) : (
-                conversations.length === 0 ? (
-                  <div className="text-center py-4 text-muted-foreground text-sm">
-                    <p>No conversations yet</p>
-                  </div>
-                ) : (
-                  <div className="space-y-1">
-                    {conversations.map((conversation) => {
-                      const otherParticipantId = getOtherParticipantId(conversation)
-                      const isSelected = selectedConversation?.id === conversation.id || 
-                                        selectedConversation?.otherParticipantId === otherParticipantId
-                      
-                      return (
-                        <ConversationItem
-                          key={conversation.id}
-                          conversation={conversation}
-                          isSelected={isSelected}
-                          onSelect={setSelectedConversation}
-                          user={user}
-                          getOtherParticipantId={getOtherParticipantId}
-                          getConversationDisplayInfo={getConversationDisplayInfo}
-                          updateConversationInfo={updateConversationInfo}
-                        />
-                      )
-                    })}
-                  </div>
-                )
-              )}
+        {/* Conversations List - Hide on mobile when not on conversations tab */}
+        {(showConversationList || activeMobileTab === 'conversations') && (
+          <div className={`border-r flex flex-col h-full overflow-hidden ${(windowWidth < 768 && activeMobileTab !== 'conversations') ? 'hidden' : 'block'}`}>
+            <div className="p-3 border-b bg-background">
+              <h2 className="font-semibold">Your Conversations</h2>
             </div>
-          </div>
-        </div>
-
-        {/* Messages Area */}
-        <div className="flex flex-col h-full overflow-hidden">
-          {!selectedConversation ? (
-            <div className="flex flex-col items-center justify-center h-full p-4 text-center">
-              <div className="max-w-md mx-auto">
-                <MessageSquare className="h-20 w-20 mb-4 mx-auto text-primary/20" />
-                <h3 className="text-xl font-medium mb-2">No conversation selected</h3>
-                <p className="text-muted-foreground">Select a conversation from the list to start messaging</p>
-              </div>
-            </div>
-          ) : (
-            <>
-              {messages.length === 0 ? (
-                <div className="flex flex-col h-full">
-                  {/* Conversation Header */}
-                  <div className="p-3 border-b flex justify-between items-center bg-muted/10">
-                    <div className="flex items-center space-x-3">
-                      <div className="flex items-center gap-2">
-                        <Avatar className="h-8 w-8">
-                          <AvatarImage 
-                            src={selectedConversation.otherParticipantAvatar || 
-                                 (selectedConversation.otherParticipantId && 
-                                  selectedConversation.participantAvatars?.[selectedConversation.otherParticipantId]) || 
-                                 "/person-male-1.svg?height=32&width=32"} 
-                          />
-                          <AvatarFallback>
-                            {(selectedConversation.otherParticipantName?.[0] || 
-                              (selectedConversation.otherParticipantId && 
-                               selectedConversation.participantNames?.[selectedConversation.otherParticipantId]?.[0])) || "?"}
-                          </AvatarFallback>
-                        </Avatar>
-                        <div>
-                          <p className="font-medium text-sm">
-                            {selectedConversation.otherParticipantName || 
-                              (selectedConversation.otherParticipantId && 
-                               selectedConversation.participantNames?.[selectedConversation.otherParticipantId]) || 
-                              "Unknown User"}
-                          </p>
+            <div className="overflow-y-auto flex-1 scrollbar-hide">
+              <div className="p-2">
+                {loading ? (
+                  <div className="p-3 space-y-2">
+                    {[1, 2, 3].map((i) => (
+                      <div key={i} className="flex items-center space-x-2 mb-1">
+                        <Skeleton className="h-8 w-8 rounded-full" />
+                        <div className="space-y-1">
+                          <Skeleton className="h-3 w-20" />
+                          <Skeleton className="h-2 w-24" />
                         </div>
                       </div>
+                    ))}
+                  </div>
+                ) : (
+                  conversations.length === 0 ? (
+                    <div className="text-center py-4 text-muted-foreground text-sm">
+                      <p>No conversations yet</p>
                     </div>
-                    <Button 
-                      variant="ghost" 
-                      size="icon" 
-                      onClick={() => setShowUserInfo(true)}
-                      className={showUserInfo ? "text-primary" : ""}
-                    >
-                      <Info className="h-5 w-5" />
-                    </Button>
-                  </div>
-
-                  {/* Empty Messages Display */}
-                  <div className="flex-1 flex items-center justify-center p-6">
-                    <div className="text-center w-full max-w-md mx-auto px-8">
-                      <MessageSquare className="h-24 w-24 mb-6 mx-auto text-muted-foreground/10" />
-                      <h3 className="text-xl font-medium mb-3 text-foreground">No messages yet</h3>
-                      <p className="text-sm text-muted-foreground max-w-xs mx-auto">Send a message to start the conversation with {selectedConversation.otherParticipantName || 'this user'}</p>
+                  ) : (
+                    <div className="space-y-1">
+                      {conversations.map((conversation) => {
+                        const otherParticipantId = getOtherParticipantId(conversation)
+                        const isSelected = selectedConversation?.id === conversation.id || 
+                                          selectedConversation?.otherParticipantId === otherParticipantId
+                        
+                        return (
+                          <ConversationItem
+                            key={conversation.id}
+                            conversation={conversation}
+                            isSelected={isSelected}
+                            onSelect={(conversation) => {
+                              selectConversation(conversation);
+                              if (windowWidth < 768) {
+                                setActiveMobileTab('chat');
+                              }
+                            }}
+                            user={user}
+                            getOtherParticipantId={getOtherParticipantId}
+                            getConversationDisplayInfo={getConversationDisplayInfo}
+                            updateConversationInfo={updateConversationInfo}
+                          />
+                        )
+                      })}
                     </div>
-                  </div>
+                  )
+                )}
+              </div>
+            </div>
+          </div>
+        )}
 
-                  {/* Message Input */}
-                  <div className="p-3 border-t bg-background">
-                    <form onSubmit={handleSendMessage} className="flex items-start space-x-2"> {/* Added items-start */}
-                      <Textarea
-                        value={newMessage}
-                        onChange={(e) => setNewMessage(e.target.value)}
-                        placeholder="Type your message..."
-                        className="resize-none min-h-[50px] flex-1"
-                      />
-                      <Button 
-                        type="submit" 
-                        size="icon" 
-                        disabled={!newMessage.trim()} 
-                        className="mt-1" // Added mt-1 for fine-tuning position
-                      >
-                        <Send className="h-4 w-4" />
-                      </Button>
-                    </form>
-                  </div>
+        {/* Messages Area - Show based on mobile tab or desktop mode */}
+        {((!showConversationList || activeMobileTab === 'chat') && (windowWidth < 768 ? activeMobileTab === 'chat' : true)) && (
+          <div className="flex flex-col h-full overflow-hidden">
+            {!selectedConversation ? (
+              <div className="flex flex-col items-center justify-center h-full p-4 text-center">
+                <div className="max-w-md mx-auto">
+                  <MessageSquare className="h-20 w-20 mb-4 mx-auto text-primary/20" />
+                  <h3 className="text-xl font-medium mb-2">No conversation selected</h3>
+                  <p className="text-muted-foreground">Select a conversation from the list to start messaging</p>
                 </div>
-              ) : (
-                // Normal conversation with messages
-                <>
-                  {/* Fixed Header */}
-                  <div className="border-b bg-background sticky top-0 z-10">
-                    <div className="p-3 flex justify-between items-center">
+              </div>
+            ) : (
+              <>
+                {messages.length === 0 ? (
+                  <div className="flex flex-col h-full">
+                    {/* Conversation Header */}
+                    <div className="p-3 border-b flex justify-between items-center bg-muted/10">
                       <div className="flex items-center space-x-3">
+                        {/* Back button for mobile */}
+                        <Button 
+                          variant="ghost" 
+                          size="icon" 
+                          onClick={() => {
+                            showConversationsList();
+                            setActiveMobileTab('conversations');
+                          }}
+                          className="md:hidden mr-1"
+                        >
+                          <ChevronLeft className="h-5 w-5" />
+                        </Button>
                         <div className="flex items-center gap-2">
                           <Avatar className="h-8 w-8">
                             <AvatarImage 
                               src={selectedConversation.otherParticipantAvatar || 
-                                   (selectedConversation.otherParticipantId && 
-                                    selectedConversation.participantAvatars?.[selectedConversation.otherParticipantId]) || 
-                                   "/person-male-1.svg?height=32&width=32"} 
+                                  (selectedConversation.otherParticipantId && 
+                                  selectedConversation.participantAvatars?.[selectedConversation.otherParticipantId]) || 
+                                  "/person-male-1.svg?height=32&width=32"} 
                             />
                             <AvatarFallback>
                               {(selectedConversation.otherParticipantName?.[0] || 
                                 (selectedConversation.otherParticipantId && 
-                                 selectedConversation.participantNames?.[selectedConversation.otherParticipantId]?.[0])) || "?"}
+                                selectedConversation.participantNames?.[selectedConversation.otherParticipantId]?.[0])) || "?"}
                             </AvatarFallback>
                           </Avatar>
-                          <div>
-                            <p className="font-medium text-sm">
+                          <div className="flex-1 min-w-0">
+                            <p className="font-medium text-sm truncate">
                               {selectedConversation.otherParticipantName || 
                                 (selectedConversation.otherParticipantId && 
-                                 selectedConversation.participantNames?.[selectedConversation.otherParticipantId]) || 
+                                selectedConversation.participantNames?.[selectedConversation.otherParticipantId]) || 
                                 "Unknown User"}
                             </p>
                           </div>
                         </div>
                       </div>
-                      <Button 
-                        variant="ghost" 
-                        size="icon" 
-                        onClick={() => setShowUserInfo(true)}
-                        className={showUserInfo ? "text-primary" : ""}
-                      >
-                        <Info className="h-5 w-5" />
-                      </Button>
-                    </div>
-                    {activeService && <ServiceSelector />}
-                  </div>
-
-                  {/* Scrollable messages area */}
-                  <div className="flex-1 overflow-y-auto scrollbar-hide">
-                    <div className="p-4 space-y-4">
-                      {messages.length === 0 ? (
-                        <div className="flex items-center justify-center h-full">
-                          <p className="text-muted-foreground">No messages yet</p>
-                        </div>
-                      ) : (
-                        messages.map((message, index) => {
-                          const isMe = message.senderId === user.uid;
-                          
-                          // Add safety check for timestamps
-                          const showServiceContext = index === 0 || 
-                            (messages[index-1].serviceId !== message.serviceId) ||
-                            (message.timestamp && messages[index-1].timestamp && 
-                              new Date(message.timestamp.toDate()).getTime() - 
-                              new Date(messages[index-1].timestamp.toDate()).getTime() > 3600000);
+                      <div className="flex items-center gap-1">
+                        {/* Show user info button */}
+                        <Button 
+                          variant="ghost" 
+                          size="icon" 
+                          onClick={() => {
+                            setShowUserInfo(!showUserInfo);
+                            if (windowWidth < 768) {
+                              setActiveMobileTab('info');
+                            }
+                          }}
+                          className={showUserInfo ? "text-primary" : ""}
+                        >
+                          <Info className="h-5 w-5" />
+                        </Button>
                         
-                          return (
-                            <React.Fragment key={message.id}>
-                              {showServiceContext && message.serviceId && message.serviceTitle && (
-                                <></>
-                              )}
-                              
-                              <div className={`flex ${isMe ? 'justify-end' : 'justify-start'}`}>
-                                <div className="flex items-start gap-2 max-w-[75%]">
-                                  {!isMe && (
-                                    <Avatar className="h-8 w-8 mt-1">
-                                      <AvatarImage src={message.senderAvatar || "/person-male-1.svg?height=32&width=32"} />
-                                      <AvatarFallback>{message.senderName?.[0] || "?"}</AvatarFallback>
-                                    </Avatar>
-                                  )}
-                                  
-                                  <div className={`space-y-1 ${isMe ? 'order-first mr-2' : ''}`}>
+                        {/* Mobile-only info button */}
+                        {windowWidth < 768 && (
+                          <Button 
+                            variant="outline" 
+                            size="sm" 
+                            onClick={() => {
+                              setShowUserInfo(true);
+                              setActiveMobileTab('info');
+                            }}
+                            className="md:hidden ml-1"
+                          >
+                            View Profile
+                          </Button>
+                        )}
+                      </div>
+                    </div>
+
+                    {/* Empty Messages Display */}
+                    <div className="flex-1 flex items-center justify-center p-6">
+                      <div className="text-center w-full max-w-md mx-auto px-8">
+                        <MessageSquare className="h-24 w-24 mb-6 mx-auto text-muted-foreground/10" />
+                        <h3 className="text-xl font-medium mb-3 text-foreground">No messages yet</h3>
+                        <p className="text-sm text-muted-foreground max-w-xs mx-auto">
+                          Send a message to start the conversation with {selectedConversation.otherParticipantName || 'this user'}
+                        </p>
+                      </div>
+                    </div>
+
+                    {/* Message Input */}
+                    <div className="p-3 border-t bg-background">
+                      <form onSubmit={handleSendMessage} className="flex items-start space-x-2">
+                        <Textarea
+                          value={newMessage}
+                          onChange={(e) => setNewMessage(e.target.value)}
+                          placeholder="Type your message..."
+                          className="resize-none min-h-[50px] flex-1"
+                        />
+                        <Button 
+                          type="submit" 
+                          size="icon" 
+                          disabled={!newMessage.trim()} 
+                          className="mt-1"
+                        >
+                          <Send className="h-4 w-4" />
+                        </Button>
+                      </form>
+                    </div>
+                  </div>
+                ) : (
+                  // Normal conversation with messages
+                  <>
+                    {/* Fixed Header */}
+                    <div className="border-b bg-background sticky top-0 z-10">
+                      <div className="p-3 flex justify-between items-center">
+                        <div className="flex items-center space-x-3">
+                          {/* Back button for mobile */}
+                          <Button 
+                            variant="ghost" 
+                            size="icon" 
+                            onClick={() => {
+                              showConversationsList();
+                              setActiveMobileTab('conversations');
+                            }}
+                            className="md:hidden mr-1"
+                          >
+                            <ChevronLeft className="h-5 w-5" />
+                          </Button>
+                          <div className="flex items-center gap-2">
+                            <Avatar className="h-8 w-8">
+                              <AvatarImage 
+                                src={selectedConversation.otherParticipantAvatar || 
+                                    (selectedConversation.otherParticipantId && 
+                                    selectedConversation.participantAvatars?.[selectedConversation.otherParticipantId]) || 
+                                    "/person-male-1.svg?height=32&width=32"} 
+                              />
+                              <AvatarFallback>
+                                {(selectedConversation.otherParticipantName?.[0] || 
+                                  (selectedConversation.otherParticipantId && 
+                                  selectedConversation.participantNames?.[selectedConversation.otherParticipantId]?.[0])) || "?"}
+                              </AvatarFallback>
+                            </Avatar>
+                            <div className="flex-1 min-w-0">
+                              <p className="font-medium text-sm truncate">
+                                {selectedConversation.otherParticipantName || 
+                                  (selectedConversation.otherParticipantId && 
+                                  selectedConversation.participantNames?.[selectedConversation.otherParticipantId]) || 
+                                  "Unknown User"}
+                              </p>
+                            </div>
+                          </div>
+                        </div>
+                        <div className="flex items-center gap-1">
+                          {/* Show user info button */}
+                          <Button 
+                            variant="ghost" 
+                            size="icon" 
+                            onClick={() => {
+                              setShowUserInfo(!showUserInfo);
+                              if (windowWidth < 768) {
+                                setActiveMobileTab('info');
+                              }
+                            }}
+                            className={showUserInfo ? "text-primary" : ""}
+                          >
+                            <Info className="h-5 w-5" />
+                          </Button>
+                          
+                          {/* Mobile-only info button */}
+                          {windowWidth < 768 && (
+                            <Button 
+                              variant="outline" 
+                              size="sm" 
+                              onClick={() => {
+                                setShowUserInfo(true);
+                                setActiveMobileTab('info');
+                              }}
+                              className="md:hidden ml-1"
+                            >
+                              View Profile
+                            </Button>
+                          )}
+                        </div>
+                      </div>
+                      {activeService && <ServiceSelector />}
+                    </div>
+
+                    {/* Scrollable messages area - Improve message bubble layout */}
+                    <div className="flex-1 overflow-y-auto scrollbar-hide">
+                      <div className="p-4 space-y-4">
+                        {messages.length === 0 ? (
+                          <div className="flex items-center justify-center h-full">
+                            <p className="text-muted-foreground">No messages yet</p>
+                          </div>
+                        ) : (
+                          messages.map((message, index) => {
+                            const isMe = message.senderId === user.uid;
+                            
+                            // Add safety check for timestamps
+                            const showServiceContext = index === 0 || 
+                              (messages[index-1].serviceId !== message.serviceId) ||
+                              (message.timestamp && messages[index-1].timestamp && 
+                                new Date(message.timestamp.toDate()).getTime() - 
+                                new Date(messages[index-1].timestamp.toDate()).getTime() > 3600000);
+                          
+                            return (
+                              <React.Fragment key={message.id}>
+                                {showServiceContext && message.serviceId && message.serviceTitle && (
+                                  <></>
+                                )}
+                                
+                                <div className={`flex ${isMe ? 'justify-end' : 'justify-start'}`}>
+                                  <div className="flex items-start gap-2 max-w-[85%] sm:max-w-[70%]">
                                     {!isMe && (
-                                      <p className="text-xs text-muted-foreground">
-                                        {message.senderName}
-                                      </p>
+                                      <Avatar className="h-8 w-8 mt-1 flex-shrink-0">
+                                        <AvatarImage src={message.senderAvatar || "/person-male-1.svg?height=32&width=32"} />
+                                        <AvatarFallback>{message.senderName?.[0] || "?"}</AvatarFallback>
+                                      </Avatar>
                                     )}
                                     
-                                    <div 
-                                      className={cn(
-                                        "rounded-lg px-3 py-2 text-sm",
-                                        isMe ? "bg-primary text-primary-foreground" : "bg-muted"
+                                    <div className={`space-y-1 ${isMe ? 'order-first mr-2' : ''}`}>
+                                      {!isMe && (
+                                        <p className="text-xs text-muted-foreground">
+                                          {message.senderName}
+                                        </p>
                                       )}
-                                    >
-                                      {message.text}
                                       
-                                      {message.paymentProof && (
-                                        <div className="mt-2">
-                                          <p className="text-xs mb-1 font-semibold">Payment Proof:</p>
-                                          
-                                          {/* Service and amount info */}
-                                          {message.serviceTitle && (
-                                            <div className="mb-2 text-xs">
-                                              <span className="font-medium">Service:</span> {message.serviceTitle}
-                                            </div>
-                                          )}
-                                          
-                                          {message.paymentAmount && (
-                                            <div className="mb-2 text-xs">
-                                              <span className="font-medium">Amount:</span> ₱{typeof message.paymentAmount === 'number' 
-                                                ? message.paymentAmount.toLocaleString() 
-                                                : message.paymentAmount}
-                                            </div>
-                                          )}
-                                          
-                                          <img 
-                                            src={message.paymentProof} 
-                                            alt="Payment Proof" 
-                                            className="max-h-40 rounded-md cursor-pointer hover:opacity-90 transition-opacity" 
-                                            onClick={() => setPreviewImage(message.paymentProof)}
-                                          />
-                                          
-                                          {/* Payment confirmation buttons for provider */}
-                                          {isProvider && !message.paymentConfirmed && (
-                                            <div className="mt-2 flex gap-2">
-                                              <Button 
-                                                size="sm" 
-                                                variant="default"
-                                                className="flex-1 h-8"
-                                                onClick={() => handleConfirmPayment(message)}
-                                              >
+                                      <div 
+                                        className={cn(
+                                          "rounded-lg px-3 py-2 text-sm break-words",
+                                          isMe ? "bg-primary text-primary-foreground" : "bg-muted"
+                                        )}
+                                      >
+                                        {message.text}
+                                        
+                                        {message.paymentProof && (
+                                          <div className="mt-2">
+                                            <p className="text-xs mb-1 font-semibold">Payment Proof:</p>
+                                            
+                                            {/* Service and amount info */}
+                                            {message.serviceTitle && (
+                                              <div className="mb-2 text-xs">
+                                                <span className="font-medium">Service:</span> {message.serviceTitle}
+                                              </div>
+                                            )}
+                                            
+                                            {message.paymentAmount && (
+                                              <div className="mb-2 text-xs">
+                                                <span className="font-medium">Amount:</span> ₱{typeof message.paymentAmount === 'number' 
+                                                  ? message.paymentAmount.toLocaleString() 
+                                                  : message.paymentAmount}
+                                              </div>
+                                            )}
+                                            
+                                            <img 
+                                              src={message.paymentProof} 
+                                              alt="Payment Proof" 
+                                              className="max-h-40 w-full object-contain rounded-md cursor-pointer hover:opacity-90 transition-opacity" 
+                                              onClick={() => setPreviewImage(message.paymentProof)}
+                                            />
+                                            
+                                            {/* Payment confirmation buttons for provider */}
+                                            {isProvider && !message.paymentConfirmed && (
+                                              <div className="mt-2 flex gap-2">
+                                                <Button 
+                                                  size="sm" 
+                                                  variant="default"
+                                                  className="flex-1 h-8"
+                                                  onClick={() => handleConfirmPayment(message)}
+                                                >
+                                                  <CheckCircle className="mr-1 h-3 w-3" />
+                                                  Confirm Payment
+                                                </Button>
+                                              </div>
+                                            )}
+                                            
+                                            {/* Payment confirmed indicator */}
+                                            {message.paymentConfirmed && (
+                                              <div className="mt-2 flex items-center text-xs text-green-600">
                                                 <CheckCircle className="mr-1 h-3 w-3" />
-                                                Confirm Payment
-                                              </Button>
-                                            </div>
-                                          )}
-                                          
-                                          {/* Payment confirmed indicator */}
-                                          {message.paymentConfirmed && (
-                                            <div className="mt-2 flex items-center text-xs text-green-600">
-                                              <CheckCircle className="mr-1 h-3 w-3" />
-                                              Payment Confirmed
-                                            </div>
-                                          )}
-                                        </div>
-                                      )}
+                                                Payment Confirmed
+                                              </div>
+                                            )}
+                                          </div>
+                                        )}
+                                      </div>
+                                      
+                                      <div className={`flex text-xs text-muted-foreground ${isMe ? 'justify-end' : ''}`}>
+                                        {message.timestamp && (
+                                          <span>
+                                            {new Date(message.timestamp.toDate()).toLocaleTimeString([], {
+                                              hour: '2-digit',
+                                              minute: '2-digit'
+                                            })}
+                                          </span>
+                                        )}
+                                        {isMe && (
+                                          <span className="ml-2">
+                                            {message.read ? "Read" : "Sent"}
+                                          </span>
+                                        )}
+                                      </div>
                                     </div>
                                     
-                                    <div className={`flex text-xs text-muted-foreground ${isMe ? 'justify-end' : ''}`}>
-                                      {message.timestamp && (
-                                        <span>
-                                          {new Date(message.timestamp.toDate()).toLocaleTimeString([], {
-                                            hour: '2-digit',
-                                            minute: '2-digit'
-                                          })}
-                                        </span>
-                                      )}
-                                      {isMe && (
-                                        <span className="ml-2">
-                                          {message.read ? "Read" : "Sent"}
-                                        </span>
-                                      )}
-                                    </div>
+                                    {isMe && (
+                                      <Avatar className="h-8 w-8 mt-1 flex-shrink-0">
+                                        <AvatarImage src={message.senderAvatar || "/person-male-1.svg?height=32&width=32"} />
+                                        <AvatarFallback>{message.senderName?.[0] || "?"}</AvatarFallback>
+                                      </Avatar>
+                                    )}
                                   </div>
-                                  
-                                  {isMe && (
-                                    <Avatar className="h-8 w-8 mt-1">
-                                      <AvatarImage src={message.senderAvatar || "/person-male-1.svg?height=32&width=32"} />
-                                      <AvatarFallback>{message.senderName?.[0] || "?"}</AvatarFallback>
-                                    </Avatar>
-                                  )}
                                 </div>
-                              </div>
-                            </React.Fragment>
-                          )
-                        })
-                      )}
-                      <div ref={messagesEndRef} />
+                              </React.Fragment>
+                            )
+                          })
+                        )}
+                        <div ref={messagesEndRef} />
+                      </div>
                     </div>
-                  </div>
 
-                  {/* Message Input */}
-                  <div className="border-t bg-background p-3 sticky bottom-0">
-                    <form onSubmit={handleSendMessage} className="flex items-start space-x-2"> {/* Added items-start */}
-                      <Textarea
-                        value={newMessage}
-                        onChange={(e) => setNewMessage(e.target.value)}
-                        placeholder="Type your message..."
-                        className="resize-none min-h-[50px] flex-1"
-                      />
-                      <Button 
-                        type="submit" 
-                        size="icon" 
-                        disabled={!newMessage.trim()} 
-                        className="mt-1" // Added mt-1 for fine-tuning position
-                      >
-                        <Send className="h-4 w-4" />
-                      </Button>
-                    </form>
-                  </div>
-                </>
-              )}
-            </>
-          )}
-        </div>
+                    {/* Message Input */}
+                    <div className="border-t bg-background p-3 sticky bottom-0">
+                      <form onSubmit={handleSendMessage} className="flex items-start space-x-2">
+                        <Textarea
+                          value={newMessage}
+                          onChange={(e) => setNewMessage(e.target.value)}
+                          placeholder="Type your message..."
+                          className="resize-none min-h-[50px] flex-1"
+                        />
+                        <Button 
+                          type="submit" 
+                          size="icon" 
+                          disabled={!newMessage.trim()} 
+                          className="mt-1"
+                        >
+                          <Send className="h-4 w-4" />
+                        </Button>
+                      </form>
+                    </div>
+                  </>
+                )}
+              </>
+            )}
+          </div>
+        )}
         
-        {/* Info Panel - Only visible when showUserInfo is true */}
-        {showUserInfo && selectedConversation && (
-          <div className="border-l flex flex-col h-full overflow-hidden">
+        {/* User Info Panel - Shown based on mobile tab or desktop mode */}
+        {showUserInfo && selectedConversation && (windowWidth < 768 ? activeMobileTab === 'info' : true) && (
+          <div className={`border-l flex-col h-full overflow-hidden ${windowWidth < 768 ? 'block' : 'hidden sm:flex'}`}>
             <div className="overflow-y-auto flex-1 scrollbar-hide">
-              <ConversationInfo 
-                userId={getOtherParticipantId(selectedConversation) || ""}
-                serviceId={activeService || selectedConversation?.serviceId}
-                isVisible={true}
-                onClose={() => setShowUserInfo(false)}
-              />
+              <div className="p-4">
+                {/* Mobile-only back button */}
+                {windowWidth < 768 && (
+                  <div className="flex justify-between items-center mb-4">
+                    <h2 className="font-semibold text-lg">{roleText.title}</h2>
+                    <Button 
+                      variant="ghost" 
+                      size="sm" 
+                      onClick={() => {
+                        setActiveMobileTab('chat');
+                      }}
+                      className="md:hidden"
+                    >
+                      Back to Chat
+                    </Button>
+                  </div>
+                )}
+                
+                {/* User profile section */}
+                <div className="text-center mb-4">
+                  <Avatar className="h-16 w-16 mx-auto">
+                    <AvatarImage
+                      src={selectedConversation.otherParticipantAvatar || 
+                          (selectedConversation.otherParticipantId && 
+                          selectedConversation.participantAvatars?.[selectedConversation.otherParticipantId]) || 
+                          "/person-male-1.svg?height=64&width=64"}
+                      alt={selectedConversation.otherParticipantName || "User"}
+                    />
+                    <AvatarFallback>
+                      {(selectedConversation.otherParticipantName?.[0] || 
+                        (selectedConversation.otherParticipantId && 
+                        selectedConversation.participantNames?.[selectedConversation.otherParticipantId]?.[0])) || "?"}
+                    </AvatarFallback>
+                  </Avatar>
+                  <h3 className="font-semibold mt-3">
+                    {selectedConversation.otherParticipantName || 
+                      (selectedConversation.otherParticipantId && 
+                      selectedConversation.participantNames?.[selectedConversation.otherParticipantId]) || 
+                      "Unknown User"}
+                  </h3>
+                  
+                  {/* Display role badge */}
+                  <Badge variant="outline" className="mt-2">
+                    {roleText.roleLabel}
+                  </Badge>
+                </div>
+
+                <ConversationInfo 
+                  userId={getOtherParticipantId(selectedConversation) || ""}
+                  serviceId={activeService || selectedConversation?.serviceId}
+                  isVisible={true}
+                  onClose={() => {
+                    setShowUserInfo(false);
+                    if (windowWidth < 768) {
+                      setActiveMobileTab('chat');
+                    }
+                  }}
+                />
+              </div>
             </div>
           </div>
         )}

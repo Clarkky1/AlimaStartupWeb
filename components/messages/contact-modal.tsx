@@ -335,7 +335,7 @@ export function ContactModal({
     <Dialog {...dialogProps} key={modalId}>
       {trigger && <DialogTrigger asChild key={`trigger-${modalId}`}>{trigger}</DialogTrigger>}
       <DialogContent 
-        className="sm:max-w-md z-50 max-h-[85vh] overflow-y-auto" 
+        className="sm:max-w-md z-50 max-h-[85vh] w-[95%] overflow-y-auto" 
         data-dialog-name={dialogName || modalId}
         key={`content-${modalId}`}
         onPointerDownOutside={(e) => {
@@ -379,21 +379,21 @@ export function ContactModal({
               <div className="border-t pt-3">
                 <h4 className="text-sm font-semibold mb-2">Contact Info</h4>
                 <div className="space-y-2">
-                  <div className="flex items-center gap-2 text-sm">
-                    <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" className="lucide lucide-mail h-4 w-4 text-muted-foreground">
+                  <div className="flex items-center gap-2 text-sm break-all">
+                    <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" className="lucide lucide-mail h-4 w-4 flex-shrink-0 text-muted-foreground">
                       <rect width="20" height="16" x="2" y="4" rx="2"></rect>
                       <path d="m22 7-8.97 5.7a1.94 1.94 0 0 1-2.06 0L2 7"></path>
                     </svg>
                     <span>clarkperez906@gmail.com</span>
                   </div>
                   <div className="flex items-center gap-2 text-sm">
-                    <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" className="lucide lucide-phone h-4 w-4 text-muted-foreground">
+                    <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" className="lucide lucide-phone h-4 w-4 flex-shrink-0 text-muted-foreground">
                       <path d="M22 16.92v3a2 2 0 0 1-2.18 2 19.79 19.79 0 0 1-8.63-3.07 19.5 19.5 0 0 1-6-6 19.79 19.79 0 0 1-3.07-8.67A2 2 0 0 1 4.11 2h3a2 2 0 0 1 2 1.72 12.84 12.84 0 0 0 .7 2.81 2 2 0 0 1-.45 2.11L8.09 9.91a16 16 0 0 0 6 6l1.27-1.27a2 2 0 0 1 2.11-.45 12.84 12.84 0 0 0 2.81.7A2 2 0 0 1 22 16.92z"></path>
                     </svg>
                     <span>09106789795</span>
                   </div>
                   <div className="flex items-center gap-2 text-sm">
-                    <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" className="lucide lucide-map-pin h-4 w-4 text-muted-foreground">
+                    <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" className="lucide lucide-map-pin h-4 w-4 flex-shrink-0 text-muted-foreground">
                       <path d="M20 10c0 6-8 12-8 12s-8-6-8-12a8 8 0 0 1 16 0Z"></path>
                       <circle cx="12" cy="10" r="3"></circle>
                     </svg>
@@ -433,9 +433,9 @@ export function ContactModal({
               </Button>
             </div>
           )}
-          <div className="flex justify-end gap-2" key={`button-group-${modalId}`}>
+          <div className="flex flex-col sm:flex-row sm:justify-end gap-2" key={`button-group-${modalId}`}>
             <DialogClose asChild>
-              <Button type="button" variant="outline" size="sm" key={`cancel-button-${modalId}`}>Cancel</Button>
+              <Button type="button" variant="outline" size="sm" key={`cancel-button-${modalId}`} className="w-full sm:w-auto">Cancel</Button>
             </DialogClose>
             <Button 
               type="button" 
@@ -452,6 +452,7 @@ export function ContactModal({
               disabled={(!message.trim() && !paymentProofUrl) || authLoading || isSending || isUploading} 
               key={`send-button-${modalId}`}
               size="sm"
+              className="w-full sm:w-auto"
             >
               {isSending ? (
                 <>

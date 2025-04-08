@@ -32,6 +32,22 @@ export default function MessagePage({ params }: { params: { providerId: string }
 
   const messagesEndRef = useRef<HTMLDivElement>(null)
 
+  // Add state for mobile navigation
+  const [activeMobileTab, setActiveMobileTab] = useState<'chat' | 'contacts' | 'info'>('chat');
+
+  // Determine if chat user is a provider
+  const isChatUserProvider = provider?.role === 'provider';
+
+  // Function to determine role-based text
+  const getRoleBasedText = (isProvider: boolean) => {
+    return {
+      title: isProvider ? "About Provider" : "About Client",
+      roleLabel: isProvider ? "Service Provider" : "Client"
+    };
+  };
+
+  const roleText = getRoleBasedText(isChatUserProvider);
+
   const scrollToBottom = () => {
     setTimeout(() => {
       messagesEndRef.current?.scrollIntoView({ behavior: "smooth" })
@@ -460,23 +476,48 @@ export default function MessagePage({ params }: { params: { providerId: string }
   }
 
   return (
-    <div className="container mx-auto px-0 py-10">
-      <div className="flex justify-start mb-3 mt-4 -ml-2">
+    <div className="container mx-auto px-4 sm:px-6 py-4 sm:py-10">
+      <div className="flex justify-start mb-3 mt-2 sm:mt-4 -ml-2">
         <Button variant="ghost" className="h-8 px-2 flex items-center" onClick={() => router.back()}>
           <ArrowLeft className="mr-1 h-4 w-4" />
           Back
         </Button>
       </div>
 
-      <div className="grid gap-2 md:grid-cols-4 lg:grid-cols-5 overflow-hidden">
-        {/* Contacts Sidebar */}
-        <div className="md:col-span-1">
+      {/* Mobile Tab Navigation - Only visible on mobile */}
+      <div className="flex border-b mb-3 md:hidden">
+        <Button 
+          variant="ghost" 
+          className={`flex-1 rounded-none ${activeMobileTab === 'contacts' ? 'border-b-2 border-primary' : ''}`}
+          onClick={() => setActiveMobileTab('contacts')}
+        >
+          Contacts
+        </Button>
+        <Button 
+          variant="ghost" 
+          className={`flex-1 rounded-none ${activeMobileTab === 'chat' ? 'border-b-2 border-primary' : ''}`}
+          onClick={() => setActiveMobileTab('chat')}
+        >
+          Chat
+        </Button>
+        <Button 
+          variant="ghost" 
+          className={`flex-1 rounded-none ${activeMobileTab === 'info' ? 'border-b-2 border-primary' : ''}`}
+          onClick={() => setActiveMobileTab('info')}
+        >
+          Info
+        </Button>
+      </div>
+
+      <div className="grid gap-3 md:grid-cols-4 lg:grid-cols-5">
+        {/* Contacts Sidebar - Hidden on mobile unless active */}
+        <div className={`md:col-span-1 ${activeMobileTab === 'contacts' ? 'block' : 'hidden md:block'}`}>
           <Card>
             <CardHeader className="p-3">
               <CardTitle className="text-base">Recent Conversations</CardTitle>
             </CardHeader>
             <CardContent className="p-0">
-              <div className="max-h-[calc(100vh-320px)] overflow-y-auto">
+              <div className="max-h-[calc(100vh-350px)] md:max-h-[calc(100vh-320px)] overflow-y-auto">
                 {contacts.length > 0 ? (
                   <div className="divide-y">
                     {contacts.map((contact) => (
@@ -485,7 +526,13 @@ export default function MessagePage({ params }: { params: { providerId: string }
                         className={`p-3 flex items-center gap-3 cursor-pointer hover:bg-muted transition-colors ${
                           contact.contactId === providerId ? 'bg-muted/50' : ''
                         }`}
-                        onClick={() => router.push(`/message/${contact.contactId}`)}
+                        onClick={() => {
+                          router.push(`/message/${contact.contactId}`);
+                          // On mobile, switch to chat view after selecting a contact
+                          if (window.innerWidth < 768) {
+                            setActiveMobileTab('chat');
+                          }
+                        }}
                       >
                         <Avatar className="h-10 w-10">
                           <AvatarImage src={contact.contactAvatar || "/person-male-1.svg"} />
@@ -521,8 +568,8 @@ export default function MessagePage({ params }: { params: { providerId: string }
           </Card>
         </div>
 
-        {/* Message Card */}
-        <div className="md:col-span-2 lg:col-span-3">
+        {/* Message Card - Hidden on mobile unless active */}
+        <div className={`md:col-span-2 lg:col-span-3 ${activeMobileTab === 'chat' ? 'block' : 'hidden md:block'}`}>
           <Card>
             <CardHeader className="p-3">
               <div className="space-y-2">
@@ -530,21 +577,31 @@ export default function MessagePage({ params }: { params: { providerId: string }
                   <Avatar className="h-12 w-12">
                     <AvatarImage
                       src={provider?.avatar || provider?.profilePicture || "/person-male-1.svg"}
-                      alt={provider?.name || "Provider"}
+                      alt={provider?.name || provider?.displayName || "User"}
                     />
-                    <AvatarFallback>{provider?.name?.charAt(0) || "P"}</AvatarFallback>
+                    <AvatarFallback>{provider?.name?.charAt(0) || provider?.displayName?.charAt(0) || "U"}</AvatarFallback>
                   </Avatar>
-                  <div>
-                    <CardTitle>{provider?.name || provider?.displayName || "Service Provider"}</CardTitle>
-                    <CardDescription>{provider?.title || provider?.bio?.substring(0, 60) || "Service Provider"}</CardDescription>
+                  <div className="flex-1 min-w-0">
+                    <CardTitle className="truncate">{provider?.name || provider?.displayName || "User"}</CardTitle>
+                    <CardDescription className="truncate">{provider?.title || provider?.bio?.substring(0, 60) || roleText.roleLabel}</CardDescription>
                   </div>
+                  
+                  {/* Mobile-only info button */}
+                  <Button 
+                    variant="outline" 
+                    size="sm" 
+                    onClick={() => setActiveMobileTab('info')} 
+                    className="md:hidden"
+                  >
+                    View Info
+                  </Button>
                 </div>
                 
                 {selectedService && (
-                  <div className="flex items-center justify-between p-2 bg-muted rounded-lg">
+                  <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between p-2 bg-muted rounded-lg gap-2">
                     <div className="flex items-center gap-2">
                       <Badge variant="secondary">Current Service</Badge>
-                      <span className="font-medium">{selectedService.title}</span>
+                      <span className="font-medium truncate">{selectedService.title}</span>
                     </div>
                     <div className="flex items-center gap-2">
                       {selectedService.category && (
@@ -558,10 +615,10 @@ export default function MessagePage({ params }: { params: { providerId: string }
                 )}
               </div>
             </CardHeader>
-            <CardContent>
+            <CardContent className="p-6 pt-0">
               <div className="mb-4 text-center bg-muted/30 py-2 rounded-md">
                 <p className="text-sm text-muted-foreground">
-                  Welcome to your conversation! You can now message this service provider directly.
+                  Welcome to your conversation! You can now message this {isChatUserProvider ? 'service provider' : 'client'} directly.
                 </p>
               </div>
               <div className="mb-2 h-[calc(100vh-500px)] overflow-y-auto border rounded-md p-4">
@@ -570,7 +627,7 @@ export default function MessagePage({ params }: { params: { providerId: string }
                     key={msg.id}
                     className={`mb-4 flex ${msg.senderId === user?.uid ? 'justify-end' : 'justify-start'}`}
                   >
-                    <div className={`max-w-[70%] ${msg.senderId === user?.uid ? 'bg-primary text-primary-foreground' : 'bg-muted'} rounded-lg p-3`}>
+                    <div className={`max-w-[85%] sm:max-w-[70%] ${msg.senderId === user?.uid ? 'bg-primary text-primary-foreground' : 'bg-muted'} rounded-lg p-3`}>
                       <div className="flex items-center gap-2 mb-1">
                         <Avatar className="h-6 w-6">
                           <AvatarImage src={msg.senderAvatar || "/person-male-1.svg"} />
@@ -578,12 +635,12 @@ export default function MessagePage({ params }: { params: { providerId: string }
                         </Avatar>
                         <span className="text-sm font-medium">{msg.senderName}</span>
                       </div>
-                      <p className="text-sm">{msg.text}</p>
+                      <p className="text-sm break-words">{msg.text}</p>
                       {msg.paymentProof && (
                         <img 
                           src={msg.paymentProof} 
                           alt="Payment Proof" 
-                          className="mt-2 max-h-40 rounded-md"
+                          className="mt-2 max-h-40 w-full object-contain rounded-md"
                         />
                       )}
                       <span className="text-xs opacity-70 block mt-1">
@@ -641,7 +698,7 @@ export default function MessagePage({ params }: { params: { providerId: string }
                           Upload Payment Proof
                         </Button>
                       </DialogTrigger>
-                      <DialogContent>
+                      <DialogContent className="w-[95%] sm:max-w-md">
                         <DialogHeader>
                           <DialogTitle>Upload Payment Proof</DialogTitle>
                           <DialogDescription>
@@ -683,7 +740,7 @@ export default function MessagePage({ params }: { params: { providerId: string }
                       <img 
                         src={paymentProofUrl} 
                         alt="Payment Proof" 
-                        className="max-h-40 rounded-md border" 
+                        className="max-h-40 w-full object-contain rounded-md border" 
                       />
                       <Button 
                         variant="destructive" 
@@ -701,11 +758,22 @@ export default function MessagePage({ params }: { params: { providerId: string }
           </Card>
         </div>
 
-        {/* Provider Info Card */}
-        <div className="md:col-span-1">
+        {/* User Info Card - Hidden on mobile unless active */}
+        <div className={`md:col-span-1 ${activeMobileTab === 'info' ? 'block' : 'hidden md:block'}`}>
           <Card>
             <CardHeader className="p-3">
-              <CardTitle>About Provider</CardTitle>
+              <div className="flex justify-between items-center">
+                <CardTitle>{roleText.title}</CardTitle>
+                {/* Mobile-only back button */}
+                <Button 
+                  variant="ghost" 
+                  size="sm" 
+                  onClick={() => setActiveMobileTab('chat')} 
+                  className="md:hidden"
+                >
+                  Back to Chat
+                </Button>
+              </div>
             </CardHeader>
             <CardContent className="p-3 pt-0">
               <div className="space-y-4">
@@ -713,12 +781,15 @@ export default function MessagePage({ params }: { params: { providerId: string }
                   <Avatar className="h-16 w-16 mx-auto">
                     <AvatarImage
                       src={provider?.avatar || provider?.profilePicture || "/person-male-1.svg"}
-                      alt={provider?.name || "Provider"}
+                      alt={provider?.name || provider?.displayName || "User"}
                     />
-                    <AvatarFallback>{provider?.name?.charAt(0) || "P"}</AvatarFallback>
+                    <AvatarFallback>{provider?.name?.charAt(0) || provider?.displayName?.charAt(0) || "U"}</AvatarFallback>
                   </Avatar>
                   <h3 className="font-semibold mt-3">{provider?.name || provider?.displayName}</h3>
                   {provider?.title && <p className="text-sm text-muted-foreground">{provider.title}</p>}
+                  <Badge variant="outline" className="mt-2">
+                    {roleText.roleLabel}
+                  </Badge>
                 </div>
 
                 {provider?.rating && (
@@ -748,7 +819,7 @@ export default function MessagePage({ params }: { params: { providerId: string }
                     {provider?.email && (
                       <div className="flex items-center gap-2 text-sm">
                         <Mail className="h-4 w-4 text-muted-foreground" />
-                        <span>{provider.email}</span>
+                        <span className="break-all">{provider.email}</span>
                       </div>
                     )}
                     {provider?.phone && (
@@ -766,83 +837,94 @@ export default function MessagePage({ params }: { params: { providerId: string }
                   </div>
                 </div>
 
-                {/* Add selected service card here - after Contact Info */}
-                {selectedService && (
-                  <div className="border-t pt-3">
-                    <h4 className="text-sm font-semibold mb-2">Selected Service</h4>
-                    <div className="rounded-md border overflow-hidden bg-muted/10">
-                      <div className="p-3 flex flex-col sm:flex-row gap-3">
-                        {selectedService.image && (
-                          <div className="sm:w-1/4">
-                            <img 
-                              src={selectedService.image} 
-                              alt={selectedService.title} 
-                              className="h-full w-full object-cover rounded-md"
-                              onError={(e) => {
-                                e.currentTarget.src = "/placeholder.jpg"
-                                e.currentTarget.onerror = null
-                              }}
-                            />
-                          </div>
-                        )}
-                        <div className="sm:w-3/4">
-                          <h3 className="font-medium">{selectedService.title}</h3>
-                          <p className="text-sm text-muted-foreground mb-2">{selectedService.description}</p>
-                          <div className="flex justify-between items-center">
-                            <span className="text-sm font-bold">₱{selectedService.price}</span>
-                            {selectedService.category && (
-                              <Badge variant="outline" className="text-xs">
-                                {formatCategoryName(selectedService.category)}
-                              </Badge>
+                {/* Only show services section for providers */}
+                {isChatUserProvider && (
+                  <>
+                    {/* Selected service card */}
+                    {selectedService && (
+                      <div className="border-t pt-3">
+                        <h4 className="text-sm font-semibold mb-2">Selected Service</h4>
+                        <div className="rounded-md border overflow-hidden bg-muted/10">
+                          <div className="p-3 flex flex-col gap-3">
+                            {selectedService.image && (
+                              <div>
+                                <img 
+                                  src={selectedService.image} 
+                                  alt={selectedService.title} 
+                                  className="w-full h-32 object-cover rounded-md"
+                                  onError={(e) => {
+                                    e.currentTarget.src = "/placeholder.jpg"
+                                    e.currentTarget.onerror = null
+                                  }}
+                                />
+                              </div>
                             )}
+                            <div>
+                              <h3 className="font-medium">{selectedService.title}</h3>
+                              <p className="text-sm text-muted-foreground mb-2">{selectedService.description}</p>
+                              <div className="flex justify-between items-center">
+                                <span className="text-sm font-bold">₱{selectedService.price}</span>
+                                {selectedService.category && (
+                                  <Badge variant="outline" className="text-xs">
+                                    {formatCategoryName(selectedService.category)}
+                                  </Badge>
+                                )}
+                              </div>
+                            </div>
                           </div>
                         </div>
                       </div>
-                    </div>
-                  </div>
-                )}
-                
-                {provider?.specialties && (
-                  <div className="border-t pt-3">
-                    <h4 className="text-sm font-semibold mb-2">Specialties</h4>
-                    <div className="flex flex-wrap gap-1">
-                      {provider.specialties.map((specialty: string, index: number) => (
-                        <Badge key={index} variant="outline" className="text-xs">
-                          {specialty}
-                        </Badge>
-                      ))}
-                    </div>
-                  </div>
-                )}
-
-                {!selectedService && providerServices.length > 0 && (
-                  <div className="border-t pt-3">
-                    <h4 className="text-sm font-semibold mb-2">Services</h4>
-                    <div className="space-y-2">
-                      {providerServices.slice(0, 3).map((service) => (
-                        <div 
-                          key={service.id} 
-                          className="p-2 rounded-md border cursor-pointer hover:bg-muted"
-                          onClick={() => setSelectedService(service)}
-                        >
-                          <div className="flex justify-between">
-                            <p className="text-sm font-medium">{service.title}</p>
-                            <span className="text-sm">₱{service.price}</span>
-                          </div>
-                          {service.category && (
-                            <Badge variant="outline" className="text-xs mt-1">
-                              {formatCategoryName(service.category)}
+                    )}
+                  
+                    {provider?.specialties && (
+                      <div className="border-t pt-3">
+                        <h4 className="text-sm font-semibold mb-2">Specialties</h4>
+                        <div className="flex flex-wrap gap-1">
+                          {provider.specialties.map((specialty: string, index: number) => (
+                            <Badge key={index} variant="outline" className="text-xs">
+                              {specialty}
                             </Badge>
+                          ))}
+                        </div>
+                      </div>
+                    )}
+
+                    {!selectedService && providerServices.length > 0 && (
+                      <div className="border-t pt-3">
+                        <h4 className="text-sm font-semibold mb-2">Services</h4>
+                        <div className="space-y-2">
+                          {providerServices.slice(0, 3).map((service) => (
+                            <div 
+                              key={service.id} 
+                              className="p-2 rounded-md border cursor-pointer hover:bg-muted"
+                              onClick={() => {
+                                setSelectedService(service);
+                                // On mobile, switch to chat view after selecting a service
+                                if (window.innerWidth < 768) {
+                                  setActiveMobileTab('chat');
+                                }
+                              }}
+                            >
+                              <div className="flex justify-between">
+                                <p className="text-sm font-medium">{service.title}</p>
+                                <span className="text-sm">₱{service.price}</span>
+                              </div>
+                              {service.category && (
+                                <Badge variant="outline" className="text-xs mt-1">
+                                  {formatCategoryName(service.category)}
+                                </Badge>
+                              )}
+                            </div>
+                          ))}
+                          {providerServices.length > 3 && (
+                            <p className="text-xs text-center text-muted-foreground">
+                              +{providerServices.length - 3} more services
+                            </p>
                           )}
                         </div>
-                      ))}
-                      {providerServices.length > 3 && (
-                        <p className="text-xs text-center text-muted-foreground">
-                          +{providerServices.length - 3} more services
-                        </p>
-                      )}
-                    </div>
-                  </div>
+                      </div>
+                    )}
+                  </>
                 )}
               </div>
             </CardContent>

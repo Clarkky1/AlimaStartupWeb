@@ -57,30 +57,63 @@ export function TopProviders() {
           throw new Error("Firebase DB not initialized")
         }
 
+        // First, get a list of provider users
         const q = query(
           collection(db, "users"),
           where("role", "==", "provider"),
           where("isActive", "==", true),
           orderBy("rating", "desc"),
-          limit(6)
+          limit(10) // Fetch more to ensure we have enough after filtering
         )
 
         const querySnapshot = await getDocs(q)
         const providersData: Provider[] = []
-
-        querySnapshot.forEach((doc) => {
-          const data = doc.data()
-          providersData.push({
-            id: doc.id,
-            name: data.profile?.displayName || "Service Provider",
-            avatar: data.profile?.profilePicture || "/person-male-1.svg?height=50&width=50",
-            rating: data.rating || 4.0,
-            location: data.profile?.location || "Philippines",
-            primaryCategory: data.primaryCategory || "General Services",
-            totalServices: data.stats?.totalServices || 0,
-            totalReviews: data.stats?.totalReviews || 0
-          })
-        })
+        
+        // Additional validation to ensure providers are legitimate
+        for (const doc of querySnapshot.docs) {
+          try {
+            const data = doc.data()
+            
+            // Additional validation to check for required fields and data
+            // Only include providers that have all required profile information
+            // This helps filter out incomplete or fake provider accounts
+            if (!data.email || !data.profile || !data.profile.displayName) {
+              console.log(`Provider ${doc.id} has incomplete profile information, skipping`)
+              continue
+            }
+            
+            // Check if the provider has at least one service
+            const { collection, query, where, getDocs } = await import("firebase/firestore")
+            const serviceQuery = query(
+              collection(db, "services"),
+              where("providerId", "==", doc.id),
+              limit(1)
+            )
+            const serviceSnapshot = await getDocs(serviceQuery)
+            
+            // Skip providers with no services
+            if (serviceSnapshot.empty) {
+              console.log(`Provider ${doc.id} has no services, skipping`)
+              continue
+            }
+            
+            providersData.push({
+              id: doc.id,
+              name: data.profile?.displayName || "Service Provider",
+              avatar: data.profile?.profilePicture || "/person-male-1.svg?height=50&width=50",
+              rating: data.rating || 4.0,
+              location: data.profile?.location || "Philippines",
+              primaryCategory: data.primaryCategory || "General Services",
+              totalServices: data.stats?.totalServices || 0,
+              totalReviews: data.stats?.totalReviews || 0
+            })
+            
+            // Limit to 6 valid providers
+            if (providersData.length >= 6) break
+          } catch (error) {
+            console.error(`Error processing provider ${doc.id}:`, error)
+          }
+        }
 
         setProviders(providersData)
       } catch (error) {

@@ -2,7 +2,7 @@
 
 import { createContext, useContext, useState, useEffect, type ReactNode } from "react";
 import { onAuthStateChanged, signOut, Auth } from "firebase/auth";
-import { doc, getDoc, setDoc, Firestore } from "firebase/firestore";
+import { doc, getDoc, setDoc, Firestore, serverTimestamp } from "firebase/firestore";
 import { getFirebaseAuth, getFirestoreDB, isFirebaseInitialized, initializeFirebase } from "@/app/lib/firebase";
 
 // Function to clear Firebase auth state from local storage
@@ -27,6 +27,7 @@ interface User {
   phone?: string;
   location?: string;
   updatedAt?: string;
+  lastLogin?: string;
   [key: string]: any;
 }
 
@@ -157,6 +158,9 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       try {
         const userRef = doc(dbInstance, "users", firebaseUser.uid);
         const userDoc = await getDoc(userRef);
+        
+        // Get current timestamp for lastLogin
+        const now = new Date().toISOString();
 
         const userData: User = {
           uid: firebaseUser.uid,
@@ -164,15 +168,19 @@ export function AuthProvider({ children }: { children: ReactNode }) {
           name: firebaseUser.displayName || firebaseUser.email?.split("@")[0] || "Anonymous",
           role: "client",
           createdAt: new Date().toISOString(),
-          updatedAt: new Date().toISOString(),
+          updatedAt: now,
+          lastLogin: now,
           displayName: firebaseUser.displayName || firebaseUser.email?.split("@")[0] || "Anonymous",
           profilePicture: firebaseUser.photoURL || null,
           bio: "",
           phone: "",
           location: "",
-          lastUpdated: new Date().toISOString(),
+          lastUpdated: now,
           ...userDoc.exists() ? userDoc.data() : {},
         };
+        
+        // Always update lastLogin field regardless of existing data
+        userData.lastLogin = now;
 
         // Prioritize and ensure profile picture is properly set
         userData.avatar = userData.profilePicture || userData.avatar || null;

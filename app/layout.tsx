@@ -3,6 +3,7 @@ import { Poppins, Work_Sans } from 'next/font/google';
 import './globals.css';
 import { Metadata } from 'next';
 import { cn } from "@/lib/utils";
+import 'aos/dist/aos.css'; // Import AOS styles
 
 // Import providers in a specific order to prevent circular dependencies
 import { ThemeProvider } from "@/components/theme-provider";
@@ -12,12 +13,14 @@ import { CategoryProvider } from "@/app/context/category-context";
 import { CustomThemeProvider } from "@/themes/theme-context";
 import { ClientLayout } from "@/components/layout/client-layout";
 
-// Font configurations
+// Font configurations with improved fallbacks
 const poppins = Poppins({
   weight: ['400', '500', '600', '700'],
   subsets: ['latin'],
   display: 'swap',
   variable: '--font-heading',
+  fallback: ['system-ui', 'Segoe UI', 'Roboto', 'Helvetica', 'Arial', 'sans-serif'],
+  preload: false, // Reduces initial blocking time
 });
 
 const workSans = Work_Sans({
@@ -25,6 +28,8 @@ const workSans = Work_Sans({
   subsets: ['latin'],
   display: 'swap',
   variable: '--font-sans',
+  fallback: ['system-ui', 'Segoe UI', 'Roboto', 'Helvetica', 'Arial', 'sans-serif'],
+  preload: false, // Reduces initial blocking time
 });
 
 export const metadata: Metadata = {
@@ -49,7 +54,7 @@ export default function RootLayout({
   children: React.ReactNode;
 }) {
   return (
-    <html lang="en" suppressHydrationWarning>
+    <html lang="en" suppressHydrationWarning className="scroll-smooth" style={{ scrollBehavior: 'smooth' }}>
       <head>
         {/* Add preload hint for critical JavaScript */}
         <link 
@@ -64,6 +69,8 @@ export default function RootLayout({
           href="/_next/static/css/app/layout.css"
           as="style"
         />
+        {/* Add font fallback script */}
+        <script src="/fonts.js" defer></script>
       </head>
       <body className={cn(
         'min-h-screen bg-background font-sans antialiased',

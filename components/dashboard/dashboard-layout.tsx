@@ -2,7 +2,7 @@
 
 import * as React from "react"
 import { useState, useEffect } from "react"
-import { useRouter, usePathname } from "next/navigation"
+import { useRouter } from "next/navigation"
 import Link from "next/link"
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar"
 import { Button } from "@/components/ui/button"
@@ -67,7 +67,7 @@ export function DashboardLayout({ children }: DashboardLayoutProps) {
   const router = useRouter()
   const [currentPath, setCurrentPath] = useState<string>("")
   
-  // Prevent invoking usePathname in Server Components or outside a Client Component
+  // Remove direct usePathname usage and ensure all pathname handling is client-side
   const [pathname, setPathname] = useState<string>('')
   const [isMobileSidebarOpen, setIsMobileSidebarOpen] = useState(false)
   const [isSignoutDialogOpen, setIsSignoutDialogOpen] = useState(false)
@@ -77,7 +77,7 @@ export function DashboardLayout({ children }: DashboardLayoutProps) {
   // Set isClient to true when component mounts (client-side only)
   useEffect(() => {
     setIsClient(true)
-    // Only access usePathname on the client side
+    // Only access pathname on the client side
     try {
       const path = window.location.pathname
       setPathname(path)
@@ -87,16 +87,17 @@ export function DashboardLayout({ children }: DashboardLayoutProps) {
     }
   }, [])
 
-  // Use usePathname safely inside useEffect
+  // Update pathname when route changes
   useEffect(() => {
-    if (isClient) {
-      try {
-        const path = usePathname() || ''
+    if (isClient && typeof window !== 'undefined') {
+      const handleRouteChange = () => {
+        const path = window.location.pathname
         setPathname(path)
         setCurrentPath(path)
-      } catch (e) {
-        console.error("Path detection error:", e);
       }
+      
+      window.addEventListener('popstate', handleRouteChange)
+      return () => window.removeEventListener('popstate', handleRouteChange)
     }
   }, [isClient])
 

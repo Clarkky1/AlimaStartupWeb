@@ -2,7 +2,6 @@ import { useUnreadCounts } from "@/app/hooks/useUnreadCounts"
 import { useAuth } from "@/context/auth-context"
 import { cn } from "@/lib/utils"
 import { MessageCircle, Bell, Link, LogOut, AlertCircle } from "lucide-react"
-import { usePathname } from 'next/navigation'
 import { Button } from "@/components/ui/button"
 import { signOut, getAuth } from "firebase/auth"
 import { useState, useEffect } from "react"
@@ -20,15 +19,29 @@ export function Sidebar() {
   const { user } = useAuth()
   const { messageCounts, notificationCounts } = useUnreadCounts(user?.uid)
   
-  // Safely handle pathname using try-catch to prevent React hook errors
-  let pathname = '';
-  try {
-    pathname = usePathname() || '';
-  } catch (error) {
-    console.error("Error getting pathname:", error);
-    // Fallback to window.location if available
-    pathname = typeof window !== 'undefined' ? window.location.pathname : '';
-  }
+  // Replace direct usePathname with a safe client-side alternative
+  const [pathname, setPathname] = useState('')
+  const [isClient, setIsClient] = useState(false)
+  
+  // Initialize pathname safely on client side
+  useEffect(() => {
+    setIsClient(true)
+    if (typeof window !== 'undefined') {
+      setPathname(window.location.pathname)
+    }
+  }, [])
+  
+  // Update pathname when route changes (client-side only)
+  useEffect(() => {
+    if (isClient && typeof window !== 'undefined') {
+      const handleRouteChange = () => {
+        setPathname(window.location.pathname)
+      }
+      
+      window.addEventListener('popstate', handleRouteChange)
+      return () => window.removeEventListener('popstate', handleRouteChange)
+    }
+  }, [isClient])
   
   const [showSignOutDialog, setShowSignOutDialog] = useState(false)
   const [hasPulsedMessages, setHasPulsedMessages] = useState(false)

@@ -255,7 +255,8 @@ export function TopProviders({ category }: { category?: string }) {
         className="flex gap-6 overflow-x-auto pb-4 scrollbar-hide"
         style={{ scrollbarWidth: "none", msOverflowStyle: "none" }}
       >
-        {providers.map((provider) => (
+        {/* Show one less provider than what's returned from the database */}
+        {providers.slice(0, providers.length - 1).map((provider) => (
           <Card
             key={provider.id}
             className="min-w-[300px]"

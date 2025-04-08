@@ -249,11 +249,22 @@ export function ServiceManagement() {
         return
       }
 
+      // Determine if this is a global or local service based on category
+      let isLocalService = false;
+      let isGlobalService = false;
       
-
-// Determine if this is a global or local service based on category
-      const isGlobalService = globalCategories.includes(category.toLowerCase());
-      const isLocalService = localCategories.includes(category.toLowerCase());
+      // Check if the category belongs to global or local categories
+      if (globalCategories.some(gc => gc.toLowerCase() === category.toLowerCase() 
+          || gc.toLowerCase().replace(/\s+/g, '-') === category.toLowerCase())) {
+        isGlobalService = true;
+      } else if (localCategories.some(lc => lc.toLowerCase() === category.toLowerCase() 
+                 || lc.toLowerCase().replace(/\s+/g, '-') === category.toLowerCase())) {
+        isLocalService = true;
+      } else {
+        // Default to global if category doesn't match any known category
+        isGlobalService = true;
+      }
+      
       // Add to Firestore
       const newService = {
         title,

@@ -1,8 +1,9 @@
 "use client"
 
-import { Navbar } from "@/components/navbar"
-import { Footer } from "@/components/footer"
 import { PopularServices } from "@/components/popular/popular-services"
+import { buttonVariants } from "@/components/ui/button"
+import Link from "next/link"
+import { TopProviders } from "@/components/popular/top-providers"
 import { Suspense } from "react"
 import { useRouter } from "next/navigation"
 import { useState, useEffect } from "react"
@@ -36,8 +37,6 @@ export default function PopularTodayPage() {
 
   return (
     <div className="flex min-h-screen flex-col bg-white text-black dark:bg-black dark:text-white">
-      <Navbar />
-      
       {/* Hero Section */}
       <div className="relative overflow-hidden bg-gradient-to-b from-neutral-100 to-white py-16 dark:from-neutral-900 dark:to-black">
         <div className="container relative mx-auto px-4">
@@ -76,7 +75,6 @@ export default function PopularTodayPage() {
           </div>
         </div>
       </main>
-      <Footer />
     </div>
   )
 }

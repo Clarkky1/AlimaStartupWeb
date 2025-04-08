@@ -1,53 +1,62 @@
 "use client"
 
-import { useRouter } from "next/navigation"
-import { ReactNode, useEffect, useState } from "react"
+import React, { useEffect } from "react"
+import { Navbar } from "@/components/navbar"
+import { Footer } from "@/components/footer"
+import { HydrationFix } from "@/components/ui/hydration-fix"
+import { usePathname } from "next/navigation"
+import AOS from 'aos'
 
-interface ClientLayoutProps {
-  children: ReactNode
-}
+// This is a server component that wraps the client component
+export function ClientLayout({ children }: { children: React.ReactNode }) {
+  const pathname = usePathname()
+  
+  // Check if current path is a dashboard path
+  const isDashboardPage = pathname?.startsWith('/dashboard')
 
-export function ClientLayout({ children }: ClientLayoutProps) {
-  const router = useRouter()
-  const [isClient, setIsClient] = useState(false)
-  const [pathname, setPathname] = useState<string>('')
-
+  // Initialize AOS with custom settings
   useEffect(() => {
-    // Set isClient to true when component mounts
-    setIsClient(true)
-    
-    // Immediately set the pathname from window location
-    if (typeof window !== 'undefined') {
-      setPathname(window.location.pathname)
-    }
-  }, [])
+    AOS.init({
+      duration: 800,
+      easing: 'ease-out-cubic',
+      once: false,
+      mirror: true,
+      offset: 50,
+      delay: 100,
+      debounceDelay: 50,
+      throttleDelay: 99,
+      anchorPlacement: 'top-bottom',
+      disable: 'mobile',
+    });
 
-  useEffect(() => {
-    // Only attempt to use Next.js hooks when on the client side
-    if (isClient) {
-      try {
-        // Dynamically import usePathname to avoid SSR issues
-        const { usePathname } = require("next/navigation")
-        const pathFromHook = usePathname()
-        if (pathFromHook) {
-          setPathname(pathFromHook)
-        }
-      } catch (e) {
-        console.error("Error using navigation hooks:", e)
-      }
-    }
-  }, [isClient])
+    // Refresh AOS when the window is resized for responsiveness
+    window.addEventListener('resize', () => {
+      AOS.refresh();
+    });
 
-  useEffect(() => {
-    // Force a soft navigation when the pathname changes
-    if (pathname) {
-      router.refresh()
-    }
-  }, [pathname, router])
+    // Refresh AOS on route change
+    window.addEventListener('load', () => {
+      AOS.refresh();
+    });
+
+    return () => {
+      window.removeEventListener('resize', () => {
+        AOS.refresh();
+      });
+      window.removeEventListener('load', () => {
+        AOS.refresh();
+      });
+    };
+  }, []);
 
   return (
-    <div key={pathname}>
-      {children}
-    </div>
+    <>
+      <HydrationFix />
+      {!isDashboardPage && <Navbar />}
+      <main className={`min-h-screen ${isDashboardPage ? 'dashboard-layout' : ''}`}>
+        {children}
+      </main>
+      {!isDashboardPage && <Footer />}
+    </>
   )
 } 

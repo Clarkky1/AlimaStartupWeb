@@ -189,8 +189,9 @@ export function GlobalServices({ category = 'recent', expandable = false }: Glob
         const servicesData: Service[] = []
         
         if (querySnapshot.empty) {
-          // If no services found in Firestore, use mock data
-          setServices(mockGlobalServices)
+          // If no services found in Firestore, don't use mock data
+          // Just set an empty array to show "No services found" message
+          setServices([])
         } else {
           for (const docSnap of querySnapshot.docs) {
             const data = docSnap.data()
@@ -225,21 +226,18 @@ export function GlobalServices({ category = 'recent', expandable = false }: Glob
             })
           }
           
-          if (servicesData.length > 0) {
-            setServices(servicesData)
-          } else {
-            setServices(mockGlobalServices)
-          }
+          // Only use real services from the database
+          setServices(servicesData)
         }
       } catch (error) {
         console.error("Error fetching global services:", error)
         toast({
           title: "Error",
-          description: "Failed to load services. Using sample data instead.",
+          description: "Failed to load services. Displaying no services.",
           variant: "destructive",
         })
-        // Fallback to mock data on error
-        setServices(mockGlobalServices)
+        // Don't use mock data on error, just show no services
+        setServices([])
       } finally {
         setLoading(false)
       }
@@ -260,38 +258,47 @@ export function GlobalServices({ category = 'recent', expandable = false }: Glob
 
   // Modify display logic to handle expansion
   const displayServices = filteredServices.length > 0 ? filteredServices : services;
-  const limitedServices = isExpanded ? displayServices : displayServices.slice(0, 4);
+  // Per user request: subtract 1 from the number of services displayed, but don't go below 0
+  const limitedCount = Math.max(0, displayServices.length - 1);
+  const limitedServices = isExpanded ? displayServices : displayServices.slice(0, limitedCount);
 
   return (
-    <div className="space-y-4">
+    <div className="space-y-3">
       {loading ? (
-        <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-4">
+        <div className="grid gap-3 md:grid-cols-2 lg:grid-cols-4">
           {[1, 2, 3, 4].map((i) => (
-            <Skeleton key={i} className="h-[300px] w-full" />
+            <Skeleton key={i} className="h-[280px] w-full" />
           ))}
         </div>
       ) : (
         <>
-          <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-4">
-            {(isExpanded ? services : services.slice(0, 4)).map((service) => (
-              <ServiceCard
-                key={service.id}
-                id={service.id}
-                title={service.title}
-                description={service.description}
-                price={service.price}
-                category={service.category}
-                image={service.image}
-                provider={service.provider}
-                showRating={true}
-              />
-            ))}
+          <div className="grid gap-3 md:grid-cols-2 lg:grid-cols-4">
+            {limitedServices.length > 0 ? (
+              limitedServices.map((service) => (
+                <ServiceCard
+                  key={service.id}
+                  id={service.id}
+                  title={service.title}
+                  description={service.description}
+                  price={service.price}
+                  category={service.category}
+                  image={service.image}
+                  provider={service.provider}
+                  showRating={true}
+                />
+              ))
+            ) : (
+              <div className="col-span-4 text-center py-8">
+                <p className="text-muted-foreground">No services found</p>
+              </div>
+            )}
           </div>
-          {expandable && services.length > 4 && (
-            <div className="flex justify-center">
+          {expandable && displayServices.length > 4 && (
+            <div className="flex justify-center mt-4">
               <Button
                 variant="outline"
                 onClick={() => setIsExpanded(!isExpanded)}
+                className="px-5 py-1.5"
               >
                 {isExpanded ? "Show Less" : "Show More"}
               </Button>

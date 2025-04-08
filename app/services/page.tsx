@@ -22,6 +22,8 @@ import { Card, CardContent } from "@/components/ui/card"
 import { Badge } from "@/components/ui/badge"
 import { X } from "lucide-react"
 import { Button } from "@/components/ui/button"
+import Link from "next/link"
+import { ArrowRight } from "lucide-react"
 
 export default function ServicesPage() {
   const searchParams = useSearchParams()
@@ -30,7 +32,7 @@ export default function ServicesPage() {
   const [selectedCategory, setSelectedCategory] = useState("all")
   const [sortBy, setSortBy] = useState("rating")
   const [priceRange, setPriceRange] = useState([0, 10000])
-  const [location, setLocation] = useState("")
+  const [location, setLocation] = useState("all")
   const [locations, setLocations] = useState<string[]>([])
   const [showFilters, setShowFilters] = useState(false)
   
@@ -64,7 +66,7 @@ export default function ServicesPage() {
     setSearchTerm("");
     setSelectedCategory("all");
     setPriceRange([0, 10000]);
-    setLocation("");
+    setLocation("all");
   };
 
   // Reset only category filter
@@ -157,14 +159,20 @@ export default function ServicesPage() {
     const matchesPrice = servicePrice >= priceRange[0] && servicePrice <= priceRange[1];
     
     // Location filter
-    const matchesLocation = !location || service.location === location;
+    const matchesLocation = location === "all" || service.location === location;
     
     return matchesSearch && matchesPrice && matchesLocation;
   });
 
   return (
     <div className="container py-8">
-      <h1 className="text-4xl font-bold mb-8">Browse Services</h1>
+      <h1 className="text-4xl font-bold mb-2">Browse Services</h1>
+      <div className="mb-8">
+        <Link href="/popular-today" className="text-primary hover:underline inline-flex items-center">
+          <span>View popular services</span>
+          <ArrowRight className="ml-1 h-4 w-4" />
+        </Link>
+      </div>
       
       <div className="flex flex-col md:flex-row gap-8">
         <div className="w-full md:w-3/4">
@@ -240,7 +248,7 @@ export default function ServicesPage() {
                       Location: {location}
                       <X 
                         className="h-3 w-3 cursor-pointer" 
-                        onClick={() => setLocation("")}
+                        onClick={() => setLocation("all")}
                       />
                     </Badge>
                   )}
@@ -331,7 +339,7 @@ export default function ServicesPage() {
                     <SelectValue placeholder="All Locations" />
                   </SelectTrigger>
                   <SelectContent>
-                    <SelectItem value="">All Locations</SelectItem>
+                    <SelectItem value="all">All Locations</SelectItem>
                     {locations
                       .filter(loc => loc !== "Philippines")
                       .sort()

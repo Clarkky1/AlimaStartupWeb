@@ -44,7 +44,7 @@ import {
   Building2,
   Cpu
 } from "lucide-react"
-import { usePathname } from "next/navigation"
+import { useAuth } from '@/context/auth-context'
 
 interface PopularServicesProps {
   category?: string
@@ -68,6 +68,7 @@ interface ServiceData {
   image?: string;
   providerId: string;
   isLocalService?: boolean;
+  isGlobalService?: boolean;
   rating?: number;
 }
 
@@ -639,7 +640,35 @@ export function PopularServices({ category, limit: serviceLimit = 8 }: PopularSe
   const { toast } = useToast()
   const isMounted = useRef(true)
   const providersCache = useRef(new Map<string, Provider>())
-  const pathname = usePathname()
+  
+  // Replace direct usePathname with a safe alternative
+  const [pathname, setPathname] = useState<string>("")
+  const [isClient, setIsClient] = useState(false)
+  
+  // Safely get the current pathname on client-side only
+  useEffect(() => {
+    setIsClient(true)
+    if (typeof window !== 'undefined') {
+      setPathname(window.location.pathname)
+    }
+  }, [])
+  
+  // Update pathname when needed (client-side only)
+  useEffect(() => {
+    if (isClient && typeof window !== 'undefined') {
+      // This will run only on the client side
+      const handleRouteChange = () => {
+        setPathname(window.location.pathname)
+      }
+      
+      // Listen for route changes
+      window.addEventListener('popstate', handleRouteChange)
+      
+      return () => {
+        window.removeEventListener('popstate', handleRouteChange)
+      }
+    }
+  }, [isClient])
   
   // Add state for filters
   const [searchTerm, setSearchTerm] = useState("")
@@ -750,8 +779,28 @@ export function PopularServices({ category, limit: serviceLimit = 8 }: PopularSe
               location: "Unknown",
               hasRating: false
             },
-            isGlobalService: !serviceData.isLocalService,
-            isLocalService: serviceData.isLocalService || false,
+            isGlobalService: (() => {
+              // First check if the flags are explicitly set
+              if (serviceData.isGlobalService === true) return true;
+              if (serviceData.isLocalService === true) return false;
+              
+              // If not set, determine from category
+              if (!serviceData.category) return true; // Default to global
+              
+              const normalizedCategory = normalizeCategory(serviceData.category);
+              return globalCategories.some(gc => normalizeCategory(gc.value) === normalizedCategory);
+            })(),
+            isLocalService: (() => {
+              // First check if the flags are explicitly set
+              if (serviceData.isLocalService === true) return true;
+              if (serviceData.isGlobalService === true) return false;
+              
+              // If not set, determine from category
+              if (!serviceData.category) return false; // Default to not local
+              
+              const normalizedCategory = normalizeCategory(serviceData.category);
+              return localCategories.some(lc => normalizeCategory(lc.value) === normalizedCategory);
+            })(),
             rating: serviceData.rating || 0
           }
 
@@ -795,7 +844,7 @@ export function PopularServices({ category, limit: serviceLimit = 8 }: PopularSe
   // Apply filters whenever any filter changes
   useEffect(() => {
     console.log("Filter effect triggered - current tab:", activeTab);
-    if (!services.length) {
+    if (services.length === 0) {
       // No services at all - use all mock data filtered by tab
       const mockFiltered = mockServices.filter(service => {
         if (activeTab === "global") {
@@ -814,13 +863,16 @@ export function PopularServices({ category, limit: serviceLimit = 8 }: PopularSe
     // First filter based on active tab
     if (activeTab === "global") {
       filtered = filtered.filter(service => service.isGlobalService === true);
+      console.log(`Found ${filtered.length} real global services`);
     } else {
       filtered = filtered.filter(service => service.isLocalService === true);
+      console.log(`Found ${filtered.length} real local services`);
     }
     
-    // Always use mock data if filtered list is empty for the current tab
+    // If we have real services for the current tab, use them
+    // Otherwise fall back to mock data for the current tab only
     if (filtered.length === 0) {
-      console.log(`No ${activeTab} services found, forcing mock data`);
+      console.log(`No ${activeTab} services found in real data, using mock data for this tab`);
       const mockFiltered = mockServices.filter(service => {
         if (activeTab === "global") {
           return service.isGlobalService === true;
@@ -829,9 +881,10 @@ export function PopularServices({ category, limit: serviceLimit = 8 }: PopularSe
         }
       });
       
-      // IMPORTANT: Always use mock data for empty tabs
       filtered = mockFiltered;
       console.log(`Applied ${mockFiltered.length} mock services for ${activeTab} tab`);
+    } else {
+      console.log(`Using ${filtered.length} real services for ${activeTab} tab`);
     }
 
     // Apply search filter
@@ -963,8 +1016,43 @@ export function PopularServices({ category, limit: serviceLimit = 8 }: PopularSe
   }, [])
 
   return (
-    <div className="space-y-4">
-      <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
+    <div className="space-y-3">
+      {!loading && (
+        <div className="mb-10">
+          <h2 className="text-2xl font-bold mb-4">Recently Added Services</h2>
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4">
+            {services
+              .filter(service => 
+                service.title && 
+                service.description && 
+                service.price && 
+                service.category && 
+                service.image && 
+                service.provider?.name
+              )
+              .slice(0, 4)
+              .map((service) => (
+                <div key={service.id} className="transition-transform hover:scale-105">
+                  <ServiceCard 
+                    id={service.id}
+                    title={service.title}
+                    description={service.description}
+                    price={service.price}
+                    category={service.category}
+                    image={service.image || "https://via.placeholder.com/800x600?text=Service+Image"}
+                    provider={{
+                      ...service.provider,
+                      avatar: service.provider.avatar || "/person-male-1.svg"
+                    }}
+                    showRating={true}
+                  />
+                </div>
+              ))}
+          </div>
+        </div>
+      )}
+
+      <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
         <Tabs 
           value={activeTab} 
           className="w-full sm:w-auto" 
@@ -992,8 +1080,8 @@ export function PopularServices({ category, limit: serviceLimit = 8 }: PopularSe
       </div>
 
       {showFilters && (
-        <Card className="p-4">
-          <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
+        <div className="bg-muted/50 rounded-xl p-4">
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
             <div className="space-y-2">
               <Label>Search</Label>
               <Input
@@ -1056,61 +1144,47 @@ export function PopularServices({ category, limit: serviceLimit = 8 }: PopularSe
               </Select>
             </div>
           </div>
-        </Card>
+        </div>
       )}
 
       {loading ? (
-        <div className="grid grid-cols-1 gap-6 sm:grid-cols-2 lg:grid-cols-4">
-          {Array(4)
-            .fill(0)
-            .map((_, i) => (
-              <div key={i} className="space-y-3">
-                <Skeleton className="h-48 w-full rounded-lg" />
-                <div className="space-y-2">
-                  <Skeleton className="h-5 w-3/4" />
-                  <Skeleton className="h-4 w-full" />
-                  <div className="flex items-center gap-2 pt-2">
-                    <Skeleton className="h-8 w-8 rounded-full" />
-                    <Skeleton className="h-4 w-24" />
-                  </div>
-                </div>
-              </div>
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-3">
+          {[...Array(serviceLimit)].map((_, index) => (
+            <Skeleton key={index} className="h-[280px] w-full rounded-xl" />
             ))}
         </div>
       ) : (
-        <div className="grid grid-cols-1 gap-6 sm:grid-cols-2 lg:grid-cols-4">
-          {/* Force display of mock data regardless of filteredServices state */}
-          {(activeTab === "global" ? 
-            mockServices.filter(s => s.isGlobalService === true) : 
-            mockServices.filter(s => s.isLocalService === true)
-          )
-            .filter(service => 
-              service.title && 
-              service.description && 
-              service.price && 
-              service.category && 
-              service.image && 
-              service.provider?.name
-            )
-            .slice(0, 8)
-            .map((service) => (
-              <div key={service.id} className="transition-transform hover:scale-105">
-                <ServiceCard 
-                  id={service.id}
-                  title={service.title}
-                  description={service.description}
-                  price={service.price}
-                  category={service.category}
-                  image={service.image || "https://via.placeholder.com/800x600?text=Service+Image"}
-                  provider={{
-                    ...service.provider,
-                    avatar: service.provider.avatar || "/person-male-1.svg"
-                  }}
-                  showRating={true}
-                />
-              </div>
-            ))}
-        </div>
+        <>
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4 mt-8">
+            {filteredServices
+              .filter(service => 
+                service.title && 
+                service.description && 
+                service.price && 
+                service.category && 
+                service.image && 
+                service.provider?.name
+              )
+              .slice(0, 8)
+              .map((service) => (
+                <div key={service.id} className="transition-transform hover:scale-105">
+                  <ServiceCard 
+                    id={service.id}
+                    title={service.title}
+                    description={service.description}
+                    price={service.price}
+                    category={service.category}
+                    image={service.image || "https://via.placeholder.com/800x600?text=Service+Image"}
+                    provider={{
+                      ...service.provider,
+                      avatar: service.provider.avatar || "/person-male-1.svg"
+                    }}
+                    showRating={true}
+                  />
+                </div>
+              ))}
+          </div>
+        </>
       )}
     </div>
   )

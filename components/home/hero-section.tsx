@@ -3,30 +3,178 @@
 import { useRouter } from "next/navigation"
 import { Button } from "@/components/ui/button"
 import { useAuth } from "@/app/context/auth-context"
+import { Plus, Circle } from "lucide-react"
+import { useStatistics } from "@/app/hooks/useStatistics"
 
 export function HeroSection() {
   const router = useRouter()
   const { user } = useAuth()
+  const { userCount, serviceCount, isLoading } = useStatistics()
+  
+  // Format numbers with K suffix (e.g., 15300 -> 15.3K)
+  const formatStatNumber = (num: number): string => {
+    if (num >= 1000) {
+      return (num / 1000).toFixed(1) + 'K'
+    }
+    return num.toString()
+  }
 
   return (
-    <section className="relative flex justify-center items-start py-4 md:py-8 w-full px-4 sm:px-6 md:px-8">
-      <div className="relative w-full max-w-screen-2xl rounded-3xl overflow-hidden">
-        <img 
-          alt="Background" 
-          className="w-full h-auto object-cover" 
-          src="/HomeBanner.svg"
-        />
-        <div className="absolute inset-0 flex flex-col justify-center px-8 sm:px-16 md:px-32">
-          <h1 className="text-2xl sm:text-4xl md:text-7xl font-bold text-white leading-tight">
-            Empower <br />
-            Excel <br />
-            Earn
-          </h1>
-          <p className="mt-2 md:mt-4 text-xs sm:text-sm md:text-lg text-white">
-            Discover opportunities and unlock your potential with <span className="font-bold">Alima</span>.
-          </p>
+    <section className="relative overflow-hidden pt-16 pb-32 md:pt-24 md:pb-40">
+      <div className="absolute inset-0 -z-10">
+        <div className="absolute inset-0 bg-white dark:bg-black"></div>
+        {/* Decorative elements */}
+        <div className="absolute top-1/4 left-1/4 h-4 w-4 rounded-full bg-purple-300"></div>
+        <div className="absolute bottom-1/4 right-1/3 h-6 w-6 rounded-full bg-blue-200"></div>
+        <div className="absolute top-1/3 right-1/4 h-10 w-10 text-green-300">
+          <Plus className="h-full w-full" strokeWidth={1} />
+        </div>
+        <div className="absolute bottom-1/3 left-1/3 h-8 w-8 text-blue-200">
+          <Plus className="h-full w-full" strokeWidth={1} />
+        </div>
+      </div>
+      
+      <div className="container mx-auto px-4">
+        <div className="mx-auto max-w-6xl">
+          <div className="grid items-center gap-12 md:grid-cols-2">
+            <div className="text-left">
+              <h1 className="text-5xl font-bold tracking-tight md:text-6xl lg:text-7xl">
+                <span className="block text-[#10b981]">Empower</span>
+                <span className="block text-[#3b82f6]">Excel</span>
+                <span className="block text-[#10b981]">Earn</span>
+              </h1>
+              
+              <p className="mt-6 text-lg text-neutral-600 dark:text-neutral-300 md:text-xl max-w-md">
+                Discover opportunities and unlock your potential with <span className="font-bold">Alima</span>.
+              </p>
+              
+              <div className="mt-10 flex flex-wrap gap-4">
+                <Button 
+                  className="rounded-full px-8 py-6 text-base bg-[#10b981] hover:bg-[#10b981]/90"
+                  onClick={() => router.push(user ? "/popular-today" : "/signup")}
+                >
+                  Get Started
+                </Button>
+                <a 
+                  href="#how-it-works"
+                  className="inline-flex items-center justify-center gap-2 whitespace-nowrap text-sm font-medium ring-offset-background transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:pointer-events-none disabled:opacity-50 [&_svg]:pointer-events-none [&_svg]:size-4 [&_svg]:shrink-0 border border-input bg-background hover:bg-accent hover:text-accent-foreground h-11 rounded-full px-8"
+                  onClick={(e) => {
+                    e.preventDefault();
+                    const element = document.getElementById("how-it-works");
+                    if (element) {
+                      element.scrollIntoView({ behavior: "smooth" });
+                    }
+                  }}
+                >
+                  How It Works
+                </a>
+              </div>
+            </div>
+            
+            <div className="relative">
+              {/* Modern colorful panels with people - updated to match reference image */}
+              <div className="relative h-[400px] md:h-[450px] flex items-center justify-center">
+                <div className="relative grid grid-cols-2 grid-rows-2 gap-4 max-w-md mx-auto">
+                  {/* Top-left person - orange shirt */}
+                  <div className="relative bg-[#ffd280] rounded-2xl overflow-hidden shadow-lg transform rotate-2 z-10">
+                    <div className="absolute top-2 right-2 w-6 h-6 bg-white/30 rounded-full"></div>
+                    <img 
+                      alt="Person in orange shirt" 
+                      className="w-full h-48 object-cover object-top"
+                      src="/images/people/person1.jpg"
+                      onError={(e) => {
+                        e.currentTarget.src = "https://images.unsplash.com/photo-1494790108377-be9c29b29330?ixlib=rb-4.0.3";
+                        e.currentTarget.onerror = null;
+                      }}
+                    />
+                  </div>
+                  
+                  {/* Top-right person - person with glasses */}
+                  <div className="relative bg-[#c4a7ff] rounded-2xl overflow-hidden shadow-lg transform -rotate-1 translate-y-4 z-20">
+                    <div className="absolute top-2 left-2 w-4 h-4 bg-white/30 rounded-full"></div>
+                    <img 
+                      alt="Person with glasses" 
+                      className="w-full h-52 object-cover object-top"
+                      src="/images/people/person2.jpg" 
+                      onError={(e) => {
+                        e.currentTarget.src = "https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?ixlib=rb-4.0.3";
+                        e.currentTarget.onerror = null;
+                      }}
+                    />
+                  </div>
+                  
+                  {/* Bottom-left - decorative element */}
+                  <div className="relative bg-[#a0e4ff] rounded-2xl overflow-hidden shadow-lg transform -rotate-3 z-20 flex items-center justify-center">
+                    <div className="absolute w-full h-full flex items-center justify-center">
+                      <div className="w-16 h-16 flex items-center justify-center">
+                        <div className="h-3 w-3 rounded-full bg-white mx-1"></div>
+                        <div className="h-3 w-3 rounded-full bg-white mx-1"></div>
+                        <div className="h-3 w-3 rounded-full bg-white mx-1"></div>
+                        <div className="h-3 w-3 rounded-full bg-white mx-1"></div>
+                      </div>
+                    </div>
+                  </div>
+                  
+                  {/* Bottom-right person - person in pink */}
+                  <div className="relative bg-[#b7e5a2] rounded-2xl overflow-hidden shadow-lg transform rotate-1 -translate-y-2 z-10">
+                    <div className="absolute bottom-2 right-2 w-5 h-5 bg-white/30 rounded-full"></div>
+                    <img 
+                      alt="Person in pink" 
+                      className="w-full h-48 object-cover object-top"
+                      src="/images/people/person3.jpg"
+                      onError={(e) => {
+                        e.currentTarget.src = "https://images.unsplash.com/photo-1573497019940-1c28c88b4f3e?ixlib=rb-4.0.3";
+                        e.currentTarget.onerror = null;
+                      }}
+                    />
+                  </div>
+                </div>
+                
+                {/* Decorative elements */}
+                <div className="absolute top-1/3 right-1/3 text-[#10b981]">
+                  <Plus className="h-6 w-6" strokeWidth={1.5} />
+                </div>
+                
+                <div className="absolute bottom-1/4 left-1/3 text-[#3b82f6]">
+                  <Circle className="h-4 w-4" fill="#3b82f6" strokeWidth={0} />
+                </div>
+                
+                <div className="absolute top-1/2 right-1/4 h-3 w-3 rounded-full bg-[#f9a8d4]"></div>
+                <div className="absolute bottom-1/3 left-1/4 h-3 w-3 rounded-full bg-[#fcd34d]"></div>
+              </div>
+              
+              {/* Stats below image grid */}
+              <div className="flex items-center justify-start mt-8 space-x-8">
+                <div className="text-center">
+                  <p className="text-xl font-bold">
+                    {isLoading ? (
+                      <span className="inline-block h-6 w-16 bg-gray-200 dark:bg-gray-700 animate-pulse rounded-md"></span>
+                    ) : (
+                      formatStatNumber(userCount)
+                    )}
+                  </p>
+                  <p className="text-sm text-neutral-500">Active Users</p>
+                </div>
+                <div className="text-center">
+                  <p className="text-xl font-bold">
+                    {isLoading ? (
+                      <span className="inline-block h-6 w-12 bg-gray-200 dark:bg-gray-700 animate-pulse rounded-md"></span>
+                    ) : (
+                      formatStatNumber(serviceCount)
+                    )}
+                  </p>
+                  <p className="text-sm text-neutral-500">Services</p>
+                </div>
+                <div className="flex items-center">
+                  <div className="h-8 w-8 rounded-full bg-gray-200 border-2 border-white -mr-2"></div>
+                  <div className="h-8 w-8 rounded-full bg-gray-300 border-2 border-white -mr-2"></div>
+                  <div className="h-8 w-8 rounded-full bg-gray-400 border-2 border-white"></div>
+                </div>
+              </div>
+            </div>
+          </div>
         </div>
       </div>
     </section>
   )
-}
+} 

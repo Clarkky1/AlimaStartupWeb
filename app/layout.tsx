@@ -6,11 +6,9 @@ import { cn } from "@/lib/utils";
 import 'aos/dist/aos.css'; // Import AOS styles
 
 // Import providers in a specific order to prevent circular dependencies
-import { ThemeProvider } from "@/components/theme-provider";
 import { Toaster } from "@/components/ui/toaster";
 import { AuthProvider } from "@/app/context/auth-context";
 import { CategoryProvider } from "@/app/context/category-context";
-import { CustomThemeProvider } from "@/themes/theme-context";
 import { ClientLayout } from "@/components/layout/client-layout";
 
 // Font configurations with improved fallbacks
@@ -77,23 +75,14 @@ export default function RootLayout({
         poppins.variable,
         workSans.variable
       )} suppressHydrationWarning>
-        <ThemeProvider
-          attribute="class"
-          defaultTheme="system"
-          enableSystem
-          disableTransitionOnChange
-        >
-          <CustomThemeProvider defaultVariant="default">
-            <AuthProvider>
-              <CategoryProvider>
-                <ClientLayout>
-                  {children}
-                </ClientLayout>
-              </CategoryProvider>
-              <Toaster />
-            </AuthProvider>
-          </CustomThemeProvider>
-        </ThemeProvider>
+        <AuthProvider>
+          <CategoryProvider>
+            <ClientLayout>
+              {children}
+            </ClientLayout>
+          </CategoryProvider>
+          <Toaster />
+        </AuthProvider>
       </body>
     </html>
   );

@@ -16,8 +16,9 @@ import {
 } from "@/components/ui/dropdown-menu"
 import { Badge } from "@/components/ui/badge"
 import { Avatar, AvatarImage, AvatarFallback } from "@/components/ui/avatar"
-import { collection, query, where, getDocs, onSnapshot } from "firebase/firestore"
+import { collection, query, where, getDocs, onSnapshot, orderBy, limit } from "firebase/firestore"
 import { initializeFirebase } from "@/app/lib/firebase"
+import { useToast } from "@/components/ui/use-toast"
 
 export function Navbar() {
   const [isMenuOpen, setIsMenuOpen] = useState(false)
@@ -25,6 +26,7 @@ export function Navbar() {
   const { user, logout } = useAuth()
   const router = useRouter()
   const pathname = usePathname()
+  const { toast } = useToast()
   
   // Fetch unread notifications count
   useEffect(() => {
@@ -63,6 +65,57 @@ export function Navbar() {
     await logout()
     router.push("/")
   }
+
+  // Function to fetch the most recent conversation and navigate to it
+  const fetchRecentConversation = async () => {
+    if (!user) return;
+    
+    try {
+      const { db } = await initializeFirebase();
+      if (!db) {
+        toast({
+          title: "Error",
+          description: "Failed to initialize Firebase",
+          variant: "destructive",
+        });
+        return;
+      }
+      
+      // Query to find the most recent conversation
+      const q = query(
+        collection(db, "conversations"),
+        where("participants", "array-contains", user.uid),
+        orderBy("lastMessageTime", "desc"),
+        limit(1)
+      );
+      
+      const snapshot = await getDocs(q);
+      
+      if (snapshot.empty) {
+        // No conversations found, show message
+        toast({
+          title: "No conversations",
+          description: "You don't have any conversations yet.",
+        });
+        return;
+      }
+      
+      // Get the other participant (not the current user)
+      const conversationData = snapshot.docs[0].data();
+      const otherUserId = conversationData.participants.find((id: string) => id !== user.uid);
+      
+      // Navigate to the conversation
+      router.push(`/message/${otherUserId}`);
+      
+    } catch (error) {
+      console.error("Error fetching recent conversation:", error);
+      toast({
+        title: "Error",
+        description: "Failed to load your conversations",
+        variant: "destructive",
+      });
+    }
+  };
 
   const navItems = [
     { name: "Home", href: "/" },
@@ -193,6 +246,11 @@ export function Navbar() {
                       )}
                     </span>
                   </DropdownMenuItem>
+                  <DropdownMenuItem onClick={() => user.role === "provider" ? router.push('/dashboard/messages') : fetchRecentConversation()}>
+                    <span className="flex items-center">
+                      Messages
+                    </span>
+                  </DropdownMenuItem>
                   <DropdownMenuItem onClick={() => router.push('/profile')}>
                     Profile
                   </DropdownMenuItem>
@@ -285,6 +343,21 @@ export function Navbar() {
                           {unreadCount}
                         </Badge>
                       )}
+                    </span>
+                  </Link>
+                  <Link
+                    href={user.role === "provider" ? "/dashboard/messages" : "#"}
+                    className="flex items-center text-sm font-medium px-4 py-2 rounded-lg transition-all text-foreground/70 hover:bg-white/5 hover:text-foreground/90"
+                    onClick={(e) => {
+                      if (user.role !== "provider") {
+                        e.preventDefault();
+                        fetchRecentConversation();
+                      }
+                      setIsMenuOpen(false);
+                    }}
+                  >
+                    <span className="flex items-center">
+                      Messages
                     </span>
                   </Link>
                 </div>

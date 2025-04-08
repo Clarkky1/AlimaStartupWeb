@@ -28,6 +28,7 @@ export default function MessagePage({ params }: { params: { providerId: string }
   const [selectedService, setSelectedService] = useState<any>(null)
   const [loading, setLoading] = useState(true)
   const [messages, setMessages] = useState<any[]>([])
+  const [contacts, setContacts] = useState<any[]>([])
 
   const messagesEndRef = useRef<HTMLDivElement>(null)
 
@@ -178,6 +179,59 @@ export default function MessagePage({ params }: { params: { providerId: string }
 
     fetchMessages();
   }, [user, providerId, authLoading]);
+
+  // Fetch user's conversations
+  useEffectState(() => {
+    async function fetchContacts() {
+      if (!user || authLoading) return
+      
+      try {
+        const { db } = await initializeFirebase()
+        if (!db) throw new Error("Failed to initialize Firebase")
+        
+        const { collection, query, where, orderBy, onSnapshot, doc, getDoc } = await import("firebase/firestore")
+        
+        const conversationsQuery = query(
+          collection(db, "conversations"),
+          where("participants", "array-contains", user.uid),
+          orderBy("lastMessageTime", "desc")
+        )
+        
+        const unsubscribe = onSnapshot(conversationsQuery, async (snapshot) => {
+          const contactsList: any[] = []
+          
+          for (const convDoc of snapshot.docs) {
+            const convData = convDoc.data()
+            
+            // Find the other participant (not the current user)
+            const otherUserId = convData.participants.find((id: string) => id !== user.uid)
+            
+            // Get other user's profile
+            const userDocRef = doc(db, "users", otherUserId)
+            const userDoc = await getDoc(userDocRef)
+            const userData = userDoc.data() || {}
+            
+            contactsList.push({
+              id: convDoc.id,
+              ...convData,
+              contactId: otherUserId,
+              contactName: userData.name || userData.displayName || "User",
+              contactAvatar: userData.profilePicture || userData.avatar || null,
+              lastMessageTime: convData.lastMessageTime?.toDate()
+            })
+          }
+          
+          setContacts(contactsList)
+        })
+        
+        return () => unsubscribe()
+      } catch (error) {
+        console.error("Error fetching contacts:", error)
+      }
+    }
+    
+    fetchContacts()
+  }, [user, authLoading])
 
   const handleSendMessage = async (e: React.FormEvent) => {
     e.preventDefault()
@@ -406,15 +460,69 @@ export default function MessagePage({ params }: { params: { providerId: string }
   }
 
   return (
-    <div className="container mx-auto px-0 py-0">
-      <Button variant="ghost" className="h-8 px-2 mb-0 flex items-center" onClick={() => router.back()}>
-        <ArrowLeft className="mr-1 h-3 w-3" />
-        Back
-      </Button>
+    <div className="container mx-auto px-0 py-10">
+      <div className="flex justify-start mb-3 mt-4 -ml-2">
+        <Button variant="ghost" className="h-8 px-2 flex items-center" onClick={() => router.back()}>
+          <ArrowLeft className="mr-1 h-4 w-4" />
+          Back
+        </Button>
+      </div>
 
-      <div className="grid gap-2 md:grid-cols-3 overflow-hidden">
+      <div className="grid gap-2 md:grid-cols-4 lg:grid-cols-5 overflow-hidden">
+        {/* Contacts Sidebar */}
+        <div className="md:col-span-1">
+          <Card>
+            <CardHeader className="p-3">
+              <CardTitle className="text-base">Recent Conversations</CardTitle>
+            </CardHeader>
+            <CardContent className="p-0">
+              <div className="max-h-[calc(100vh-320px)] overflow-y-auto">
+                {contacts.length > 0 ? (
+                  <div className="divide-y">
+                    {contacts.map((contact) => (
+                      <div 
+                        key={contact.id}
+                        className={`p-3 flex items-center gap-3 cursor-pointer hover:bg-muted transition-colors ${
+                          contact.contactId === providerId ? 'bg-muted/50' : ''
+                        }`}
+                        onClick={() => router.push(`/message/${contact.contactId}`)}
+                      >
+                        <Avatar className="h-10 w-10">
+                          <AvatarImage src={contact.contactAvatar || "/person-male-1.svg"} />
+                          <AvatarFallback>{contact.contactName?.[0]}</AvatarFallback>
+                        </Avatar>
+                        <div className="flex-1 min-w-0">
+                          <p className="font-medium text-sm truncate">{contact.contactName}</p>
+                          <p className="text-xs text-muted-foreground truncate">
+                            {contact.lastMessage || "No messages yet"}
+                          </p>
+                          {contact.lastMessageTime && (
+                            <p className="text-xs opacity-70">
+                              {contact.lastMessageTime.toLocaleDateString()}
+                            </p>
+                          )}
+                        </div>
+                        {contact.serviceTitle && (
+                          <Badge variant="outline" className="text-xs hidden sm:block">
+                            {contact.serviceTitle.substring(0, 10)}
+                            {contact.serviceTitle.length > 10 ? '...' : ''}
+                          </Badge>
+                        )}
+                      </div>
+                    ))}
+                  </div>
+                ) : (
+                  <div className="p-4 text-center text-sm text-muted-foreground">
+                    No conversations yet
+                  </div>
+                )}
+              </div>
+            </CardContent>
+          </Card>
+        </div>
+
         {/* Message Card */}
-        <div className="md:col-span-2">
+        <div className="md:col-span-2 lg:col-span-3">
           <Card>
             <CardHeader className="p-3">
               <div className="space-y-2">
@@ -451,7 +559,12 @@ export default function MessagePage({ params }: { params: { providerId: string }
               </div>
             </CardHeader>
             <CardContent>
-              <div className="mb-2 h-[calc(100vh-300px)] overflow-y-auto border rounded-md p-4">
+              <div className="mb-4 text-center bg-muted/30 py-2 rounded-md">
+                <p className="text-sm text-muted-foreground">
+                  Welcome to your conversation! You can now message this service provider directly.
+                </p>
+              </div>
+              <div className="mb-2 h-[calc(100vh-500px)] overflow-y-auto border rounded-md p-4">
                 {messages.map((msg) => (
                   <div
                     key={msg.id}
@@ -479,7 +592,7 @@ export default function MessagePage({ params }: { params: { providerId: string }
                     </div>
                   </div>
                 ))}
-                <div ref={messagesEndRef} /> {/* Add this div at the end of messages */}
+                <div ref={messagesEndRef} />
               </div>
               <form onSubmit={handleSendMessage} className="space-y-2">
                 {providerServices.length > 1 && (
@@ -500,8 +613,6 @@ export default function MessagePage({ params }: { params: { providerId: string }
                   </div>
                 )}
                 
-                {/* Service card has been moved to the About Provider section below */}
-
                 <div className="flex flex-col gap-2">
                   <div className="flex items-center gap-2">
                     <Textarea

@@ -300,10 +300,19 @@ export function ContactModal({
         description: "Your message has been sent successfully",
       })
 
-      // Close both modals
-      onOpenChange?.(false)
-      setShowConfirmation(false)
-      
+      // Show confirmation or navigate directly to chat
+      if (showConfirmation) {
+        setShowConfirmation(false)
+        onOpenChange?.(false)
+        router.push(`/message/${providerId}`)
+      } else {
+        setShowConfirmation(true)
+        setTimeout(() => {
+          onOpenChange?.(false)
+          router.push(`/message/${providerId}`)
+        }, 2000)
+      }
+
       return true; // Return true on success for the confirmation dialog handler
     } catch (error) {
       console.error("Error sending message:", error)

@@ -7,7 +7,7 @@ import { HydrationFix } from "@/components/ui/hydration-fix"
 import { usePathname } from "next/navigation"
 import AOS from 'aos'
 
-// This is a server component that wraps the client component
+// This is a client component that wraps children
 export function ClientLayout({ children }: { children: React.ReactNode }) {
   const pathname = usePathname()
   const [mounted, setMounted] = useState(false);

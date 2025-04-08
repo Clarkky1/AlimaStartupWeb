@@ -470,18 +470,23 @@ export function ContactModal({
 
         {/* Confirmation Dialog */}
         <Dialog open={showConfirmation} onOpenChange={setShowConfirmation}>
-          <DialogContent className="sm:max-w-[350px]">
-            <DialogHeader className="space-y-2 pb-2">
-              <DialogTitle className="flex items-center gap-2 text-base">
+          <DialogContent className="w-[95%] max-w-[350px] p-4 sm:p-5">
+            <DialogHeader className="space-y-1 sm:space-y-2 pb-2">
+              <DialogTitle className="flex items-center gap-2 text-sm sm:text-base">
                 <AlertCircle className="h-4 w-4 text-yellow-500" />
                 Confirm Message
               </DialogTitle>
-              <DialogDescription className="text-sm">
+              <DialogDescription className="text-xs sm:text-sm">
                 Are you sure you want to send this message to {providerName}?
               </DialogDescription>
             </DialogHeader>
-            <DialogFooter className="pt-2">
-              <Button variant="outline" size="sm" onClick={() => setShowConfirmation(false)}>
+            <DialogFooter className="flex-col sm:flex-row gap-2 sm:gap-0 pt-2">
+              <Button 
+                variant="outline" 
+                size="sm" 
+                onClick={() => setShowConfirmation(false)}
+                className="w-full sm:w-auto"
+              >
                 Cancel
               </Button>
               <Button 
@@ -500,6 +505,7 @@ export function ContactModal({
                   router.push(`/message/${providerId}`);
                 }} 
                 disabled={isSending}
+                className="w-full sm:w-auto"
               >
                 {isSending ? "Sending..." : "Send Message"}
               </Button>

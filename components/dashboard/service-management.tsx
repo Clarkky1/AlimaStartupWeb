@@ -697,18 +697,26 @@ export function ServiceManagement() {
 
       {/* Delete Service Dialog */}
       <Dialog open={isDeleteDialogOpen} onOpenChange={setIsDeleteDialogOpen}>
-        <DialogContent className="sm:max-w-[400px]">
+        <DialogContent className="w-[95%] max-w-[400px] p-4 sm:p-6">
           <DialogHeader>
-            <DialogTitle>Delete Service</DialogTitle>
-            <DialogDescription>
+            <DialogTitle className="text-base sm:text-lg">Delete Service</DialogTitle>
+            <DialogDescription className="text-xs sm:text-sm">
               Are you sure you want to delete this service? This action cannot be undone.
             </DialogDescription>
           </DialogHeader>
-          <DialogFooter>
-            <Button variant="outline" onClick={() => setIsDeleteDialogOpen(false)}>
+          <DialogFooter className="flex-col sm:flex-row gap-2 sm:gap-0 mt-2 sm:mt-0">
+            <Button 
+              variant="outline" 
+              onClick={() => setIsDeleteDialogOpen(false)}
+              className="w-full sm:w-auto"
+            >
               Cancel
             </Button>
-            <Button variant="destructive" onClick={handleDeleteService}>
+            <Button 
+              variant="destructive" 
+              onClick={handleDeleteService}
+              className="w-full sm:w-auto"
+            >
               Delete
             </Button>
           </DialogFooter>

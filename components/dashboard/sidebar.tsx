@@ -120,21 +120,22 @@ export function Sidebar() {
       
       {/* Sign Out Confirmation Dialog */}
       <Dialog open={showSignOutDialog} onOpenChange={setShowSignOutDialog}>
-        <DialogContent className="sm:max-w-md">
+        <DialogContent className="w-[95%] max-w-md p-4 sm:p-6">
           <DialogHeader>
-            <DialogTitle className="flex items-center gap-2">
-              <AlertCircle className="h-5 w-5 text-yellow-500" />
+            <DialogTitle className="flex items-center gap-2 text-base sm:text-lg">
+              <AlertCircle className="h-4 w-4 sm:h-5 sm:w-5 text-yellow-500" />
               Confirm Sign Out
             </DialogTitle>
-            <DialogDescription>
+            <DialogDescription className="text-xs sm:text-sm">
               Are you sure you want to sign out from your account?
             </DialogDescription>
           </DialogHeader>
-          <DialogFooter className="sm:justify-end">
+          <DialogFooter className="flex-col sm:flex-row gap-2 sm:gap-0 mt-2 sm:mt-0">
             <Button 
               type="button" 
               variant="outline" 
               onClick={() => setShowSignOutDialog(false)}
+              className="w-full sm:w-auto"
             >
               Cancel
             </Button>
@@ -142,6 +143,7 @@ export function Sidebar() {
               type="button" 
               variant="destructive" 
               onClick={handleSignOut}
+              className="w-full sm:w-auto"
             >
               Sign Out
             </Button>

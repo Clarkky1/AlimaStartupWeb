@@ -18,6 +18,8 @@ export default function PopularTodayPage() {
     // Safely get the current pathname on client-side only
     if (typeof window !== 'undefined') {
       setPathname(window.location.pathname)
+      // Scroll to top on page load
+      window.scrollTo(0, 0)
     }
   }, [])
   
@@ -35,8 +37,8 @@ export default function PopularTodayPage() {
 
   return (
     <div className="flex min-h-screen flex-col bg-white text-black dark:bg-black dark:text-white">
-      {/* Custom spacing to account for fixed navbar */}
-      <div className="pt-24 md:pt-28"></div>
+      {/* Minimal spacing for fixed navbar */}
+      <div className="pt-4 md:pt-6"></div>
       
       {/* Hero Section */}
       <div className="relative overflow-hidden bg-gradient-to-b from-neutral-100 to-white py-24 dark:from-neutral-900 dark:to-black">

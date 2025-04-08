@@ -148,13 +148,20 @@ export function DashboardLayout({ children }: DashboardLayoutProps) {
             </SheetTrigger>
             <SheetContent side="left" className="w-72 p-0">
               <div className="flex h-full flex-col">
-                <div className="border-b p-4">
-                  <Link href="/" className="flex items-center gap-2 font-semibold">
-                    <img src="/AlimaLOGO.svg" alt="Alima" className="h-8 w-auto" />
-                    <span>Alima Dashboard</span>
+                <div className="border-b p-4 bg-gradient-to-br from-blue-500 to-emerald-500 relative overflow-hidden">
+                  {/* Background pattern overlay */}
+                  <div className="absolute inset-0 opacity-15 mix-blend-overlay" 
+                       style={{ 
+                         backgroundImage: "url('/patterns/circuit-board.svg')", 
+                         backgroundSize: "cover" 
+                       }}>
+                  </div>
+                  <Link href="/" className="flex items-center gap-2 font-semibold relative z-10">
+                    <img src="/AlimaLOGO.svg" alt="Alima" className="h-8 w-auto drop-shadow-lg" />
+                    <span className="text-white font-bold">Alima Dashboard</span>
                   </Link>
                 </div>
-                <ScrollArea className="flex-1 overflow-auto py-4">
+                <ScrollArea className="flex-1 py-2">
                   <nav className="grid gap-1 px-2">
                     {navItemsWithCounts.map((item) => {
                       const isActive = currentPath === item.path
@@ -181,7 +188,7 @@ export function DashboardLayout({ children }: DashboardLayoutProps) {
                     })}
                   </nav>
                 </ScrollArea>
-                <div className="border-t p-4">
+                <div className="border-t p-4 bg-gradient-to-br from-blue-400/10 to-emerald-400/10">
                   <div className="flex items-center gap-4 pb-4">
                     <Avatar>
                       <AvatarImage src={user?.avatar || "/placeholder-user.jpg"} alt={user?.name || "User"} />
@@ -287,18 +294,26 @@ export function DashboardLayout({ children }: DashboardLayoutProps) {
         </div>
       </main>
       <Dialog open={isSignoutDialogOpen} onOpenChange={setIsSignoutDialogOpen}>
-        <DialogContent>
+        <DialogContent className="w-[95%] max-w-md p-4 sm:p-6">
           <DialogHeader>
-            <DialogTitle>Confirm Sign Out</DialogTitle>
-            <DialogDescription>
+            <DialogTitle className="text-base sm:text-lg">Confirm Sign Out</DialogTitle>
+            <DialogDescription className="text-xs sm:text-sm">
               Are you sure you want to sign out? This will end your current session.
             </DialogDescription>
           </DialogHeader>
-          <div className="flex justify-end space-x-2">
-            <Button variant="outline" onClick={() => setIsSignoutDialogOpen(false)}>
+          <div className="flex flex-col sm:flex-row justify-end gap-2 sm:space-x-2 mt-2">
+            <Button 
+              variant="outline" 
+              onClick={() => setIsSignoutDialogOpen(false)}
+              className="w-full sm:w-auto"
+            >
               Cancel
             </Button>
-            <Button variant="destructive" onClick={confirmSignOut}>
+            <Button 
+              variant="destructive" 
+              onClick={confirmSignOut}
+              className="w-full sm:w-auto"
+            >
               Sign Out
             </Button>
           </div>

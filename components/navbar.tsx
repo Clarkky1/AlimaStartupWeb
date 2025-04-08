@@ -270,105 +270,107 @@ export function Navbar() {
 
       {/* Mobile menu */}
       {isMenuOpen && (
-        <div className="md:hidden mx-auto max-w-3xl mt-2 rounded-xl bg-white/5 dark:bg-black/5 backdrop-blur-md border border-white/10 dark:border-white/5 shadow-[0_0_15px_rgba(38,100,245,0.05)] dark:shadow-[0_0_20px_rgba(59,130,246,0.1)]">
-          <div className="px-4 py-4">
-            <nav className="flex flex-col space-y-4">
-              {navItems.map((item) => (
-                  <Link
-                  key={item.name}
-                    href={item.href}
-                  className={`text-sm font-medium px-4 py-2 rounded-lg transition-all ${
-                      isActive(item.href)
-                      ? "bg-white/10 text-primary shadow-[0_0_10px_rgba(59,130,246,0.2)]" 
-                      : "text-foreground/70 hover:bg-white/5 hover:text-foreground/90"
-                    }`}
-                    onClick={(e) => {
-                      handleAnchorClick(e, item.href);
-                      if (!item.href.startsWith('/#')) {
-                        setIsMenuOpen(false);
-                      }
-                    }}
-                  >
-                    {item.name}
-                  </Link>
-              ))}
-              
-              {user ? (
-                <div className="flex flex-col space-y-2 pt-4 border-t border-white/10">
-                  {user.role === "provider" && (
+        <div className="fixed inset-x-0 top-[5.5rem] p-2 md:hidden z-50">
+          <div className="w-full mx-auto max-w-md rounded-xl bg-white/10 dark:bg-black/10 backdrop-blur-lg border border-white/20 dark:border-white/10 shadow-lg overflow-hidden">
+            <div className="px-3 py-3 sm:px-4 sm:py-4">
+              <nav className="flex flex-col space-y-1.5 sm:space-y-2">
+                {navItems.map((item) => (
                     <Link
-                      href="/dashboard"
-                      className="text-sm font-medium px-4 py-2 rounded-lg transition-all text-foreground/70 hover:bg-white/5 hover:text-foreground/90"
+                    key={item.name}
+                      href={item.href}
+                    className={`text-sm font-medium px-3 py-2 rounded-lg transition-all ${
+                        isActive(item.href)
+                        ? "bg-white/15 text-foreground shadow-sm" 
+                        : "text-foreground/90 hover:bg-white/10 hover:text-foreground"
+                      }`}
+                      onClick={(e) => {
+                        handleAnchorClick(e, item.href);
+                        if (!item.href.startsWith('/#')) {
+                          setIsMenuOpen(false);
+                        }
+                      }}
+                    >
+                      {item.name}
+                    </Link>
+                ))}
+                
+                {user ? (
+                  <div className="flex flex-col space-y-1.5 sm:space-y-2 pt-2 mt-1 border-t border-white/10 dark:border-white/5">
+                    {user.role === "provider" && (
+                      <Link
+                        href="/dashboard"
+                        className="text-sm font-medium px-3 py-2 rounded-lg transition-all text-foreground/90 hover:bg-white/10 hover:text-foreground"
+                        onClick={() => setIsMenuOpen(false)}
+                      >
+                        Dashboard
+                      </Link>
+                    )}
+                    <Link
+                      href={user.role === "provider" ? "/dashboard/notifications" : "/notifications"}
+                      className="flex items-center text-sm font-medium px-3 py-2 rounded-lg transition-all text-foreground/90 hover:bg-white/10 hover:text-foreground"
                       onClick={() => setIsMenuOpen(false)}
                     >
-                      Dashboard
+                      <span className="flex items-center">
+                        Notifications
+                        {notificationCounts > 0 && (
+                          <Badge 
+                            className="ml-2 h-5 w-5 flex items-center justify-center p-0 bg-red-500 text-white" 
+                            variant="destructive"
+                          >
+                            {notificationCounts}
+                          </Badge>
+                        )}
+                      </span>
                     </Link>
-                  )}
-                  <Link
-                    href={user.role === "provider" ? "/dashboard/notifications" : "/notifications"}
-                    className="flex items-center text-sm font-medium px-4 py-2 rounded-lg transition-all text-foreground/70 hover:bg-white/5 hover:text-foreground/90"
-                    onClick={() => setIsMenuOpen(false)}
-                  >
-                    <span className="flex items-center">
-                      Notifications
-                      {notificationCounts > 0 && (
-                        <Badge 
-                          className="ml-2 h-5 w-5 flex items-center justify-center p-0 bg-red-500 text-white shadow-[0_0_5px_rgba(239,68,68,0.5)]" 
-                          variant="destructive"
-                        >
-                          {notificationCounts}
-                        </Badge>
-                      )}
-                    </span>
-                  </Link>
-                  <Link
-                    href={user.role === "provider" ? "/dashboard/chat" : "#"}
-                    className="flex items-center text-sm font-medium px-4 py-2 rounded-lg transition-all text-foreground/70 hover:bg-white/5 hover:text-foreground/90"
-                    onClick={(e) => {
-                      if (user.role !== "provider") {
-                        e.preventDefault();
-                        fetchRecentConversation();
-                      }
-                      setIsMenuOpen(false);
-                    }}
-                  >
-                    <span className="flex items-center">
-                      Messages
-                      {messageCounts > 0 && (
-                        <Badge 
-                          className="ml-2 h-5 w-5 flex items-center justify-center p-0 bg-red-500 text-white shadow-[0_0_5px_rgba(239,68,68,0.5)]" 
-                          variant="destructive"
-                        >
-                          {messageCounts}
-                        </Badge>
-                      )}
-                    </span>
-                  </Link>
-                </div>
-              ) : (
-                <div className="flex flex-col space-y-2 pt-4">
-                  <Button
-                    variant="outline"
+                    <Link
+                      href={user.role === "provider" ? "/dashboard/chat" : "#"}
+                      className="flex items-center text-sm font-medium px-3 py-2 rounded-lg transition-all text-foreground/90 hover:bg-white/10 hover:text-foreground"
+                      onClick={(e) => {
+                        if (user.role !== "provider") {
+                          e.preventDefault();
+                          fetchRecentConversation();
+                        }
+                        setIsMenuOpen(false);
+                      }}
+                    >
+                      <span className="flex items-center">
+                        Messages
+                        {messageCounts > 0 && (
+                          <Badge 
+                            className="ml-2 h-5 w-5 flex items-center justify-center p-0 bg-red-500 text-white" 
+                            variant="destructive"
+                          >
+                            {messageCounts}
+                          </Badge>
+                        )}
+                      </span>
+                    </Link>
+                  </div>
+                ) : (
+                  <div className="flex flex-col space-y-2 pt-2 mt-1 border-t border-white/10 dark:border-white/5">
+                    <Button
+                      variant="outline"
+                      onClick={() => {
+                        router.push('/login');
+                        setIsMenuOpen(false);
+                      }}
+                      className="w-full justify-center bg-white/5 border-white/20 text-foreground hover:bg-white/10"
+                    >
+                      Log in
+                    </Button>
+                  <Button 
                     onClick={() => {
-                      router.push('/login');
-                      setIsMenuOpen(false);
+                        router.push('/signup');
+                        setIsMenuOpen(false);
                     }}
-                    className="w-full justify-center border-white/10 text-foreground/80 hover:text-foreground/95"
+                      className="w-full justify-center"
                   >
-                    Log in
+                      Sign up
                   </Button>
-                <Button 
-                  onClick={() => {
-                      router.push('/signup');
-                      setIsMenuOpen(false);
-                  }}
-                    className="w-full justify-center shadow-[0_0_10px_rgba(59,130,246,0.3)]"
-                >
-                    Sign up
-                </Button>
-                </div>
-              )}
-            </nav>
+                  </div>
+                )}
+              </nav>
+            </div>
           </div>
         </div>
       )}

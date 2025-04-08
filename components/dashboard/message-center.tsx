@@ -307,10 +307,10 @@ const UploadPaymentProofDialog = ({
           Upload Payment Proof
         </Button>
       </DialogTrigger>
-      <DialogContent>
+      <DialogContent className="w-[95%] max-w-md p-4 sm:p-6">
         <DialogHeader>
-          <DialogTitle>Upload Payment Proof</DialogTitle>
-          <DialogDescription>
+          <DialogTitle className="text-base sm:text-lg">Upload Payment Proof</DialogTitle>
+          <DialogDescription className="text-xs sm:text-sm">
             Upload a screenshot of your payment receipt
           </DialogDescription>
         </DialogHeader>
@@ -715,12 +715,12 @@ const ConversationItem = ({
 const ImagePreviewDialog = ({ src, isOpen, onClose }: { src: string, isOpen: boolean, onClose: () => void }) => {
   return (
     <Dialog open={isOpen} onOpenChange={onClose}>
-      <DialogContent className="max-w-4xl">
+      <DialogContent className="w-[95%] max-w-3xl md:max-w-4xl p-3 sm:p-4">
         <DialogHeader>
-          <DialogTitle>Image Preview</DialogTitle>
-          <DialogDescription>View the full size image</DialogDescription>
+          <DialogTitle className="text-base sm:text-lg">Image Preview</DialogTitle>
+          <DialogDescription className="text-xs sm:text-sm">View the full size image</DialogDescription>
         </DialogHeader>
-        <div className="relative w-full h-full max-h-[80vh] overflow-auto">
+        <div className="relative w-full h-full max-h-[60vh] sm:max-h-[80vh] overflow-auto">
           <img
             src={src}
             alt="Full size preview"

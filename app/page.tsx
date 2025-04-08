@@ -8,8 +8,19 @@ import Link from "next/link"
 import { Suspense } from "react"
 import { CheckCircle, Search, MessageSquare, CreditCard, Plus, Circle } from "lucide-react"
 import { Button } from "@/components/ui/button"
+import { useStatistics } from "@/app/hooks/useStatistics"
 
 export default function Home() {
+  const { userCount, serviceCount, providerCount, isLoading } = useStatistics()
+  
+  // Format numbers with K suffix (e.g., 15300 -> 15.3K)
+  const formatStatNumber = (num: number): string => {
+    if (num >= 1000) {
+      return (num / 1000).toFixed(1) + 'K'
+    }
+    return num.toString()
+  }
+
   return (
     <div className="flex min-h-screen flex-col bg-white text-black dark:bg-black dark:text-white relative overflow-hidden">
       {/* Background elements */}
@@ -168,19 +179,31 @@ export default function Home() {
                     <div className="flex items-center justify-between mt-8 bg-white/80 dark:bg-black/80 backdrop-blur-sm rounded-xl p-4 shadow-lg">
                       <div className="text-center px-4">
                         <p className="text-2xl font-bold text-primary">
-                          15.3K
+                          {isLoading ? (
+                            <span className="inline-block h-6 w-16 bg-gray-200 dark:bg-gray-700 animate-pulse rounded-md"></span>
+                          ) : (
+                            formatStatNumber(userCount)
+                          )}
                         </p>
                         <p className="text-sm text-neutral-500">Active Users</p>
                       </div>
                       <div className="text-center px-4 border-x border-gray-200 dark:border-gray-800">
                         <p className="text-2xl font-bold text-primary">
-                          4.8K
+                          {isLoading ? (
+                            <span className="inline-block h-6 w-16 bg-gray-200 dark:bg-gray-700 animate-pulse rounded-md"></span>
+                          ) : (
+                            formatStatNumber(serviceCount)
+                          )}
                         </p>
                         <p className="text-sm text-neutral-500">Services</p>
                       </div>
                       <div className="text-center px-4">
                         <p className="text-2xl font-bold text-primary">
-                          326
+                          {isLoading ? (
+                            <span className="inline-block h-6 w-16 bg-gray-200 dark:bg-gray-700 animate-pulse rounded-md"></span>
+                          ) : (
+                            formatStatNumber(providerCount)
+                          )}
                         </p>
                         <p className="text-sm text-neutral-500">Providers</p>
                       </div>

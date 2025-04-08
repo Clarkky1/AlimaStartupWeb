@@ -5,6 +5,7 @@ import { collection, getCountFromServer, query, where, or } from 'firebase/fires
 export interface Statistics {
   userCount: number;
   serviceCount: number;
+  providerCount: number;
   isLoading: boolean;
 }
 
@@ -12,6 +13,7 @@ export function useStatistics(): Statistics {
   const [stats, setStats] = useState<Statistics>({
     userCount: 0,
     serviceCount: 0,
+    providerCount: 0,
     isLoading: true
   });
 
@@ -45,10 +47,20 @@ export function useStatistics(): Statistics {
         // Fetch service count
         const servicesSnapshot = await getCountFromServer(collection(db, "services"));
         const serviceCount = servicesSnapshot.data().count;
+        
+        // Fetch provider count - users with role "provider"
+        const providersQuery = query(
+          collection(db, "users"),
+          where("role", "==", "provider")
+        );
+        
+        const providersSnapshot = await getCountFromServer(providersQuery);
+        const providerCount = providersSnapshot.data().count;
 
         setStats({
           userCount,
           serviceCount: Math.max(0, serviceCount - 1),
+          providerCount,
           isLoading: false
         });
       } catch (error) {

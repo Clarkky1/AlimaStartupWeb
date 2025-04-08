@@ -206,19 +206,37 @@ export function ContactModal({
       // Create/update conversation data
       const conversationData: any = {
         participants,
+          participantIds: {
+          [user.uid]: true,
+          [providerId]: true
+        },
         lastMessage: paymentProofUrl ? "Payment proof attached" : message,
         lastMessageTime: timestamp,
         lastSenderId: user.uid,
         lastSenderName: userName,
         lastSenderAvatar: user.photoURL || userData?.profilePicture || userData?.avatar || null,
+        createdAt: timestamp,
+        updatedAt: timestamp
       }
+      
+      // Include provider data for easy access
+      conversationData.providerName = providerName
+      conversationData.providerAvatar = providerAvatar
+      conversationData.providerId = providerId
+      
+      // Include user data for easy access
+      conversationData.userName = userName
+      conversationData.userAvatar = user.photoURL || userData?.profilePicture || userData?.avatar || null
+      conversationData.userId = user.uid
       
       // Include service info if available
       if (serviceId && serviceTitle) {
         conversationData.serviceId = serviceId
         conversationData.serviceTitle = serviceTitle
+        conversationData.servicePrice = servicePrice
       }
       
+      // Create the conversation document with merge option to update if it exists
       await setDoc(doc(db, "conversations", conversationId), conversationData, { merge: true })
 
       // Add the message
@@ -274,15 +292,19 @@ export function ContactModal({
       
       await addDoc(collection(db, "notifications"), notificationData)
 
+      // Set success state
+      setIsSending(false)
+      
       toast({
         title: "Message sent",
         description: "Your message has been sent successfully",
       })
 
+      // Close both modals
       onOpenChange?.(false)
-
-      // After successful message send, redirect to messages page
-      router.push(`/message/${providerId}`)
+      setShowConfirmation(false)
+      
+      return true; // Return true on success for the confirmation dialog handler
     } catch (error) {
       console.error("Error sending message:", error)
       toast({
@@ -290,8 +312,8 @@ export function ContactModal({
         description: "Failed to send message. Please try again later.",
         variant: "destructive",
       })
-    } finally {
       setIsSending(false)
+      return false; // Return false on error
     }
   }
 
@@ -455,14 +477,18 @@ export function ContactModal({
               </Button>
               <Button 
                 size="sm" 
-                onClick={(e) => {
+                onClick={async (e) => {
                   if (!user) {
                     // If not logged in, redirect to login
                     const returnUrl = window.location.pathname + window.location.search;
                     router.push(`/login?returnUrl=${encodeURIComponent(returnUrl)}`);
                     return;
                   }
-                  handleSendMessage(e as React.FormEvent);
+                  
+                  await handleSendMessage(e as React.FormEvent);
+                  
+                  // Explicitly navigate to the message page after sending
+                  router.push(`/message/${providerId}`);
                 }} 
                 disabled={isSending}
               >

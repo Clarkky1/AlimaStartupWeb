@@ -500,37 +500,7 @@ export default function MessagePage({ params }: { params: { providerId: string }
                   </div>
                 )}
                 
-                {selectedService && (
-                  <div className="rounded-md border overflow-hidden bg-muted/10">
-                    <div className="p-3 flex flex-col sm:flex-row gap-3">
-                      {selectedService.image && (
-                        <div className="sm:w-1/4">
-                          <img 
-                            src={selectedService.image} 
-                            alt={selectedService.title} 
-                            className="h-full w-full object-cover rounded-md"
-                            onError={(e) => {
-                              e.currentTarget.src = "/placeholder.jpg"
-                              e.currentTarget.onerror = null
-                            }}
-                          />
-                        </div>
-                      )}
-                      <div className="sm:w-3/4">
-                        <h3 className="font-medium">{selectedService.title}</h3>
-                        <p className="text-sm text-muted-foreground mb-2">{selectedService.description}</p>
-                        <div className="flex justify-between items-center">
-                          <span className="text-sm font-bold">₱{selectedService.price}</span>
-                          {selectedService.category && (
-                            <Badge variant="outline" className="text-xs">
-                              {formatCategoryName(selectedService.category)}
-                            </Badge>
-                          )}
-                        </div>
-                      </div>
-                    </div>
-                  </div>
-                )}
+                {/* Service card has been moved to the About Provider section below */}
 
                 <div className="flex flex-col gap-2">
                   <div className="flex items-center gap-2">
@@ -685,6 +655,42 @@ export default function MessagePage({ params }: { params: { providerId: string }
                   </div>
                 </div>
 
+                {/* Add selected service card here - after Contact Info */}
+                {selectedService && (
+                  <div className="border-t pt-3">
+                    <h4 className="text-sm font-semibold mb-2">Selected Service</h4>
+                    <div className="rounded-md border overflow-hidden bg-muted/10">
+                      <div className="p-3 flex flex-col sm:flex-row gap-3">
+                        {selectedService.image && (
+                          <div className="sm:w-1/4">
+                            <img 
+                              src={selectedService.image} 
+                              alt={selectedService.title} 
+                              className="h-full w-full object-cover rounded-md"
+                              onError={(e) => {
+                                e.currentTarget.src = "/placeholder.jpg"
+                                e.currentTarget.onerror = null
+                              }}
+                            />
+                          </div>
+                        )}
+                        <div className="sm:w-3/4">
+                          <h3 className="font-medium">{selectedService.title}</h3>
+                          <p className="text-sm text-muted-foreground mb-2">{selectedService.description}</p>
+                          <div className="flex justify-between items-center">
+                            <span className="text-sm font-bold">₱{selectedService.price}</span>
+                            {selectedService.category && (
+                              <Badge variant="outline" className="text-xs">
+                                {formatCategoryName(selectedService.category)}
+                              </Badge>
+                            )}
+                          </div>
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+                )}
+                
                 {provider?.specialties && (
                   <div className="border-t pt-3">
                     <h4 className="text-sm font-semibold mb-2">Specialties</h4>

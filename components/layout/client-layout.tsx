@@ -1,6 +1,6 @@
 "use client"
 
-import React, { useEffect } from "react"
+import React, { useEffect, useState } from "react"
 import { Navbar } from "@/components/navbar"
 import { Footer } from "@/components/footer"
 import { HydrationFix } from "@/components/ui/hydration-fix"
@@ -10,14 +10,19 @@ import AOS from 'aos'
 // This is a server component that wraps the client component
 export function ClientLayout({ children }: { children: React.ReactNode }) {
   const pathname = usePathname()
+  const [mounted, setMounted] = useState(false);
   
-  // Check if current path is a dashboard, login, or signup path
-  const shouldHideNavAndFooter = pathname?.startsWith('/dashboard') || 
-                                pathname === '/login' || 
-                                pathname === '/signup' ||
-                                pathname === '/signin' ||
-                                pathname === '/register' ||
-                                pathname === '/notifications'
+  // Check if current path is a dashboard, login, signup, or notifications path
+  const shouldHideFooter = pathname?.startsWith('/dashboard') || 
+                          pathname === '/login' || 
+                          pathname === '/signup' ||
+                          pathname === '/signin' ||
+                          pathname === '/register' ||
+                          pathname === '/notifications' ||
+                          pathname?.startsWith('/message');
+                          
+  // Hide navbar only on dashboard, login, signup, and notifications pages
+  const shouldHideNavbar = shouldHideFooter;
 
   // Initialize AOS with custom settings
   useEffect(() => {
@@ -54,14 +59,18 @@ export function ClientLayout({ children }: { children: React.ReactNode }) {
     };
   }, []);
 
+  useEffect(() => {
+    setMounted(true);
+  }, []);
+
   return (
     <>
       <HydrationFix />
-      {!shouldHideNavAndFooter && <Navbar />}
+      {!shouldHideNavbar && <Navbar />}
       <main className={`min-h-screen ${pathname?.startsWith('/dashboard') ? 'dashboard-layout' : ''}`}>
         {children}
       </main>
-      {!shouldHideNavAndFooter && <Footer />}
+      {!shouldHideFooter && <Footer />}
     </>
   )
 } 

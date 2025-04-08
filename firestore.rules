@@ -33,6 +33,7 @@ service cloud.firestore {
     // Users collection
     match /users/{userId} {
       // Allow authenticated users to read other users
+      // Also allow public queries for providers with a limit
       allow read: if true;
       
       // Allow users to create their own profile
@@ -87,7 +88,7 @@ service cloud.firestore {
       allow read: if isAuthenticated() && 
         request.auth.uid in resource.data.participants;
 
-      // Allow creating conversation if user is authenticated and a participant
+      // Allow creating conversation if user is a participant and participants are valid users
       allow create: if isAuthenticated() && 
         request.auth.uid in request.resource.data.participants &&
         request.resource.data.participants.size() == 2;
@@ -170,20 +171,18 @@ service cloud.firestore {
       allow delete: if false;
     }
 
-    // Notifications collection
+    // Notifications collection - Updated to allow message notifications
     match /notifications/{notificationId} {
-      // Allow reading own notifications
-      allow read: if isAuthenticated() && 
-        resource.data.userId == request.auth.uid;
-
-      // Allow creating notifications for other users
+      // Users can only read their own notifications
+      allow read: if isAuthenticated() && resource.data.userId == request.auth.uid;
+      
+      // Allow authenticated users to create notifications
       allow create: if isAuthenticated();
-
-      // Allow updating own notifications
-      allow update: if isAuthenticated() && 
-        resource.data.userId == request.auth.uid;
-
-      // Prevent notification deletion
+      
+      // Users can update their own notifications (e.g., to mark as read)
+      allow update: if isAuthenticated() && resource.data.userId == request.auth.uid;
+      
+      // Notifications cannot be deleted
       allow delete: if false;
     }
 

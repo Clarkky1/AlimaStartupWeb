@@ -1,6 +1,5 @@
 "use client"
 
-import { Navbar } from "@/components/navbar"
 import { Footer } from "@/components/footer"
 import { PopularServices } from "@/components/popular/popular-services"
 import { Suspense } from "react"
@@ -10,33 +9,34 @@ import { useState, useEffect } from "react"
 export default function PopularTodayPage() {
   const router = useRouter()
   const [pathname, setPathname] = useState("")
+  const [mounted, setMounted] = useState(false)
   
   useEffect(() => {
+    // Set mounted state to true when component mounts on client
+    setMounted(true)
+    
     // Safely get the current pathname on client-side only
     if (typeof window !== 'undefined') {
       setPathname(window.location.pathname)
     }
-    
-    // Force a refresh when the component mounts
-    router.refresh()
-  }, [router])
+  }, [])
   
-  // Update pathname when needed
+  // Handle path changes
   useEffect(() => {
     if (typeof window !== 'undefined') {
       const handleRouteChange = () => {
         setPathname(window.location.pathname)
-        router.refresh()
       }
       
       window.addEventListener('popstate', handleRouteChange)
       return () => window.removeEventListener('popstate', handleRouteChange)
     }
-  }, [router])
+  }, [])
 
   return (
     <div className="flex min-h-screen flex-col bg-white text-black dark:bg-black dark:text-white">
-      <Navbar />
+      {/* Custom spacing to account for fixed navbar */}
+      <div className="pt-24 md:pt-28"></div>
       
       {/* Hero Section */}
       <div className="relative overflow-hidden bg-gradient-to-b from-neutral-100 to-white py-16 dark:from-neutral-900 dark:to-black">
@@ -69,14 +69,13 @@ export default function PopularTodayPage() {
                     </div>
                   </div>
                 }>
-                  <PopularServices key={pathname} />
+                  {mounted && <PopularServices key={pathname} />}
                 </Suspense>
               </section>
             </div>
           </div>
         </div>
       </main>
-      <Footer />
     </div>
   )
 }

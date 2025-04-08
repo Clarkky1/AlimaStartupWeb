@@ -7,6 +7,8 @@ import { NotificationCenter } from "@/components/dashboard/notification-center"
 import { Card, CardContent } from "@/components/ui/card"
 import { Badge } from "@/components/ui/badge"
 import { useUnreadCounts } from "@/app/hooks/useUnreadCounts"
+import { Button } from "@/components/ui/button"
+import { ArrowLeft } from "lucide-react"
 
 export default function UserNotificationsPage() {
   const { user, loading } = useAuth()
@@ -33,6 +35,15 @@ export default function UserNotificationsPage() {
     <div className="container max-w-full sm:max-w-4xl mx-auto py-6 sm:py-10 px-4 md:px-6">
       <div className="mx-auto">
         <div className="mb-4 sm:mb-6">
+          <Button 
+            variant="ghost" 
+            className="mb-4 -ml-2 p-2" 
+            onClick={() => router.back()}
+          >
+            <ArrowLeft className="h-5 w-5 mr-1" />
+            <span>Back</span>
+          </Button>
+          
           <div className="flex items-center gap-2">
             <h1 className="text-2xl sm:text-3xl font-bold tracking-tight">Your Notifications</h1>
             {notificationCounts > 0 && (

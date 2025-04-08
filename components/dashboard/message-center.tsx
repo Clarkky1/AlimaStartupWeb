@@ -5,7 +5,7 @@ import { useAuth } from "@/app/context/auth-context"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { ScrollArea } from "@/components/ui/scroll-area"
-import { Send, Image, DollarSign, X, Upload, ArrowLeft, Info, Phone, MapPin, ChevronLeft, Star, Mail, MessageSquare } from "lucide-react"
+import { Send, Image, DollarSign, X, Upload, ArrowLeft, Info, Phone, MapPin, ChevronLeft, Star, Mail, MessageSquare, CheckCircle } from "lucide-react"
 import { useToast } from "@/components/ui/use-toast"
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription, DialogTrigger } from "@/components/ui/dialog"
 import { 
@@ -34,6 +34,8 @@ import { useRouter } from "next/navigation"
 import { Textarea } from "@/components/ui/textarea"
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import { Skeleton } from "@/components/ui/skeleton"
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
+import { Label } from "@/components/ui/label"
 
 interface User {
   id: string
@@ -76,6 +78,8 @@ interface ConversationData {
   otherParticipantName?: string;
   otherParticipantAvatar?: string;
   relatedConversations?: RelatedConversation[];
+  participantNames?: Record<string, string>;
+  participantAvatars?: Record<string, string | null>;
 }
 
 interface RelatedConversation {
@@ -195,9 +199,31 @@ const mockMessages: Record<string, Message[]> = {
   ],
 }
 
-const UploadPaymentProofDialog = ({ onUpload, providerId }: { onUpload: (imageUrl: string) => void; providerId?: string }) => {
+const UploadPaymentProofDialog = ({ 
+  onUpload, 
+  providerId, 
+  services = [] 
+}: { 
+  onUpload: (imageUrl: string, serviceId?: string, amount?: number) => void; 
+  providerId?: string;
+  services?: Array<{id: string, title: string, price?: number | string}>
+}) => {
   const [isUploading, setIsUploading] = useState(false)
+  const [selectedService, setSelectedService] = useState<string | null>(null)
+  const [paymentAmount, setPaymentAmount] = useState<string>("")
   const { toast } = useToast()
+
+  // Select first service by default if available
+  useEffect(() => {
+    if (services && services.length > 0 && !selectedService) {
+      setSelectedService(services[0].id)
+      // Set default price if available
+      const defaultPrice = services[0].price
+      if (defaultPrice) {
+        setPaymentAmount(typeof defaultPrice === 'number' ? defaultPrice.toString() : defaultPrice)
+      }
+    }
+  }, [services, selectedService])
 
   const handleUpload = async (file: File) => {
     // File validation
@@ -242,7 +268,13 @@ const UploadPaymentProofDialog = ({ onUpload, providerId }: { onUpload: (imageUr
       }
 
       const data = await response.json();
-      onUpload(data.secure_url);
+      
+      // Call onUpload with service info and payment amount
+      onUpload(
+        data.secure_url, 
+        selectedService || undefined, 
+        paymentAmount ? parseFloat(paymentAmount) : undefined
+      );
       
       toast({
         title: "Success",
@@ -257,7 +289,11 @@ const UploadPaymentProofDialog = ({ onUpload, providerId }: { onUpload: (imageUr
       });
       
       // Use peace hand image as fallback for payment proof
-      onUpload('/peace-hand.svg');
+      onUpload(
+        '/peace-hand.svg', 
+        selectedService || undefined, 
+        paymentAmount ? parseFloat(paymentAmount) : undefined
+      );
     } finally {
       setIsUploading(false);
     }
@@ -278,23 +314,73 @@ const UploadPaymentProofDialog = ({ onUpload, providerId }: { onUpload: (imageUr
             Upload a screenshot of your payment receipt
           </DialogDescription>
         </DialogHeader>
-        <div className="grid w-full max-w-sm items-center gap-1.5">
-          <label htmlFor="payment-proof">
-            Upload payment proof image
-          </label>
-          <input
-            id="payment-proof"
-            type="file"
-            accept="image/*"
-            className="w-full"
-            onChange={(e) => {
-              const file = e.target.files?.[0]
-              if (file) {
-                handleUpload(file)
-              }
-            }}
-            disabled={isUploading}
-          />
+        
+        <div className="space-y-4">
+          {/* Service selection */}
+          {services.length > 0 && (
+            <div className="space-y-2">
+              <Label htmlFor="service-select">Service</Label>
+              <Select 
+                value={selectedService || ""} 
+                onValueChange={value => {
+                  setSelectedService(value)
+                  // Update default price when service changes
+                  const service = services.find(s => s.id === value)
+                  if (service?.price) {
+                    setPaymentAmount(typeof service.price === 'number' ? service.price.toString() : service.price)
+                  }
+                }}
+              >
+                <SelectTrigger id="service-select">
+                  <SelectValue placeholder="Select service" />
+                </SelectTrigger>
+                <SelectContent>
+                  {services.map(service => (
+                    <SelectItem key={service.id} value={service.id}>
+                      {service.title} {service.price ? `- ₱${service.price}` : ''}
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+            </div>
+          )}
+          
+          {/* Payment amount input */}
+          <div className="space-y-2">
+            <Label htmlFor="payment-amount">Payment Amount (₱)</Label>
+            <Input
+              id="payment-amount"
+              type="number"
+              value={paymentAmount}
+              onChange={e => setPaymentAmount(e.target.value)}
+              placeholder="Enter payment amount"
+              min="0"
+              step="0.01"
+            />
+          </div>
+          
+          {/* File upload */}
+          <div className="space-y-2">
+            <Label htmlFor="payment-proof">Upload payment proof image</Label>
+            <Input
+              id="payment-proof"
+              type="file"
+              accept="image/*"
+              className="w-full"
+              onChange={(e) => {
+                const file = e.target.files?.[0]
+                if (file) {
+                  handleUpload(file)
+                }
+              }}
+              disabled={isUploading}
+            />
+            {isUploading && (
+              <div className="flex justify-center mt-2">
+                <div className="animate-spin rounded-full h-6 w-6 border-b-2 border-primary"></div>
+              </div>
+            )}
+          </div>
         </div>
       </DialogContent>
     </Dialog>
@@ -570,9 +656,23 @@ const ConversationItem = ({
 
   const otherParticipantId = getOtherParticipantId(conversation);
   
+  // Get the display name and avatar for the other participant
+  const displayName = otherParticipantId && conversation.participantNames?.[otherParticipantId] 
+    ? conversation.participantNames[otherParticipantId]
+    : conversation.otherParticipantName || 'Loading...';
+    
+  const displayAvatar = otherParticipantId && conversation.participantAvatars?.[otherParticipantId]
+    ? conversation.participantAvatars[otherParticipantId]
+    : conversation.otherParticipantAvatar || "/person-male-1.svg?height=40&width=40";
+  
   // Move the useEffect into this component
   useEffect(() => {
-    if (!conversation.otherParticipantName && otherParticipantId) {
+    // Only fetch if we don't have participant info in either format
+    const needsUserInfo = otherParticipantId && 
+      !conversation.otherParticipantName && 
+      !conversation.participantNames?.[otherParticipantId];
+      
+    if (needsUserInfo) {
       getConversationDisplayInfo(conversation).then(({ name, avatar }) => {
         // Update the conversation with the user's name and avatar
         updateConversationInfo(conversation.id, name, avatar || undefined);
@@ -589,13 +689,13 @@ const ConversationItem = ({
       )}
     >
       <Avatar className="h-10 w-10">
-        <AvatarImage src={conversation.otherParticipantAvatar || "/person-male-1.svg?height=40&width=40"} />
-        <AvatarFallback>{conversation.otherParticipantName?.[0] || "?"}</AvatarFallback>
+        <AvatarImage src={displayAvatar} />
+        <AvatarFallback>{displayName?.[0] || "?"}</AvatarFallback>
       </Avatar>
       <div className="space-y-1 flex-1 overflow-hidden">
         <div className="flex justify-between">
           <p className="font-medium text-sm">
-            {conversation.otherParticipantName || 'Loading...'}
+            {displayName}
           </p>
           {conversation.lastMessageTime && (
             <span className="text-xs text-muted-foreground">
@@ -649,6 +749,118 @@ export function MessageCenter() {
   const { toast } = useToast()
   const router = useRouter()
   const [previewImage, setPreviewImage] = useState<string | null>(null)
+  const [isProvider, setIsProvider] = useState(false)
+
+  // Check if user is a provider
+  useEffect(() => {
+    if (!user) return;
+    setIsProvider(user.role === 'provider');
+  }, [user]);
+
+  // Handle payment confirmation
+  const handleConfirmPayment = async (message: any) => {
+    if (!user || !isProvider || !message || !message.id) return;
+    
+    try {
+      const { db } = await initializeFirebase();
+      if (!db) {
+        toast({
+          title: "Error",
+          description: "Failed to initialize Firebase",
+          variant: "destructive",
+        });
+        return;
+      }
+      
+      // First update the message to mark payment as confirmed
+      const messageRef = doc(db, "messages", message.id);
+      await updateDoc(messageRef, {
+        paymentConfirmed: true
+      });
+      
+      // Find the transaction related to this payment proof
+      // Search by paymentProofUrl, serviceId, and the involved users
+      const transactionsQuery = query(
+        collection(db, "transactions"),
+        where("paymentProofUrl", "==", message.paymentProof),
+        where("status", "==", "pending")
+      );
+      
+      const transactionsSnapshot = await getDocs(transactionsQuery);
+      
+      let transactionId = "";
+      
+      // If no transaction found, create one
+      if (transactionsSnapshot.empty) {
+        // If no transaction exists, we create one
+        const transactionData = {
+          userId: message.senderId,
+          providerId: user.uid,
+          serviceId: message.serviceId || "",
+          amount: message.paymentAmount || "0",
+          status: "confirmed",
+          paymentProofUrl: message.paymentProof,
+          paymentMethod: "gcash", // Default to gcash if not specified
+          createdAt: new Date().toISOString(),
+          updatedAt: new Date().toISOString(),
+          conversationId: message.conversationId,
+          cloudinaryId: message.cloudinaryId || "" // May be empty
+        };
+        
+        // Add the new transaction using the already imported addDoc
+        const transactionRef = await addDoc(collection(db, "transactions"), transactionData);
+        transactionId = transactionRef.id;
+      } else {
+        // Update existing transaction to confirmed
+        const transaction = transactionsSnapshot.docs[0];
+        transactionId = transaction.id;
+        await updateDoc(doc(db, "transactions", transaction.id), {
+          status: "confirmed",
+          updatedAt: new Date().toISOString()
+        });
+      }
+      
+      // Get provider name for the notification
+      const providerDoc = await getDoc(doc(db, "users", user.uid));
+      const providerData = providerDoc.data() || {};
+      const providerName = providerData.displayName || providerData.name || user.displayName || "Service Provider";
+      
+      // Create notification for the user to rate the service
+      const notificationData = {
+        userId: message.senderId,
+        type: "payment_confirmed_rating", // Special type to trigger rating dialog
+        title: "Payment Confirmed - Rate Service",
+        description: `Your payment for ${message.serviceTitle || "service"} has been confirmed. Please rate your experience.`,
+        timestamp: serverTimestamp(),
+        read: false,
+        data: {
+          conversationId: message.conversationId,
+          messageId: message.id,
+          serviceId: message.serviceId || "",
+          serviceTitle: message.serviceTitle || "",
+          providerId: user.uid,
+          providerName: providerName,
+          transactionId: transactionId,
+          requiresRating: true
+        }
+      };
+      
+      await addDoc(collection(db, "notifications"), notificationData);
+      
+      toast({
+        title: "Success",
+        description: "Payment has been confirmed successfully",
+      });
+      
+    } catch (error) {
+      console.error("Error confirming payment:", error);
+      toast({
+        title: "Error",
+        description: "Failed to confirm payment",
+        variant: "destructive",
+      });
+    }
+  };
 
   // Scroll to bottom of messages
   const scrollToBottom = () => {
@@ -758,6 +970,7 @@ export function MessageCenter() {
           // Check if there's a conversation ID in sessionStorage from a notification
           const preselectedConversationId = sessionStorage.getItem('selectedConversationId')
           const preselectedServiceId = sessionStorage.getItem('selectedServiceId')
+          const fromNotification = sessionStorage.getItem('fromNotification')
           
           if (preselectedConversationId) {
             // Find by direct ID or within related conversations
@@ -788,13 +1001,40 @@ export function MessageCenter() {
             }
             
             if (targetConversation) {
-              setSelectedConversation(targetConversation)
-              setShowUserInfo(true) // Show user info when coming from notification
+              setSelectedConversation(targetConversation);
+              setShowUserInfo(true);
+              
+              // Add this to indicate we came from a notification
+              sessionStorage.setItem('fromNotification', 'true');
+              
+              // If we have additional sender information, update the conversation
+              const senderName = sessionStorage.getItem('senderName');
+              const senderAvatar = sessionStorage.getItem('senderAvatar');
+              
+              if (senderName && targetConversation.otherParticipantId) {
+                // Use this to fix the "Unknown User" issue for the selected conversation
+                if (!targetConversation.participantNames) {
+                  targetConversation.participantNames = {};
+                }
+                targetConversation.participantNames[targetConversation.otherParticipantId] = senderName;
+                
+                if (senderAvatar) {
+                  if (!targetConversation.participantAvatars) {
+                    targetConversation.participantAvatars = {};
+                  }
+                  targetConversation.participantAvatars[targetConversation.otherParticipantId] = senderAvatar;
+                }
+                
+                // Update the state with the enhanced conversation data
+                setSelectedConversation({...targetConversation});
+              }
             }
             
             // Clear the sessionStorage
-            sessionStorage.removeItem('selectedConversationId')
-            sessionStorage.removeItem('selectedServiceId')
+            sessionStorage.removeItem('selectedConversationId');
+            sessionStorage.removeItem('selectedServiceId');
+            sessionStorage.removeItem('senderName');
+            sessionStorage.removeItem('senderAvatar');
           }
         })
       } catch (error) {
@@ -935,6 +1175,9 @@ export function MessageCenter() {
   const handleSendMessage = async (e: React.FormEvent) => {
     e.preventDefault()
     if (!newMessage.trim() || !selectedConversation || !user) return
+
+    // Scroll immediately when sending
+    scrollToBottom()
     
     const otherParticipantId = getOtherParticipantId(selectedConversation)
     if (!otherParticipantId) return
@@ -948,7 +1191,25 @@ export function MessageCenter() {
       // Get current user's profile
       const userDoc = await getDoc(doc(db, "users", user.uid))
       const userData = userDoc.data() || {}
-      const userName = userData?.name || "Anonymous"
+      const userName = userData?.displayName || userData?.name || user.displayName || "Anonymous"
+      const userAvatar = userData?.profilePicture || userData?.avatar || user.photoURL || null
+      
+      // Update the conversation's participant info to ensure proper display
+      if (selectedConversation && selectedConversation.id) {
+        // Get the other participant's info to ensure it's properly set
+        const otherUserDoc = await getDoc(doc(db, "users", otherParticipantId))
+        const otherUserData = otherUserDoc.data() || {}
+        const otherUserName = otherUserData?.displayName || otherUserData?.name || "User"
+        const otherUserAvatar = otherUserData?.profilePicture || otherUserData?.avatar || null
+        
+        // Update the conversation with both participants' display info
+        await updateDoc(doc(db, "conversations", selectedConversation.id), {
+          [`participantNames.${user.uid}`]: userName,
+          [`participantAvatars.${user.uid}`]: userAvatar,
+          [`participantNames.${otherParticipantId}`]: otherUserName,
+          [`participantAvatars.${otherParticipantId}`]: otherUserAvatar,
+        });
+      }
       
       // Determine which conversation to use
       let targetConversationId = selectedConversation.id
@@ -974,7 +1235,7 @@ export function MessageCenter() {
         conversationId: targetConversationId,
         senderId: user.uid,
         senderName: userName,
-        senderAvatar: user.photoURL || userData?.profilePicture || userData?.avatar || null,
+        senderAvatar: userAvatar,
         receiverId: otherParticipantId,
         text: newMessage,
         timestamp: serverTimestamp(),
@@ -996,7 +1257,7 @@ export function MessageCenter() {
         lastMessageTime: serverTimestamp(),
         lastSenderId: user.uid,
         lastSenderName: userName,
-        lastSenderAvatar: user.photoURL || userData?.profilePicture || userData?.avatar || null,
+        lastSenderAvatar: userAvatar,
       })
       
       // Create notification for recipient
@@ -1077,13 +1338,22 @@ export function MessageCenter() {
     const otherParticipantId = getOtherParticipantId(conversation)
     if (!otherParticipantId) return { name: 'Unknown', avatar: null }
     
+    // Check if we have participant info in the conversation
+    if (conversation.participantNames && conversation.participantNames[otherParticipantId]) {
+      return {
+        name: conversation.participantNames[otherParticipantId],
+        avatar: conversation.participantAvatars?.[otherParticipantId] || null
+      }
+    }
+    
+    // Fallback to other fields
     let name = conversation.otherParticipantName || 'Unknown User'
     let avatar = conversation.otherParticipantAvatar
     
     try {
       const { db } = await initializeFirebase()
       if (db) {
-        const { doc, getDoc } = await import("firebase/firestore")
+        const { doc, getDoc, updateDoc } = await import("firebase/firestore")
         
         // Get current user's role
         const currentUserDoc = await getDoc(doc(db, "users", user.uid))
@@ -1095,16 +1365,20 @@ export function MessageCenter() {
         if (otherUserDoc.exists()) {
           const otherUserData = otherUserDoc.data()
           
-          // If current user is provider, we want to show client info
-          // If current user is client, we want to show provider info
-          if (isProvider) {
-            // For provider viewing, show client info
-            name = otherUserData.name || otherUserData.displayName || otherUserData.email?.split('@')[0] || 'Unknown User'
-            avatar = otherUserData.profilePicture || otherUserData.avatar
-          } else {
-            // For client viewing, show provider info
-            name = otherUserData.name || otherUserData.displayName || otherUserData.email?.split('@')[0] || 'Unknown User'
-            avatar = otherUserData.profilePicture || otherUserData.avatar
+          // Get the name and avatar from user data
+          name = otherUserData.displayName || otherUserData.name || otherUserData.email?.split('@')[0] || 'Unknown User'
+          avatar = otherUserData.profilePicture || otherUserData.avatar
+          
+          // Update the conversation with participant info for future use
+          if (conversation.id) {
+            try {
+              await updateDoc(doc(db, "conversations", conversation.id), {
+                [`participantNames.${otherParticipantId}`]: name,
+                [`participantAvatars.${otherParticipantId}`]: avatar || null,
+              });
+            } catch (error) {
+              console.error("Error updating conversation participant info:", error)
+            }
           }
         }
       }
@@ -1246,13 +1520,23 @@ export function MessageCenter() {
                       <div className="flex items-center gap-2">
                         <Avatar className="h-8 w-8">
                           <AvatarImage 
-                            src={selectedConversation.otherParticipantAvatar || "/person-male-1.svg?height=32&width=32"} 
+                            src={selectedConversation.otherParticipantAvatar || 
+                                 (selectedConversation.otherParticipantId && 
+                                  selectedConversation.participantAvatars?.[selectedConversation.otherParticipantId]) || 
+                                 "/person-male-1.svg?height=32&width=32"} 
                           />
-                          <AvatarFallback>{selectedConversation.otherParticipantName?.[0] || "?"}</AvatarFallback>
+                          <AvatarFallback>
+                            {(selectedConversation.otherParticipantName?.[0] || 
+                              (selectedConversation.otherParticipantId && 
+                               selectedConversation.participantNames?.[selectedConversation.otherParticipantId]?.[0])) || "?"}
+                          </AvatarFallback>
                         </Avatar>
                         <div>
                           <p className="font-medium text-sm">
-                            {selectedConversation.otherParticipantName || getOtherParticipantId(selectedConversation)}
+                            {selectedConversation.otherParticipantName || 
+                              (selectedConversation.otherParticipantId && 
+                               selectedConversation.participantNames?.[selectedConversation.otherParticipantId]) || 
+                              "Unknown User"}
                           </p>
                         </div>
                       </div>
@@ -1306,13 +1590,23 @@ export function MessageCenter() {
                         <div className="flex items-center gap-2">
                           <Avatar className="h-8 w-8">
                             <AvatarImage 
-                              src={selectedConversation.otherParticipantAvatar || "/person-male-1.svg?height=32&width=32"} 
+                              src={selectedConversation.otherParticipantAvatar || 
+                                   (selectedConversation.otherParticipantId && 
+                                    selectedConversation.participantAvatars?.[selectedConversation.otherParticipantId]) || 
+                                   "/person-male-1.svg?height=32&width=32"} 
                             />
-                            <AvatarFallback>{selectedConversation.otherParticipantName?.[0] || "?"}</AvatarFallback>
+                            <AvatarFallback>
+                              {(selectedConversation.otherParticipantName?.[0] || 
+                                (selectedConversation.otherParticipantId && 
+                                 selectedConversation.participantNames?.[selectedConversation.otherParticipantId]?.[0])) || "?"}
+                            </AvatarFallback>
                           </Avatar>
                           <div>
                             <p className="font-medium text-sm">
-                              {selectedConversation.otherParticipantName || getOtherParticipantId(selectedConversation)}
+                              {selectedConversation.otherParticipantName || 
+                                (selectedConversation.otherParticipantId && 
+                                 selectedConversation.participantNames?.[selectedConversation.otherParticipantId]) || 
+                                "Unknown User"}
                             </p>
                           </div>
                         </div>
@@ -1379,13 +1673,52 @@ export function MessageCenter() {
                                       
                                       {message.paymentProof && (
                                         <div className="mt-2">
-                                          <p className="text-xs mb-1">Payment Proof:</p>
+                                          <p className="text-xs mb-1 font-semibold">Payment Proof:</p>
+                                          
+                                          {/* Service and amount info */}
+                                          {message.serviceTitle && (
+                                            <div className="mb-2 text-xs">
+                                              <span className="font-medium">Service:</span> {message.serviceTitle}
+                                            </div>
+                                          )}
+                                          
+                                          {message.paymentAmount && (
+                                            <div className="mb-2 text-xs">
+                                              <span className="font-medium">Amount:</span> ₱{typeof message.paymentAmount === 'number' 
+                                                ? message.paymentAmount.toLocaleString() 
+                                                : message.paymentAmount}
+                                            </div>
+                                          )}
+                                          
                                           <img 
                                             src={message.paymentProof} 
                                             alt="Payment Proof" 
                                             className="max-h-40 rounded-md cursor-pointer hover:opacity-90 transition-opacity" 
                                             onClick={() => setPreviewImage(message.paymentProof)}
                                           />
+                                          
+                                          {/* Payment confirmation buttons for provider */}
+                                          {isProvider && !message.paymentConfirmed && (
+                                            <div className="mt-2 flex gap-2">
+                                              <Button 
+                                                size="sm" 
+                                                variant="default"
+                                                className="flex-1 h-8"
+                                                onClick={() => handleConfirmPayment(message)}
+                                              >
+                                                <CheckCircle className="mr-1 h-3 w-3" />
+                                                Confirm Payment
+                                              </Button>
+                                            </div>
+                                          )}
+                                          
+                                          {/* Payment confirmed indicator */}
+                                          {message.paymentConfirmed && (
+                                            <div className="mt-2 flex items-center text-xs text-green-600">
+                                              <CheckCircle className="mr-1 h-3 w-3" />
+                                              Payment Confirmed
+                                            </div>
+                                          )}
                                         </div>
                                       )}
                                     </div>

@@ -19,53 +19,21 @@ import { Avatar, AvatarImage, AvatarFallback } from "@/components/ui/avatar"
 import { collection, query, where, getDocs, onSnapshot, orderBy, limit } from "firebase/firestore"
 import { initializeFirebase } from "@/app/lib/firebase"
 import { useToast } from "@/components/ui/use-toast"
+import { useUnreadCounts } from "@/app/hooks/useUnreadCounts"
 
 export function Navbar() {
   const [isMenuOpen, setIsMenuOpen] = useState(false)
-  const [unreadCount, setUnreadCount] = useState(0)
   const { user, logout } = useAuth()
   const router = useRouter()
   const pathname = usePathname()
   const { toast } = useToast()
+  const { messageCounts, notificationCounts } = useUnreadCounts(user?.uid)
   
-  // Fetch unread notifications count
-  useEffect(() => {
-    if (!user) {
-      setUnreadCount(0)
-      return
-    }
-
-    const fetchUnreadCount = async () => {
-      try {
-        const { db } = await initializeFirebase()
-        if (!db) return
-
-        const q = query(
-          collection(db, "notifications"),
-          where("userId", "==", user.uid),
-          where("read", "==", false)
-        )
-
-        // Set up a real-time listener for unread notifications
-        const unsubscribe = onSnapshot(q, (querySnapshot) => {
-          setUnreadCount(querySnapshot.size)
-        })
-
-        // Clean up the listener when component unmounts
-        return () => unsubscribe()
-      } catch (error) {
-        console.error("Error fetching unread notifications:", error)
-      }
-    }
-
-    fetchUnreadCount()
-  }, [user])
-
   const handleLogout = async () => {
     await logout()
     router.push("/")
   }
-
+  
   // Function to fetch the most recent conversation and navigate to it
   const fetchRecentConversation = async () => {
     if (!user) return;
@@ -210,12 +178,12 @@ export function Navbar() {
                         {user.name ? user.name.charAt(0).toUpperCase() : 'U'}
                       </AvatarFallback>
                     </Avatar>
-                    {unreadCount > 0 && (
+                    {messageCounts > 0 && (
                       <Badge 
                         className="absolute -top-1 -right-1 h-5 w-5 flex items-center justify-center p-0 bg-red-500 text-white shadow-[0_0_5px_rgba(239,68,68,0.5)]" 
                         variant="destructive"
                       >
-                        {unreadCount}
+                        {messageCounts}
                       </Badge>
                     )}
                   </Button>
@@ -236,19 +204,27 @@ export function Navbar() {
                   <DropdownMenuItem onClick={() => user.role === "provider" ? router.push('/dashboard/notifications') : router.push('/notifications')} className="relative">
                     <span className="flex items-center">
                       Notifications
-                      {unreadCount > 0 && (
+                      {notificationCounts > 0 && (
                         <Badge 
                           className="ml-2 h-5 w-5 flex items-center justify-center p-0 bg-red-500 text-white shadow-[0_0_5px_rgba(239,68,68,0.5)]" 
                           variant="destructive"
                         >
-                          {unreadCount}
+                          {notificationCounts}
                         </Badge>
                       )}
                     </span>
                   </DropdownMenuItem>
-                  <DropdownMenuItem onClick={() => user.role === "provider" ? router.push('/dashboard/messages') : fetchRecentConversation()}>
+                  <DropdownMenuItem onClick={() => user.role === "provider" ? router.push('/dashboard/chat') : fetchRecentConversation()}>
                     <span className="flex items-center">
                       Messages
+                      {messageCounts > 0 && (
+                        <Badge 
+                          className="ml-2 h-5 w-5 flex items-center justify-center p-0 bg-red-500 text-white shadow-[0_0_5px_rgba(239,68,68,0.5)]" 
+                          variant="destructive"
+                        >
+                          {messageCounts}
+                        </Badge>
+                      )}
                     </span>
                   </DropdownMenuItem>
                   <DropdownMenuItem onClick={() => router.push('/profile')}>
@@ -335,18 +311,18 @@ export function Navbar() {
                   >
                     <span className="flex items-center">
                       Notifications
-                      {unreadCount > 0 && (
+                      {notificationCounts > 0 && (
                         <Badge 
                           className="ml-2 h-5 w-5 flex items-center justify-center p-0 bg-red-500 text-white shadow-[0_0_5px_rgba(239,68,68,0.5)]" 
                           variant="destructive"
                         >
-                          {unreadCount}
+                          {notificationCounts}
                         </Badge>
                       )}
                     </span>
                   </Link>
                   <Link
-                    href={user.role === "provider" ? "/dashboard/messages" : "#"}
+                    href={user.role === "provider" ? "/dashboard/chat" : "#"}
                     className="flex items-center text-sm font-medium px-4 py-2 rounded-lg transition-all text-foreground/70 hover:bg-white/5 hover:text-foreground/90"
                     onClick={(e) => {
                       if (user.role !== "provider") {
@@ -358,6 +334,14 @@ export function Navbar() {
                   >
                     <span className="flex items-center">
                       Messages
+                      {messageCounts > 0 && (
+                        <Badge 
+                          className="ml-2 h-5 w-5 flex items-center justify-center p-0 bg-red-500 text-white shadow-[0_0_5px_rgba(239,68,68,0.5)]" 
+                          variant="destructive"
+                        >
+                          {messageCounts}
+                        </Badge>
+                      )}
                     </span>
                   </Link>
                 </div>

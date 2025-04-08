@@ -47,7 +47,7 @@ const navItems: NavItem[] = [
   },
   {
     title: "Messages",
-    path: "/dashboard/messages",
+    path: "/dashboard/chat",
     icon: <MessageSquare className="h-5 w-5" />
   },
   {

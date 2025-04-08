@@ -11,9 +11,10 @@ import {
 import { Button } from "@/components/ui/button"
 import { StarIcon } from "lucide-react"
 import { Textarea } from "@/components/ui/textarea"
-import { doc, updateDoc } from "firebase/firestore"
+import { doc, updateDoc, getDoc, collection, query, where, getDocs } from "firebase/firestore"
 import { initializeFirebase } from "@/app/lib/firebase"
 import { useToast } from "@/components/ui/use-toast"
+import { useAuth } from "@/app/context/auth-context"
 
 interface RatingModalProps {
   open: boolean
@@ -34,6 +35,7 @@ export function RatingModal({
   const [feedback, setFeedback] = useState("")
   const [isSubmitting, setIsSubmitting] = useState(false)
   const { toast } = useToast()
+  const { user } = useAuth()
 
   const handleSubmit = async () => {
     if (rating === 0) {
@@ -50,19 +52,127 @@ export function RatingModal({
       const { db } = await initializeFirebase()
       if (!db) throw new Error("Failed to initialize Firebase")
 
-      // Update provider rating
+      // Update provider rating - get current ratings first
       const providerRef = doc(db, "users", providerId)
-      await updateDoc(providerRef, {
-        rating: rating,
-        hasRating: true
-      })
+      const providerDoc = await getDoc(providerRef)
+      
+      if (providerDoc.exists()) {
+        const providerData = providerDoc.data()
+        const currentRating = providerData.rating || 0
+        const ratingCount = providerData.ratingCount || 0
+        
+        // Calculate new average rating
+        const totalRatingPoints = currentRating * ratingCount + rating
+        const newRatingCount = ratingCount + 1
+        const newAverageRating = totalRatingPoints / newRatingCount
+        
+        // Update the provider document
+        await updateDoc(providerRef, {
+          rating: newAverageRating,
+          ratingCount: newRatingCount,
+          hasRating: true
+        })
+      } else {
+        // First rating for this provider
+        await updateDoc(providerRef, {
+          rating: rating,
+          ratingCount: 1,
+          hasRating: true
+        })
+      }
 
       // Update service rating
-      const serviceRef = doc(db, "services", serviceId)
-      await updateDoc(serviceRef, {
-        rating: rating,
-        feedback: feedback
-      })
+      if (serviceId) {
+        const serviceRef = doc(db, "services", serviceId)
+        const serviceDoc = await getDoc(serviceRef)
+        
+        if (serviceDoc.exists()) {
+          const serviceData = serviceDoc.data()
+          const currentRating = serviceData.rating || 0
+          const ratingCount = serviceData.ratingCount || 0
+          
+          // Calculate new average rating for service
+          const totalRatingPoints = currentRating * ratingCount + rating
+          const newRatingCount = ratingCount + 1
+          const newAverageRating = totalRatingPoints / newRatingCount
+          
+          await updateDoc(serviceRef, {
+            rating: newAverageRating,
+            ratingCount: newRatingCount,
+            feedback: feedback || serviceData.feedback
+          })
+        } else {
+          await updateDoc(serviceRef, {
+            rating: rating,
+            ratingCount: 1,
+            feedback: feedback
+          })
+        }
+      }
+      
+      // Try to update related transaction status to completed
+      // Find transactions between this user and provider for this service
+      if (user) {
+        const transactionsQuery = query(
+          collection(db, "transactions"),
+          where("userId", "==", user.uid),
+          where("providerId", "==", providerId),
+          where("status", "==", "confirmed")
+        )
+        
+        if (serviceId) {
+          // If we have a serviceId, add it to the query
+          const serviceTransactionsQuery = query(
+            collection(db, "transactions"),
+            where("userId", "==", user.uid),
+            where("providerId", "==", providerId),
+            where("serviceId", "==", serviceId),
+            where("status", "==", "confirmed")
+          )
+          
+          const serviceTransactionsSnapshot = await getDocs(serviceTransactionsQuery)
+          
+          // Update the most recent transaction to completed
+          if (!serviceTransactionsSnapshot.empty) {
+            // Sort by timestamp desc to get the most recent one
+            const sortedTransactions = serviceTransactionsSnapshot.docs.sort((a, b) => {
+              const aTime = a.data().updatedAt || a.data().createdAt
+              const bTime = b.data().updatedAt || b.data().createdAt
+              return new Date(bTime).getTime() - new Date(aTime).getTime()
+            })
+            
+            // Update the most recent transaction
+            const transactionRef = doc(db, "transactions", sortedTransactions[0].id)
+            await updateDoc(transactionRef, {
+              status: "completed",
+              rating: rating,
+              feedback: feedback || "",
+              updatedAt: new Date().toISOString()
+            })
+          } else {
+            // If no transaction found with the exact service, try to find any confirmed transaction
+            const transactionsSnapshot = await getDocs(transactionsQuery)
+            
+            if (!transactionsSnapshot.empty) {
+              // Sort by timestamp desc to get the most recent one
+              const sortedTransactions = transactionsSnapshot.docs.sort((a, b) => {
+                const aTime = a.data().updatedAt || a.data().createdAt
+                const bTime = b.data().updatedAt || b.data().createdAt
+                return new Date(bTime).getTime() - new Date(aTime).getTime()
+              })
+              
+              // Update the most recent transaction
+              const transactionRef = doc(db, "transactions", sortedTransactions[0].id)
+              await updateDoc(transactionRef, {
+                status: "completed",
+                rating: rating,
+                feedback: feedback || "",
+                updatedAt: new Date().toISOString()
+              })
+            }
+          }
+        }
+      }
 
       toast({
         title: "Success",

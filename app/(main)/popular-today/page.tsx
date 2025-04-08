@@ -38,11 +38,11 @@ export default function PopularTodayPage() {
   return (
     <div className="flex min-h-screen flex-col bg-white text-black dark:bg-black dark:text-white">
       {/* Hero Section */}
-      <div className="relative overflow-hidden bg-gradient-to-b from-neutral-100 to-white py-16 dark:from-neutral-900 dark:to-black">
-        <div className="container relative mx-auto px-4">
+      <div className="relative overflow-hidden bg-gradient-to-b from-neutral-100 to-white py-24 dark:from-neutral-900 dark:to-black">
+        <div className="container relative mx-auto px-6">
           <div className="mx-auto max-w-2xl text-center">
-            <h1 className="mb-6 text-5xl font-semibold tracking-tight md:text-6xl">Popular Today</h1>
-            <p className="mx-auto text-xl leading-relaxed text-neutral-600 dark:text-neutral-300">
+            <h1 className="mb-8 text-5xl font-semibold tracking-tight md:text-6xl">Popular Today</h1>
+            <p className="mx-auto text-xl leading-relaxed text-neutral-600 dark:text-neutral-300 max-w-xl">
               Discover trending services and top providers that our users love.
             </p>
           </div>
@@ -50,18 +50,18 @@ export default function PopularTodayPage() {
         <div className="absolute -bottom-24 left-1/2 h-48 w-48 -translate-x-1/2 rounded-full bg-primary/10 blur-3xl"></div>
       </div>
       
-      <main className="flex-1 py-10">
-        <div className="container mx-auto px-3 sm:px-4">
+      <main className="flex-1 py-16">
+        <div className="container mx-auto px-6">
           <div className="mx-auto max-w-5xl lg:max-w-6xl">
-            <div className="relative space-y-8">
+            <div className="relative space-y-12">
               <div className="absolute -top-4 left-1/4 h-32 w-32 rounded-full bg-blue-400/20 blur-3xl"></div>
               <div className="absolute top-1/2 right-1/4 h-32 w-32 rounded-full bg-primary/20 blur-3xl"></div>
               
               <section>
                 <Suspense fallback={
-                  <div className="space-y-4">
+                  <div className="space-y-6">
                     <div className="h-10 w-48 bg-neutral-200 dark:bg-neutral-800 animate-pulse rounded-full" />
-                    <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4 md:gap-5">
+                    <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-8">
                       {[...Array(8)].map((_, i) => (
                         <div key={i} className="h-[300px] bg-neutral-200 dark:bg-neutral-800 animate-pulse rounded-2xl" />
                       ))}

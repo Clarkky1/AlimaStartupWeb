@@ -13,13 +13,28 @@ import { useAuth } from "@/app/context/auth-context"
 import { initializeFirebase } from "@/app/lib/firebase"
 import { Badge } from "../ui/badge"
 import { useRouter } from "next/navigation"
+import { formatDistanceToNow } from "date-fns"
+import { RatingModal } from "@/components/messages/rating-modal"
 
 export function NotificationBell() {
   const { user } = useAuth()
   const [notifications, setNotifications] = useState<any[]>([])
   const [unreadCount, setUnreadCount] = useState(0)
+  const [loading, setLoading] = useState(true)
   const [isOpen, setIsOpen] = useState(false)
   const router = useRouter()
+  
+  // Rating dialog state
+  const [showRatingDialog, setShowRatingDialog] = useState(false)
+  const [ratingData, setRatingData] = useState<{
+    providerId: string;
+    providerName: string;
+    serviceId: string;
+  }>({
+    providerId: '',
+    providerName: '',
+    serviceId: ''
+  })
 
   useEffect(() => {
     if (!user) return
@@ -50,7 +65,7 @@ export function NotificationBell() {
               id: doc.id,
               ...data,
               // Format the timestamp for display
-              timeFormatted: data.timestamp ? formatTimestamp(data.timestamp) : '',
+              timeFormatted: data.timestamp ? formatDistanceToNow(data.timestamp.toDate()) : '',
             })
             // Count unread notifications
             if (!data.read) count++
@@ -145,13 +160,26 @@ export function NotificationBell() {
             // Store conversation ID in sessionStorage so the messages page can load it
             sessionStorage.setItem('selectedConversationId', notification.data.conversationId);
             
+            // Store additional helpful information
             if (notification.data.serviceId) {
               sessionStorage.setItem('selectedServiceId', notification.data.serviceId);
             }
             
-            router.push(`/dashboard/messages`);
+            if (notification.data.senderName) {
+              sessionStorage.setItem('senderName', notification.data.senderName);
+            }
+            
+            if (notification.data.senderAvatar) {
+              sessionStorage.setItem('senderAvatar', notification.data.senderAvatar);
+            }
+            
+            // Set a flag to indicate we're coming from a notification
+            sessionStorage.setItem('fromNotification', 'true');
+            
+            // Navigate to chat page
+            router.push(`/dashboard/chat`);
           } else {
-            router.push(`/dashboard/messages`)
+            router.push(`/dashboard/chat`)
           }
         }
         break
@@ -167,6 +195,20 @@ export function NotificationBell() {
         break
       case 'payment_confirmed':
         router.push('/dashboard/transactions')
+        break
+      case 'payment_confirmed_rating':
+        // Show the rating dialog
+        if (notification.data?.providerId && notification.data?.serviceId) {
+          setRatingData({
+            providerId: notification.data.providerId,
+            providerName: notification.data.providerName || 'Service Provider',
+            serviceId: notification.data.serviceId
+          })
+          setShowRatingDialog(true)
+        } else {
+          // Fallback to transaction page if missing data
+          router.push('/dashboard/transactions')
+        }
         break
       default:
         router.push('/dashboard')
@@ -200,95 +242,106 @@ export function NotificationBell() {
   const hasUnread = unreadCount > 0
   
   return (
-    <Popover open={isOpen} onOpenChange={setIsOpen}>
-      <PopoverTrigger asChild>
-        <Button variant="ghost" size="icon" className="relative">
-          <Bell className="h-5 w-5" />
-          {hasUnread && (
-            <span className="absolute -top-1 -right-1 flex h-5 w-5">
-              <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-primary opacity-75"></span>
-              <span className="relative inline-flex rounded-full h-5 w-5 bg-primary justify-center items-center text-[10px] text-white font-medium">
-                {unreadCount > 9 ? '9+' : unreadCount}
+    <>
+      <Popover open={isOpen} onOpenChange={setIsOpen}>
+        <PopoverTrigger asChild>
+          <Button variant="ghost" size="icon" className="relative">
+            <Bell className="h-5 w-5" />
+            {hasUnread && (
+              <span className="absolute -top-1 -right-1 flex h-5 w-5">
+                <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-primary opacity-75"></span>
+                <span className="relative inline-flex rounded-full h-5 w-5 bg-primary justify-center items-center text-[10px] text-white font-medium">
+                  {unreadCount > 9 ? '9+' : unreadCount}
+                </span>
               </span>
-            </span>
-          )}
-        </Button>
-      </PopoverTrigger>
-      <PopoverContent className="w-[350px] p-0" align="end">
-        <div className="flex justify-between items-center border-b p-3">
-          <h4 className="font-semibold text-sm">Notifications</h4>
-          {hasUnread && (
-            <Button variant="ghost" size="sm" onClick={markAllAsRead} className="h-8 text-xs">
-              Mark all as read
-            </Button>
-          )}
-        </div>
-        
-        {notifications.length === 0 ? (
-          <div className="flex flex-col items-center justify-center py-8 px-4 text-center text-muted-foreground">
-            <Bell className="h-8 w-8 mb-2 opacity-50" />
-            <p>No notifications yet</p>
+            )}
+          </Button>
+        </PopoverTrigger>
+        <PopoverContent className="w-[350px] p-0" align="end">
+          <div className="flex justify-between items-center border-b p-3">
+            <h4 className="font-semibold text-sm">Notifications</h4>
+            {hasUnread && (
+              <Button variant="ghost" size="sm" onClick={markAllAsRead} className="h-8 text-xs">
+                Mark all as read
+              </Button>
+            )}
           </div>
-        ) : (
-          <div className="max-h-[70vh] overflow-auto">
-            {notifications.map((notification) => (
-              <div 
-                key={notification.id}
-                className={`p-3 border-b last:border-0 hover:bg-muted/50 cursor-pointer ${!notification.read ? 'bg-muted/20' : ''}`}
-                onClick={() => handleNotificationClick(notification)}
-              >
-                <div className="flex items-start gap-3">
-                  <div className="pt-1">
-                    <span className="text-xl">{getNotificationIcon(notification.type)}</span>
-                  </div>
-                  <div className="flex-1 space-y-1">
-                    <div className="flex justify-between items-start">
-                      <h5 className="font-medium text-sm">{notification.title}</h5>
-                      <span className="text-xs text-muted-foreground whitespace-nowrap">{notification.timeFormatted}</span>
+          
+          {notifications.length === 0 ? (
+            <div className="flex flex-col items-center justify-center py-8 px-4 text-center text-muted-foreground">
+              <Bell className="h-8 w-8 mb-2 opacity-50" />
+              <p>No notifications yet</p>
+            </div>
+          ) : (
+            <div className="max-h-[70vh] overflow-auto">
+              {notifications.map((notification) => (
+                <div 
+                  key={notification.id}
+                  className={`p-3 border-b last:border-0 hover:bg-muted/50 cursor-pointer ${!notification.read ? 'bg-muted/20' : ''}`}
+                  onClick={() => handleNotificationClick(notification)}
+                >
+                  <div className="flex items-start gap-3">
+                    <div className="pt-1">
+                      <span className="text-xl">{getNotificationIcon(notification.type)}</span>
                     </div>
-                    <p className="text-sm text-muted-foreground">{notification.description}</p>
-                    
-                    {/* Show additional context for messages */}
-                    {(notification.type === 'message' || notification.type === 'payment_proof') && notification.data?.senderName && (
-                      <div className="mt-2 flex items-center gap-2">
-                        <Avatar className="h-6 w-6">
-                          <AvatarImage src={notification.data.senderAvatar || "/placeholder.svg?height=24&width=24"} />
-                          <AvatarFallback>{notification.data.senderName[0] || '?'}</AvatarFallback>
-                        </Avatar>
-                        <div className="text-xs">
-                          From: <span className="font-medium">{notification.data.senderName}</span>
-                          {notification.data.serviceTitle && (
-                            <Badge variant="outline" className="ml-2 text-[10px]">
-                              {notification.data.serviceTitle}
-                            </Badge>
-                          )}
+                    <div className="flex-1 space-y-1">
+                      <div className="flex justify-between items-start">
+                        <h5 className="font-medium text-sm">{notification.title}</h5>
+                        <span className="text-xs text-muted-foreground whitespace-nowrap">{notification.timeFormatted}</span>
+                      </div>
+                      <p className="text-sm text-muted-foreground">{notification.description}</p>
+                      
+                      {/* Show additional context for messages */}
+                      {(notification.type === 'message' || notification.type === 'payment_proof') && notification.data?.senderName && (
+                        <div className="mt-2 flex items-center gap-2">
+                          <Avatar className="h-6 w-6">
+                            <AvatarImage src={notification.data.senderAvatar || "/placeholder.svg?height=24&width=24"} />
+                            <AvatarFallback>{notification.data.senderName[0] || '?'}</AvatarFallback>
+                          </Avatar>
+                          <div className="text-xs">
+                            From: <span className="font-medium">{notification.data.senderName}</span>
+                            {notification.data.serviceTitle && (
+                              <Badge variant="outline" className="ml-2 text-[10px]">
+                                {notification.data.serviceTitle}
+                              </Badge>
+                            )}
+                          </div>
                         </div>
-                      </div>
-                    )}
-                    
-                    {/* Show payment proof thumbnail */}
-                    {notification.type === 'payment_proof' && notification.data?.paymentProofUrl && (
-                      <div className="mt-2">
-                        <img 
-                          src={notification.data.paymentProofUrl} 
-                          alt="Payment Proof" 
-                          className="h-16 object-cover rounded-md border"
-                        />
-                      </div>
-                    )}
-                    
-                    {!notification.read && (
-                      <div className="mt-1">
-                        <Badge variant="default" className="text-[10px]">New</Badge>
-                      </div>
-                    )}
+                      )}
+                      
+                      {/* Show payment proof thumbnail */}
+                      {notification.type === 'payment_proof' && notification.data?.paymentProofUrl && (
+                        <div className="mt-2">
+                          <img 
+                            src={notification.data.paymentProofUrl} 
+                            alt="Payment Proof" 
+                            className="h-16 object-cover rounded-md border"
+                          />
+                        </div>
+                      )}
+                      
+                      {!notification.read && (
+                        <div className="mt-1">
+                          <Badge variant="default" className="text-[10px]">New</Badge>
+                        </div>
+                      )}
+                    </div>
                   </div>
                 </div>
-              </div>
-            ))}
-          </div>
-        )}
-      </PopoverContent>
-    </Popover>
+              ))}
+            </div>
+          )}
+        </PopoverContent>
+      </Popover>
+      
+      {/* Rating Dialog */}
+      <RatingModal 
+        open={showRatingDialog}
+        onOpenChange={setShowRatingDialog}
+        providerId={ratingData.providerId}
+        providerName={ratingData.providerName}
+        serviceId={ratingData.serviceId}
+      />
+    </>
   )
 } 

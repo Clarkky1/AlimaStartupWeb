@@ -73,14 +73,14 @@ export default function Home() {
       <main className="flex-1 relative z-10">
         {/* 1. HEADLINE - Hero Section (acts as main headline/tagline) */}
         <Suspense fallback={<div className="h-[600px] w-full bg-neutral-100 dark:bg-neutral-900" />}>
-          <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
-            <section className="py-12 md:py-20" id="home">
-              <div className="grid grid-cols-1 gap-8 lg:grid-cols-2 lg:gap-16 items-center">
+          <div className="mx-auto max-w-7xl px-6 sm:px-8 lg:px-10">
+            <section className="py-16 md:py-24" id="home">
+              <div className="grid grid-cols-1 gap-10 lg:grid-cols-2 lg:gap-20 items-center">
                 <div className="order-2 lg:order-1" data-aos="fade-right" data-aos-delay="200">
-                  <h1 className="text-3xl font-bold tracking-tight sm:text-4xl md:text-5xl mb-6">
+                  <h1 className="text-3xl font-bold tracking-tight sm:text-4xl md:text-5xl mb-8">
                     Find the perfect service for your business needs
                   </h1>
-                  <p className="mb-8 max-w-lg text-base sm:text-lg text-gray-600 dark:text-gray-300">
+                  <p className="mb-10 max-w-lg text-base sm:text-lg text-gray-600 dark:text-gray-300">
                     Connect with skilled professionals for all your business requirements. From software development to marketing and design, we've got you covered.
                   </p>
                   <div className="flex flex-wrap gap-4">
@@ -106,7 +106,7 @@ export default function Home() {
                 <div className="order-1 lg:order-2" data-aos="fade-left" data-aos-delay="300">
                   <div className="relative mx-auto max-w-md lg:max-w-none">
                     <div className="relative h-[450px] flex items-center justify-center">
-                      <div className="relative grid grid-cols-2 grid-rows-2 gap-4 max-w-md mx-auto">
+                      <div className="relative grid grid-cols-2 grid-rows-2 gap-6 max-w-md mx-auto">
                         {/* Top-left person */}
                         <div className="relative bg-[#ffd280] rounded-2xl overflow-hidden shadow-lg transform rotate-2 z-10">
                           <div className="absolute top-2 right-2 w-6 h-6 bg-white/30 rounded-full"></div>
@@ -216,16 +216,16 @@ export default function Home() {
         </Suspense>
         
         {/* 2. PROBLEM - Client's Problem Section */}
-        <div id="problem" className="py-20 bg-white/95 dark:bg-black/95 relative scroll-mt-40">
-          <div className="container mx-auto px-4 relative z-10">
+        <div id="problem" className="py-28 bg-white/95 dark:bg-black/95 relative scroll-mt-40">
+          <div className="container mx-auto px-6 relative z-10">
             <div className="mx-auto max-w-5xl lg:max-w-6xl">
-              <h2 className="text-3xl font-semibold tracking-tight md:text-4xl mb-6 text-center" data-aos="fade-up">The Problem We Solve</h2>
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-10 items-center mt-10">
+              <h2 className="text-3xl font-semibold tracking-tight md:text-4xl mb-10 text-center" data-aos="fade-up">The Problem We Solve</h2>
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-12 items-center mt-10">
                 <div data-aos="fade-right" data-aos-delay="100">
-                  <p className="text-lg mb-4">
+                  <p className="text-lg mb-6">
                     Finding reliable service providers can be time-consuming and frustrating. You often deal with:
                   </p>
-                  <ul className="space-y-3">
+                  <ul className="space-y-4">
                     <li className="flex items-start">
                       <span className="bg-red-100 dark:bg-red-900/30 p-1 rounded-full mr-3 mt-1">
                         <svg className="h-4 w-4 text-red-500" fill="none" viewBox="0 0 24 24" stroke="currentColor">
@@ -263,64 +263,58 @@ export default function Home() {
         </div>
         
         {/* 3. SOLUTION/SERVICES - How It Works Section */}
-        <div id="how-it-works" className="py-24 bg-neutral-50/95 dark:bg-neutral-950/95 relative scroll-mt-40">
-          <div className="container mx-auto px-4 relative z-10">
+        <div id="how-it-works" className="py-32 bg-neutral-50/95 dark:bg-neutral-950/95 relative scroll-mt-40">
+          <div className="container mx-auto px-6 relative z-10">
             <div className="mx-auto max-w-5xl lg:max-w-6xl text-center">
-              <h2 className="text-3xl font-semibold tracking-tight md:text-4xl mb-3" data-aos="fade-up">How Alima Works</h2>
-              <p className="text-muted-foreground max-w-2xl mx-auto mb-16" data-aos="fade-up" data-aos-delay="100">
+              <h2 className="text-3xl font-semibold tracking-tight md:text-4xl mb-5" data-aos="fade-up">How Alima Works</h2>
+              <p className="text-muted-foreground max-w-2xl mx-auto mb-20" data-aos="fade-up" data-aos-delay="100">
                 Our platform makes it easy to connect with the right service providers or find clients for your services
               </p>
               
-              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-8">
+              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-10">
                 {/* Step 1 */}
-                <div className="flex flex-col items-center p-6" data-aos="zoom-in" data-aos-delay="100">
-                  <div className="rounded-full bg-primary/10 p-4 mb-4">
-                    <Search className="h-8 w-8 text-primary" />
+                <div className="flex flex-col items-center p-8" data-aos="zoom-in" data-aos-delay="100">
+                  <div className="rounded-full bg-primary/10 p-5 mb-6">
+                    <Search className="h-10 w-10 text-primary" />
                   </div>
-                  <h3 className="text-xl font-semibold mb-2">Discover</h3>
+                  <h3 className="text-xl font-semibold mb-3">Discover</h3>
                   <p className="text-sm text-center text-muted-foreground">
                     Browse through verified service providers or post your service offering
                   </p>
                 </div>
                 
                 {/* Step 2 */}
-                <div className="flex flex-col items-center p-6" data-aos="zoom-in" data-aos-delay="200">
-                  <div className="rounded-full bg-primary/10 p-4 mb-4">
-                    <CheckCircle className="h-8 w-8 text-primary" />
+                <div className="flex flex-col items-center p-8" data-aos="zoom-in" data-aos-delay="200">
+                  <div className="rounded-full bg-primary/10 p-5 mb-6">
+                    <CheckCircle className="h-10 w-10 text-primary" />
                   </div>
-                  <h3 className="text-xl font-semibold mb-2">Select</h3>
+                  <h3 className="text-xl font-semibold mb-3">Select</h3>
                   <p className="text-sm text-center text-muted-foreground">
                     Choose the perfect match based on reviews, portfolio, and pricing
                   </p>
                 </div>
                 
                 {/* Step 3 */}
-                <div className="flex flex-col items-center p-6" data-aos="zoom-in" data-aos-delay="300">
-                  <div className="rounded-full bg-primary/10 p-4 mb-4">
-                    <MessageSquare className="h-8 w-8 text-primary" />
+                <div className="flex flex-col items-center p-8" data-aos="zoom-in" data-aos-delay="300">
+                  <div className="rounded-full bg-primary/10 p-5 mb-6">
+                    <MessageSquare className="h-10 w-10 text-primary" />
                   </div>
-                  <h3 className="text-xl font-semibold mb-2">Connect</h3>
+                  <h3 className="text-xl font-semibold mb-3">Connect</h3>
                   <p className="text-sm text-center text-muted-foreground">
                     Communicate directly to discuss requirements and expectations
                   </p>
                 </div>
                 
                 {/* Step 4 */}
-                <div className="flex flex-col items-center p-6" data-aos="zoom-in" data-aos-delay="400">
-                  <div className="rounded-full bg-primary/10 p-4 mb-4">
-                    <CreditCard className="h-8 w-8 text-primary" />
+                <div className="flex flex-col items-center p-8" data-aos="zoom-in" data-aos-delay="400">
+                  <div className="rounded-full bg-primary/10 p-5 mb-6">
+                    <CreditCard className="h-10 w-10 text-primary" />
                   </div>
-                  <h3 className="text-xl font-semibold mb-2">Transact</h3>
+                  <h3 className="text-xl font-semibold mb-3">Transact</h3>
                   <p className="text-sm text-center text-muted-foreground">
                     Secure payment and delivery system with satisfaction guarantee
                   </p>
                 </div>
-              </div>
-              
-              <div className="mt-12" data-aos="fade-up" data-aos-delay="500">
-                <Link href="/signup" className={buttonVariants({ className: "rounded-full px-8" })}>
-                  Get Started
-                </Link>
               </div>
             </div>
           </div>

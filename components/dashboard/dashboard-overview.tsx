@@ -19,9 +19,10 @@ import {
 } from "lucide-react";
 import { useAuth } from "@/app/context/auth-context";
 import { initializeFirebase } from "@/app/lib/firebase";
-import { getDoc, doc, collection, query, where, getDocs, orderBy, limit } from "firebase/firestore";
-import { DashboardStats, CategoryData, TimelineData } from "@/types";
+import { getDoc, doc, collection, query, where, getDocs, orderBy, limit, Timestamp, documentId } from "firebase/firestore";
+import { DashboardStats, TimelineData } from "@/types";
 import { Skeleton } from "@/components/ui/skeleton";
+import { Badge } from "@/components/ui/badge";
 
 // Mock data will be replaced with dynamic data
 const mockCategoryData = [
@@ -52,6 +53,13 @@ interface ServiceData {
   category?: string;
   rating?: number;
   [key: string]: any; // For any other properties
+}
+
+interface CategoryData {
+  name: string;
+  value: number;
+  contactPercentage?: number;
+  revenue?: number;
 }
 
 export function DashboardOverview() {
@@ -167,9 +175,19 @@ export function DashboardOverview() {
         const transactionsSnap = await getDocs(transactionsQuery);
 
         // Calculate revenue from completed transactions where user is the provider
+        // Also track revenue by service
+        const serviceRevenueMap = new Map<string, number>();
         const revenue = transactionsSnap.docs.reduce((sum, doc) => {
           const data = doc.data();
           const amount = typeof data.amount === 'string' ? parseFloat(data.amount) : data.amount;
+          
+          // Record revenue for each service
+          if (data.serviceId && amount) {
+            // Get current total for this service, or 0 if not yet recorded
+            const currentServiceTotal = serviceRevenueMap.get(data.serviceId) || 0;
+            serviceRevenueMap.set(data.serviceId, currentServiceTotal + amount);
+          }
+          
           return sum + (amount || 0);
         }, 0);
 
@@ -200,34 +218,42 @@ export function DashboardOverview() {
         // Group services by category and count conversations for each
         const categoryMap = new Map<string, number>();
         const categoryContactsMap = new Map<string, number>();
+        const categoryRevenueMap = new Map<string, number>();
         
-        // Initialize all categories first
+        // Initialize all categories first with count of services in each category
         services.forEach(service => {
           const category = service.category || "Other";
           if (!categoryMap.has(category)) {
             categoryMap.set(category, 0);
             categoryContactsMap.set(category, 0);
+            categoryRevenueMap.set(category, 0);
           }
           categoryMap.set(category, categoryMap.get(category)! + 1);
+          
+          // Add service revenue to its category
+          if (serviceRevenueMap.has(service.id)) {
+            const categoryRevenue = categoryRevenueMap.get(category) || 0;
+            categoryRevenueMap.set(category, categoryRevenue + serviceRevenueMap.get(service.id)!);
+          }
         });
         
         // Count conversations by category
-        const conversationsData = conversationsSnap.docs.map(doc => doc.data());
-        for (const conversation of conversationsData) {
-          // For each conversation, find the service it relates to
-          const serviceQueryForConversation = query(
-            servicesRef,
-            where("providerId", "==", user.uid),
-            // Limit to a reasonable number to avoid excessive reads
-            limit(10)
-          );
-          const serviceSnap = await getDocs(serviceQueryForConversation);
-          
-          if (serviceSnap.docs.length > 0) {
-            const serviceData = serviceSnap.docs[0].data() as ServiceData;
-            const category = serviceData.category || "Other";
-            if (categoryContactsMap.has(category)) {
-              categoryContactsMap.set(category, categoryContactsMap.get(category)! + 1);
+        for (const conversation of conversationsSnap.docs.map(doc => doc.data())) {
+          if (conversation.serviceId) {
+            // Find the service this conversation is about
+            const serviceQuery = query(
+              servicesRef,
+              where(documentId(), "==", conversation.serviceId),
+              limit(1)
+            );
+            const serviceSnap = await getDocs(serviceQuery);
+            
+            if (!serviceSnap.empty) {
+              const serviceData = serviceSnap.docs[0].data() as ServiceData;
+              const category = serviceData.category || "Other";
+              if (categoryContactsMap.has(category)) {
+                categoryContactsMap.set(category, categoryContactsMap.get(category)! + 1);
+              }
             }
           }
         }
@@ -240,18 +266,27 @@ export function DashboardOverview() {
           totalContacts += contacts;
         });
         
-        categoryContactsMap.forEach((contacts, category) => {
-          const percentage = totalContacts > 0 
-            ? Math.round((contacts / totalContacts) * 100) 
+        Array.from(categoryMap.keys()).forEach(category => {
+          const serviceCount = categoryMap.get(category) || 0;
+          const contactCount = categoryContactsMap.get(category) || 0;
+          // Calculate contact percentage for this category
+          const contactPercentage = totalContacts > 0 
+            ? Math.round((contactCount / totalContacts) * 100) 
             : 0;
           
-          if (percentage > 0) {
+          // Only add categories that have services
+          if (serviceCount > 0) {
             dynamicCategoryData.push({
-              name: category,
-              value: percentage
+              name: formatCategoryName(category),
+              value: serviceCount,
+              contactPercentage: contactPercentage,
+              revenue: categoryRevenueMap.get(category) || 0
             });
           }
         });
+        
+        // Sort by service count descending
+        dynamicCategoryData.sort((a, b) => b.value - a.value);
         
         // Don't add a default "No Data" entry when there's no data
         setCategoryData(dynamicCategoryData);
@@ -955,6 +990,59 @@ export function DashboardOverview() {
           </div>
         </CardContent>
       </Card>
+
+      {/* Category Distribution Card */}
+      <Card>
+        <CardHeader>
+          <CardTitle>Category Distribution</CardTitle>
+          <CardDescription>
+            Your services by category and user engagement
+          </CardDescription>
+        </CardHeader>
+        <CardContent>
+          {categoryData.length === 0 ? (
+            <div className="flex flex-col items-center justify-center h-32 p-4">
+              <p className="text-sm text-muted-foreground">No category data available yet</p>
+            </div>
+          ) : (
+            <div className="space-y-4">
+              {categoryData.map((category) => (
+                <div key={category.name} className="space-y-2">
+                  <div className="flex items-center justify-between">
+                    <div className="flex items-center gap-2">
+                      <div className="w-3 h-3 rounded-full" style={{ backgroundColor: getColorForCategory(category.name) }}></div>
+                      <span className="text-sm font-medium">{category.name}</span>
+                    </div>
+                    <div className="flex items-center gap-2">
+                      <span className="text-sm text-muted-foreground">{category.value} services</span>
+                      {category.contactPercentage !== undefined && category.contactPercentage > 0 && (
+                        <Badge variant="outline" className="ml-2 text-xs">
+                          {category.contactPercentage}% contacts
+                        </Badge>
+                      )}
+                    </div>
+                  </div>
+                  <div className="h-2 w-full bg-muted rounded-full overflow-hidden">
+                    <div
+                      className="h-full rounded-full"
+                      style={{ 
+                        width: `${Math.max(5, category.value * 10)}%`,
+                        backgroundColor: getColorForCategory(category.name)
+                      }}
+                    ></div>
+                  </div>
+                  {category.revenue !== undefined && category.revenue > 0 && (
+                    <div className="flex justify-between items-center text-xs text-muted-foreground">
+                      <span>Revenue</span>
+                      <span>{formatCurrency(category.revenue)}</span>
+                    </div>
+                  )}
+                </div>
+              ))}
+            </div>
+          )}
+        </CardContent>
+      </Card>
     </div>
   );
 }
@@ -1031,4 +1119,30 @@ function generateCalendarDays(month = new Date().getMonth(), year = new Date().g
   }
   
   return days;
+}
+
+// Helper function to format category name for display
+function formatCategoryName(category: string) {
+  return category
+    .split('-')
+    .map(word => word.charAt(0).toUpperCase() + word.slice(1))
+    .join(' ');
+}
+
+// Helper function to get color for a category
+function getColorForCategory(category: string) {
+  // Implement your logic to determine a color based on the category
+  // For example, you can use a switch statement or a mapping
+  switch (category) {
+    case "Development":
+      return "#FF5733"; // Example color for Development
+    case "Design":
+      return "#33FF57"; // Example color for Design
+    case "Marketing":
+      return "#3357FF"; // Example color for Marketing
+    case "Writing":
+      return "#FF33FF"; // Example color for Writing
+    default:
+      return "#CCCCCC"; // Default color for other categories
+  }
 }

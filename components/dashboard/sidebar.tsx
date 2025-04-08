@@ -66,7 +66,7 @@ export function Sidebar() {
     // ...existing navigation items...
     {
       name: "Messages",
-      href: "/dashboard/messages",
+      href: "/dashboard/chat",
       icon: MessageCircle,
       badge: messageCounts > 0 ? messageCounts : undefined,
       hasPulsed: hasPulsedMessages

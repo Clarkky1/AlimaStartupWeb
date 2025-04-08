@@ -1131,18 +1131,33 @@ function formatCategoryName(category: string) {
 
 // Helper function to get color for a category
 function getColorForCategory(category: string) {
-  // Implement your logic to determine a color based on the category
-  // For example, you can use a switch statement or a mapping
-  switch (category) {
-    case "Development":
-      return "#FF5733"; // Example color for Development
-    case "Design":
-      return "#33FF57"; // Example color for Design
-    case "Marketing":
-      return "#3357FF"; // Example color for Marketing
-    case "Writing":
-      return "#FF33FF"; // Example color for Writing
+  // Map each category to a specific vibrant color
+  switch (category.toLowerCase()) {
+    case "development":
+      return "#FF5733"; // Vibrant orange/red for Development
+    case "design":
+      return "#33B5FF"; // Bright blue for Design
+    case "marketing":
+      return "#6633FF"; // Purple for Marketing
+    case "writing":
+      return "#33FF57"; // Green for Writing
+    case "education":
+      return "#FFD133"; // Golden yellow for Education
+    case "pc & smartphone":
+    case "pc and smartphone":  
+      return "#3399FF"; // Azure blue for PC & Smartphone
+    case "social media":
+      return "#FF33A8"; // Pink for Social Media
+    case "finance":
+      return "#00CC99"; // Teal for Finance
+    case "health":
+      return "#FF6B8E"; // Salmon pink for Health
+    case "consultation":
+      return "#9966FF"; // Lavender for Consultation
     default:
-      return "#CCCCCC"; // Default color for other categories
+      // Generate a deterministic color based on category name if not in the list
+      const hash = [...category].reduce((acc, char) => acc + char.charCodeAt(0), 0);
+      const hue = hash % 360;
+      return `hsl(${hue}, 70%, 60%)`; // Generate a vibrant color with good saturation and lightness
   }
 }

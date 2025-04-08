@@ -1785,17 +1785,11 @@ export function MessageCenter() {
       });
       
       // Create notification for recipient about payment proof
-      const paymentAmount = paymentInfo.paymentAmount 
-        ? (typeof paymentInfo.paymentAmount === 'number' 
-          ? paymentInfo.paymentAmount.toLocaleString() 
-          : paymentInfo.paymentAmount) 
-        : "0";
-        
       const notificationData: any = {
         userId: otherParticipantId,
         type: "payment_proof",
-        title: `Payment Proof: ${serviceTitle || "Service"} - ₱${paymentAmount}`,
-        description: `${userName} has sent a payment proof of ₱${paymentAmount} for ${serviceTitle || "your service"}`,
+        title: "Payment Proof Received",
+        description: `${userName} has sent a payment proof for ${serviceTitle || "your service"}`,
         timestamp: serverTimestamp(),
         read: false,
         data: {
@@ -1804,9 +1798,7 @@ export function MessageCenter() {
           senderName: userName,
           messageText: paymentInfo.text,
           paymentProof: true,
-          paymentAmount: paymentInfo.paymentAmount,
-          serviceTitle: serviceTitle,
-          serviceId: serviceId
+          paymentAmount: paymentInfo.paymentAmount
         }
       };
       

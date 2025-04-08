@@ -211,15 +211,12 @@ const UploadPaymentProofDialog = ({
   const [isUploading, setIsUploading] = useState(false)
   const [selectedService, setSelectedService] = useState<string | null>(null)
   const [paymentAmount, setPaymentAmount] = useState<string>("")
-  const [selectedServiceDetails, setSelectedServiceDetails] = useState<{title: string, price?: number | string} | null>(null)
   const { toast } = useToast()
 
   // Select first service by default if available
   useEffect(() => {
     if (services && services.length > 0 && !selectedService) {
       setSelectedService(services[0].id)
-      setSelectedServiceDetails(services[0])
-      
       // Set default price if available
       const defaultPrice = services[0].price
       if (defaultPrice) {
@@ -227,18 +224,6 @@ const UploadPaymentProofDialog = ({
       }
     }
   }, [services, selectedService])
-
-  // Update selected service details when service changes
-  const handleServiceChange = (value: string) => {
-    setSelectedService(value)
-    const service = services.find(s => s.id === value)
-    if (service) {
-      setSelectedServiceDetails(service)
-      if (service.price) {
-        setPaymentAmount(typeof service.price === 'number' ? service.price.toString() : service.price)
-      }
-    }
-  }
 
   const handleUpload = async (file: File) => {
     // File validation
@@ -337,7 +322,14 @@ const UploadPaymentProofDialog = ({
               <Label htmlFor="service-select">Service</Label>
               <Select 
                 value={selectedService || ""} 
-                onValueChange={handleServiceChange}
+                onValueChange={value => {
+                  setSelectedService(value)
+                  // Update default price when service changes
+                  const service = services.find(s => s.id === value)
+                  if (service?.price) {
+                    setPaymentAmount(typeof service.price === 'number' ? service.price.toString() : service.price)
+                  }
+                }}
               >
                 <SelectTrigger id="service-select">
                   <SelectValue placeholder="Select service" />
@@ -350,20 +342,6 @@ const UploadPaymentProofDialog = ({
                   ))}
                 </SelectContent>
               </Select>
-              
-              {/* Display selected service details */}
-              {selectedServiceDetails && (
-                <div className="mt-2 p-3 rounded-md border bg-muted/10">
-                  <h4 className="text-sm font-medium mb-1">{selectedServiceDetails.title}</h4>
-                  {selectedServiceDetails.price && (
-                    <div className="text-sm font-semibold text-primary">
-                      ₱{typeof selectedServiceDetails.price === 'number' 
-                        ? selectedServiceDetails.price.toLocaleString() 
-                        : selectedServiceDetails.price}
-                    </div>
-                  )}
-                </div>
-              )}
             </div>
           )}
           
@@ -1040,8 +1018,6 @@ export function MessageCenter() {
       
       let transactionId = "";
       const paymentAmount = message.paymentAmount || 0;
-      const serviceTitle = message.serviceTitle || "Service";
-      const serviceId = message.serviceId || "";
       
       // If no transaction found, create one
       if (transactionsSnapshot.empty) {
@@ -1049,8 +1025,8 @@ export function MessageCenter() {
         const transactionData = {
           userId: message.senderId,
           providerId: user.uid,
-          serviceId: serviceId,
-          serviceTitle: serviceTitle,
+          serviceId: message.serviceId || "",
+          serviceTitle: message.serviceTitle || "",
           amount: paymentAmount,
           status: "confirmed",
           paymentProofUrl: message.paymentProof,
@@ -1066,16 +1042,13 @@ export function MessageCenter() {
         const transactionRef = await addDoc(collection(db, "transactions"), transactionData);
         transactionId = transactionRef.id;
         
-        // Update provider's revenue records in both revenue collection and users collection
+        // Update provider's revenue records
         const revenueRef = doc(db, "revenue", user.uid);
         const revenueDoc = await getDoc(revenueRef);
         
-        // For numeric safety, ensure payment amount is a number
-        const numericAmount = Number(paymentAmount) || 0;
-        
         if (revenueDoc.exists()) {
           await updateDoc(revenueRef, {
-            totalRevenue: increment(numericAmount),
+            totalRevenue: increment(Number(paymentAmount) || 0),
             transactionCount: increment(1),
             updatedAt: new Date().toISOString()
           });
@@ -1083,25 +1056,10 @@ export function MessageCenter() {
           // Create new revenue record if none exists
           await setDoc(revenueRef, {
             providerId: user.uid,
-            totalRevenue: numericAmount,
+            totalRevenue: Number(paymentAmount) || 0,
             transactionCount: 1,
             createdAt: new Date().toISOString(),
             updatedAt: new Date().toISOString()
-          });
-        }
-
-        // Also update the revenue data in the user document for dashboard stats
-        const userRef = doc(db, "users", user.uid);
-        const userDoc = await getDoc(userRef);
-        if (userDoc.exists()) {
-          const userData = userDoc.data();
-          const currentRevenue = userData.totalRevenue || 0;
-          const currentTransactions = userData.totalTransactions || 0;
-          
-          await updateDoc(userRef, {
-            totalRevenue: currentRevenue + numericAmount,
-            totalTransactions: currentTransactions + 1,
-            lastTransactionDate: new Date().toISOString()
           });
         }
       } else {
@@ -1113,35 +1071,16 @@ export function MessageCenter() {
         await updateDoc(doc(db, "transactions", transaction.id), {
           status: "confirmed",
           updatedAt: new Date().toISOString(),
-          rated: false,
-          serviceTitle: serviceTitle, // Ensure service title is updated
-          amount: paymentAmount // Ensure amount is updated
+          rated: false
         });
         
         // Update provider's revenue
         const revenueRef = doc(db, "revenue", user.uid);
-        const numericAmount = Number(transactionData.amount) || 0;
-        
         await updateDoc(revenueRef, {
-          totalRevenue: increment(numericAmount),
+          totalRevenue: increment(Number(transactionData.amount) || 0),
           transactionCount: increment(1),
           updatedAt: new Date().toISOString()
         });
-        
-        // Also update user document revenue stats
-        const userRef = doc(db, "users", user.uid);
-        const userDoc = await getDoc(userRef);
-        if (userDoc.exists()) {
-          const userData = userDoc.data();
-          const currentRevenue = userData.totalRevenue || 0;
-          const currentTransactions = userData.totalTransactions || 0;
-          
-          await updateDoc(userRef, {
-            totalRevenue: currentRevenue + numericAmount,
-            totalTransactions: currentTransactions + 1,
-            lastTransactionDate: new Date().toISOString()
-          });
-        }
       }
       
       // Get provider name for the notification
@@ -1154,19 +1093,18 @@ export function MessageCenter() {
         userId: message.senderId,
         type: "payment_confirmed_rating", // Special type to trigger rating dialog
         title: "Payment Confirmed - Rate Service",
-        description: `Your payment of ₱${paymentAmount} for ${serviceTitle} has been confirmed. Please rate your experience.`,
+        description: `Your payment for ${message.serviceTitle || "service"} has been confirmed. Please rate your experience.`,
         timestamp: serverTimestamp(),
         read: false,
         data: {
           conversationId: message.conversationId,
           messageId: message.id,
-          serviceId: serviceId,
-          serviceTitle: serviceTitle,
+          serviceId: message.serviceId || "",
+          serviceTitle: message.serviceTitle || "",
           providerId: user.uid,
           providerName: providerName,
           transactionId: transactionId,
-          requiresRating: true,
-          amount: paymentAmount
+          requiresRating: true
         }
       };
       
@@ -1174,7 +1112,7 @@ export function MessageCenter() {
       
       toast({
         title: "Success",
-        description: `Payment of ₱${paymentAmount} has been confirmed successfully`,
+        description: "Payment has been confirmed successfully",
       });
       
     } catch (error) {
@@ -1192,7 +1130,6 @@ export function MessageCenter() {
     if (!user) return;
     
     async function checkForRatingNotifications() {
-      if (!user) return;
       try {
         const { db } = await initializeFirebase();
         if (!db) return;
@@ -1202,7 +1139,7 @@ export function MessageCenter() {
         // Find recent unread payment confirmation notifications
         const notificationsQuery = query(
           collection(db, "notifications"),
-          where("userId", "==", user?.uid),
+          where("userId", "==", user.uid),
           where("type", "==", "payment_confirmed_rating"),
           where("read", "==", false),
           limit(1)
@@ -1708,133 +1645,6 @@ export function MessageCenter() {
     }
   };
 
-  // Handle sending a payment proof
-  const handleSendPaymentProof = async (paymentInfo: {
-    text: string;
-    paymentProof: string;
-    serviceId?: string;
-    serviceTitle?: string;
-    paymentAmount?: number;
-  }) => {
-    if (!selectedConversation || !user) return;
-    
-    const otherParticipantId = getOtherParticipantId(selectedConversation);
-    if (!otherParticipantId) return;
-
-    try {
-      const { db } = await initializeFirebase();
-      if (!db) return;
-
-      const { collection, addDoc, serverTimestamp, doc, getDoc, updateDoc } = await import("firebase/firestore");
-      
-      // Get current user's profile
-      const userDoc = await getDoc(doc(db, "users", user.uid));
-      const userData = userDoc.data() || {};
-      const userName = userData?.displayName || userData?.name || user.displayName || "Anonymous";
-      const userAvatar = userData?.profilePicture || userData?.avatar || user.photoURL || null;
-      
-      // Determine which conversation to use
-      let targetConversationId = selectedConversation.id;
-      let serviceId = paymentInfo.serviceId || selectedConversation.serviceId;
-      let serviceTitle = paymentInfo.serviceTitle || selectedConversation.serviceTitle;
-      
-      // If user has selected a different service, use that conversation instead
-      if (activeService && activeService !== selectedConversation.serviceId) {
-        // Find the related conversation with this service
-        const relatedConversation = selectedConversation.relatedConversations?.find(
-          (conv: any) => conv.serviceId === activeService
-        );
-        
-        if (relatedConversation) {
-          targetConversationId = relatedConversation.id;
-          serviceId = relatedConversation.serviceId;
-          serviceTitle = relatedConversation.serviceTitle;
-        }
-      }
-      
-      // Prepare message data with payment proof
-      const messageData: any = {
-        conversationId: targetConversationId,
-        senderId: user.uid,
-        senderName: userName,
-        senderAvatar: userAvatar,
-        receiverId: otherParticipantId,
-        text: paymentInfo.text,
-        timestamp: serverTimestamp(),
-        read: false,
-        paymentProof: paymentInfo.paymentProof,
-        paymentAmount: paymentInfo.paymentAmount || 0
-      };
-      
-      // Include service info if available
-      if (serviceId) {
-        messageData.serviceId = serviceId;
-        messageData.serviceTitle = serviceTitle;
-      }
-      
-      // Add message
-      await addDoc(collection(db, "messages"), messageData);
-      
-      // Update conversation
-      await updateDoc(doc(db, "conversations", targetConversationId), {
-        lastMessage: "Payment proof sent",
-        lastMessageTime: serverTimestamp(),
-        lastSenderId: user.uid,
-        lastSenderName: userName,
-        lastSenderAvatar: userAvatar
-      });
-      
-      // Create notification for recipient about payment proof
-      const paymentAmount = paymentInfo.paymentAmount 
-        ? (typeof paymentInfo.paymentAmount === 'number' 
-          ? paymentInfo.paymentAmount.toLocaleString() 
-          : paymentInfo.paymentAmount) 
-        : "0";
-        
-      const notificationData: any = {
-        userId: otherParticipantId,
-        type: "payment_proof",
-        title: `Payment Proof: ${serviceTitle || "Service"} - ₱${paymentAmount}`,
-        description: `${userName} has sent a payment proof of ₱${paymentAmount} for ${serviceTitle || "your service"}`,
-        timestamp: serverTimestamp(),
-        read: false,
-        data: {
-          conversationId: targetConversationId,
-          senderId: user.uid,
-          senderName: userName,
-          messageText: paymentInfo.text,
-          paymentProof: true,
-          paymentAmount: paymentInfo.paymentAmount,
-          serviceTitle: serviceTitle,
-          serviceId: serviceId
-        }
-      };
-      
-      // Include service info in notification if available
-      if (serviceId) {
-        notificationData.data.serviceId = serviceId;
-        notificationData.data.serviceTitle = serviceTitle;
-      }
-      
-      await addDoc(collection(db, "notifications"), notificationData);
-      
-      // Scroll to bottom to show new message
-      setTimeout(() => scrollToBottom(), 100);
-      
-      toast({
-        title: "Success",
-        description: "Payment proof sent successfully",
-      });
-    } catch (error) {
-      console.error("Error sending payment proof:", error);
-      toast({
-        title: "Error",
-        description: "Failed to send payment proof",
-        variant: "destructive",
-      });
-    }
-  };
-
   if (authLoading) {
     return (
       <div className="flex items-center justify-center h-[60vh]">
@@ -2177,55 +1987,14 @@ export function MessageCenter() {
                           placeholder="Type your message..."
                           className="resize-none min-h-[50px] flex-1"
                         />
-                        <div className="flex flex-col gap-2">
-                          {/* Add payment proof button */}
-                          {selectedConversation && (
-                            <UploadPaymentProofDialog
-                              onUpload={(imageUrl, serviceId, amount) => {
-                                // Create a message with payment proof
-                                const paymentMessage = {
-                                  text: "I've sent the payment.",
-                                  paymentProof: imageUrl,
-                                  serviceId: serviceId || selectedConversation.serviceId || activeService || undefined,
-                                  serviceTitle: selectedConversation.serviceTitle || "Service",
-                                  paymentAmount: amount || 0
-                                };
-                                
-                                // Add the payment proof to the message
-                                handleSendPaymentProof(paymentMessage);
-                              }}
-                              providerId={getOtherParticipantId(selectedConversation) || undefined}
-                              services={
-                                // Create services array for the dialog
-                                [
-                                  // Add the main service
-                                  selectedConversation.serviceId && selectedConversation.serviceTitle ? {
-                                    id: selectedConversation.serviceId,
-                                    title: selectedConversation.serviceTitle,
-                                    price: selectedConversation.servicePrice
-                                  } : null,
-                                  // Add related services
-                                  ...(selectedConversation.relatedConversations?.map(conv => 
-                                    conv.serviceId && conv.serviceTitle ? {
-                                      id: conv.serviceId,
-                                      title: conv.serviceTitle,
-                                      price: conv.price
-                                    } : null
-                                  ) || [])
-                                ].filter(Boolean) as Array<{id: string, title: string, price?: number | string}>
-                              }
-                            />
-                          )}
-                          
-                          <Button 
-                            type="submit" 
-                            size="icon" 
-                            disabled={!newMessage.trim()} 
-                            className="mt-1"
-                          >
-                            <Send className="h-4 w-4" />
-                          </Button>
-                        </div>
+                        <Button 
+                          type="submit" 
+                          size="icon" 
+                          disabled={!newMessage.trim()} 
+                          className="mt-1"
+                        >
+                          <Send className="h-4 w-4" />
+                        </Button>
                       </form>
                     </div>
                   </div>
@@ -2456,55 +2225,14 @@ export function MessageCenter() {
                           placeholder="Type your message..."
                           className="resize-none min-h-[50px] flex-1"
                         />
-                        <div className="flex flex-col gap-2">
-                          {/* Add payment proof button */}
-                          {selectedConversation && (
-                            <UploadPaymentProofDialog
-                              onUpload={(imageUrl, serviceId, amount) => {
-                                // Create a message with payment proof
-                                const paymentMessage = {
-                                  text: "I've sent the payment.",
-                                  paymentProof: imageUrl,
-                                  serviceId: serviceId || selectedConversation.serviceId || activeService || undefined,
-                                  serviceTitle: selectedConversation.serviceTitle || "Service",
-                                  paymentAmount: amount || 0
-                                };
-                                
-                                // Add the payment proof to the message
-                                handleSendPaymentProof(paymentMessage);
-                              }}
-                              providerId={getOtherParticipantId(selectedConversation) || undefined}
-                              services={
-                                // Create services array for the dialog
-                                [
-                                  // Add the main service
-                                  selectedConversation.serviceId && selectedConversation.serviceTitle ? {
-                                    id: selectedConversation.serviceId,
-                                    title: selectedConversation.serviceTitle,
-                                    price: selectedConversation.servicePrice
-                                  } : null,
-                                  // Add related services
-                                  ...(selectedConversation.relatedConversations?.map(conv => 
-                                    conv.serviceId && conv.serviceTitle ? {
-                                      id: conv.serviceId,
-                                      title: conv.serviceTitle,
-                                      price: conv.price
-                                    } : null
-                                  ) || [])
-                                ].filter(Boolean) as Array<{id: string, title: string, price?: number | string}>
-                              }
-                            />
-                          )}
-                          
-                          <Button 
-                            type="submit" 
-                            size="icon" 
-                            disabled={!newMessage.trim()} 
-                            className="mt-1"
-                          >
-                            <Send className="h-4 w-4" />
-                          </Button>
-                        </div>
+                        <Button 
+                          type="submit" 
+                          size="icon" 
+                          disabled={!newMessage.trim()} 
+                          className="mt-1"
+                        >
+                          <Send className="h-4 w-4" />
+                        </Button>
                       </form>
                     </div>
                   </>

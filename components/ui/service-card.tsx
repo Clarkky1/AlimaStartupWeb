@@ -48,6 +48,18 @@ const formatCategoryName = (category: string) => {
     .join(' ')
 }
 
+// Function to format price with thousand separators
+const formatPrice = (price: string | number) => {
+  // Convert to number if it's a string
+  const numericPrice = typeof price === 'string' ? parseFloat(price.replace(/,/g, '')) : price;
+  
+  // Check if it's a valid number
+  if (isNaN(numericPrice)) return '₱0';
+  
+  // Format with thousand separators
+  return `₱${numericPrice.toLocaleString('en-PH')}`;
+}
+
 export function ServiceCard({
   id,
   title,
@@ -113,7 +125,7 @@ export function ServiceCard({
 
             <div className="flex items-center justify-between mt-auto">
               <div className="flex items-baseline gap-1">
-                <span className="text-sm sm:text-base md:text-lg font-bold">₱{price}</span>
+                <span className="text-sm sm:text-base md:text-lg font-bold">{formatPrice(price)}</span>
               </div>
               {showRating && provider.hasRating && (
                 <div className="flex items-center gap-1">

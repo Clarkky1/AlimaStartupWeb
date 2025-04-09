@@ -419,17 +419,81 @@ export function DashboardOverview() {
                   services: any[],
                   timeframe: string
                 ) {
+                  // IMPORTANT: Only count transactions where this user is the provider
+                  // Filter out transactions where the user is not the provider
+                  combinedTransactionData = combinedTransactionData.filter(tx => {
+                    if (!user) return false; // Skip if user is null
+                    
+                    // Get a non-null user reference for TypeScript
+                    const currentUser = user as {uid: string};
+                    
+                    // For regular transactions, check providerId
+                    if (tx.type === 'transaction') {
+                      return tx.providerId === currentUser.uid;
+                    }
+                    
+                    // For message payments, verify they're directed to this user
+                    if (tx.type === 'message_payment') {
+                      return tx.receiverId === currentUser.uid;
+                    }
+                    
+                    // For notifications, check that they're for this user
+                    if (tx.type === 'notification') {
+                      return tx.userId === currentUser.uid;
+                    }
+                    
+                    return false;
+                  });
+                  
                   // Log transaction sources for debugging
                   const transactionSources = {
                     transaction: combinedTransactionData.filter(tx => tx.type === 'transaction').length,
                     notification: combinedTransactionData.filter(tx => tx.type === 'notification').length,
                     message_payment: combinedTransactionData.filter(tx => tx.type === 'message_payment').length,
                   };
-                  console.log("Revenue sources:", transactionSources);
+                  console.log("Revenue sources after provider filtering:", transactionSources);
                   
+                  // IMPORTANT: No deduplication by conversation - count every payment separately
+                  // We only deduplicate exact duplicates with the same ID
+                  const uniqueTransactionIds = new Set<string>();
+                  const dedupedTransactions = combinedTransactionData.filter(tx => {
+                    // Skip items with no ID or relevant references
+                    if (!tx.id) return false;
+                    
+                    // For notifications, only check for exact duplicates of the same notification
+                    if (tx.type === 'notification') {
+                      if (uniqueTransactionIds.has(tx.id)) {
+                        return false;
+                      }
+                      uniqueTransactionIds.add(tx.id);
+                      return true;
+                    }
+                    
+                    // For message payments, don't deduplicate by conversation - count each separately
+                    if (tx.type === 'message_payment') {
+                      if (uniqueTransactionIds.has(tx.id)) {
+                        return false;
+                      }
+                      uniqueTransactionIds.add(tx.id);
+                      return true;
+                    }
+                    
+                    // For regular transactions, just check for duplicate IDs
+                    if (uniqueTransactionIds.has(tx.id)) {
+                      return false;
+                    }
+                    uniqueTransactionIds.add(tx.id);
+                    return true;
+                  });
+                  
+                  console.log(`After deduplication: ${combinedTransactionData.length} -> ${dedupedTransactions.length} unique transactions`);
+                  
+                  // Use the deduplicated transactions list from now on
+                  combinedTransactionData = dedupedTransactions;
+
                   // First, map service IDs to names for better display
                   const serviceNameMap = new Map<string, string>();
-                  services.forEach(service => {
+      services.forEach(service => {
                     serviceNameMap.set(service.id, service.title);
                   });
 
@@ -506,7 +570,7 @@ export function DashboardOverview() {
                           
                           console.log(`Adding ${amount} revenue to service ${serviceName} from message payment in conversation ${transaction.conversationId}`);
                           console.log(`Current revenue for ${serviceName}: ${serviceRevenues[conversationData.serviceId].revenue}`);
-                        } else {
+          } else {
                           // Track as unknown service if we can't determine the service
                           const unknownServiceId = 'unknown';
                           
@@ -522,10 +586,10 @@ export function DashboardOverview() {
                           serviceRevenues[unknownServiceId].count += 1;
                           console.log(`Adding ${amount} revenue to Unknown Service from message payment - conversation not found: ${transaction.conversationId}`);
                         }
-                      }
-                    }
-                  });
-                  
+          }
+        }
+      });
+      
                   // Create sorted topServices array with additional metrics
                   const topServices = Object.entries(serviceRevenues)
                     .map(([id, data]) => ({
@@ -572,14 +636,27 @@ export function DashboardOverview() {
                   
                   // Use the fallback if we have transactions but timeline/filtering isn't working
                   let finalRevenue = currentRevenue;
-                  let finalTransactionsCount = combinedTransactionData.length;
+                  
+                  // Calculate the total transactions from the deduplicated list
+                  const totalTransactions = combinedTransactionData.length;
+                  let finalTransactionsCount = totalTransactions;
                   let finalTimelineData = timelineData;
                   
-                  // If notifications are available, use those for count instead
-                  const paymentNotificationCount = paymentNotificationsSnap.size;
-                  if (paymentNotificationCount > 0) {
-                    console.log(`Using payment notification count (${paymentNotificationCount}) for transactions display`);
-                    finalTransactionsCount = Math.max(finalTransactionsCount, paymentNotificationCount);
+                  // Log the total transactions for debugging
+                  console.log(`Total unique transactions: ${totalTransactions}`);
+                  
+                  // Only use notification/message counts if we have no transactions
+                  if (totalTransactions === 0 && (paymentNotificationsSnap.size > 0 || paymentMessagesSnap.size > 0)) {
+                    // Get unique count after considering potential overlaps
+                    const uniqueMessageCount = new Set(paymentMessagesSnap.docs.map(doc => doc.id)).size;
+                    const uniqueNotificationCount = new Set(paymentNotificationsSnap.docs.map(doc => doc.id)).size;
+                    
+                    // Count unique messages and notifications, but be conservative to avoid overcounting
+                    const uniqueCount = Math.min(uniqueMessageCount + uniqueNotificationCount, 
+                                               Math.max(uniqueMessageCount, uniqueNotificationCount) * 1.5);
+                    
+                    console.log(`Using estimated unique count: ${Math.round(uniqueCount)}`);
+                    finalTransactionsCount = Math.round(uniqueCount);
                   }
                   
                   // If we have no data from the filtered results but do have transactions,
@@ -590,12 +667,20 @@ export function DashboardOverview() {
                     // Calculate total revenue from all transactions
                     finalRevenue = allTransactionsSnap.docs.reduce((sum: number, doc: any) => {
                       const data = doc.data();
+                      // Only count if this user is the provider
+                      if (!user || data.providerId !== user.uid) return sum;
+                      
                       const amount = typeof data.amount === 'string' ? parseFloat(data.amount) : data.amount;
                       return sum + (amount || 0);
                     }, 0);
                     
-                    // Use the higher value between transactions and notifications
-                    finalTransactionsCount = Math.max(allTransactionsSnap.size, paymentNotificationCount);
+                    // Store transaction counts for reference
+                    const filteredTransactionCount = user ? allTransactionsSnap.docs.filter(doc => 
+                      doc.data().providerId === user.uid
+                    ).length : 0;
+                    
+                    // Use the higher value between filtered transactions
+                    finalTransactionsCount = Math.max(totalTransactions, filteredTransactionCount);
                     
                     // Create artificial timeline data if needed
                     if (finalTimelineData.every(item => item.contacts === 0 && item.transactions === 0)) {
@@ -615,7 +700,7 @@ export function DashboardOverview() {
                   }
                   
                   // Update state with all the calculated data
-                  setStats({
+      setStats({
                     contacts: conversationsSnap?.size || 0,
                     contactsChange: 0, // Calculate this if needed
                     transactions: finalTransactionsCount,
@@ -642,8 +727,8 @@ export function DashboardOverview() {
                   
                   // Store transaction data in state for calendar
                   setAllTransactions(combinedTransactionData);
-                  
-                  setIsLoading(false);
+      
+      setIsLoading(false);
                 }
               }).catch(error => {
                 console.error("Error processing transactions:", error);

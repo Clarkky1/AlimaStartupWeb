@@ -97,9 +97,37 @@ export function DashboardLayout({ children }: DashboardLayoutProps) {
       }
       
       window.addEventListener('popstate', handleRouteChange)
-      return () => window.removeEventListener('popstate', handleRouteChange)
+
+      // Force content refresh when paths don't match
+      if (pathname !== window.location.pathname) {
+        handleRouteChange()
+      }
+      
+      // Handle navigation from Link components
+      const handleClick = () => {
+        setTimeout(() => {
+          if (pathname !== window.location.pathname) {
+            handleRouteChange()
+            // Force re-render of children components
+            router.refresh()
+          }
+        }, 0)
+      }
+      
+      // Add click event listener to all Next.js Link components
+      const linkElements = document.querySelectorAll('a[href^="/"]')
+      linkElements.forEach(link => {
+        link.addEventListener('click', handleClick)
+      })
+      
+      return () => {
+        window.removeEventListener('popstate', handleRouteChange)
+        linkElements.forEach(link => {
+          link.removeEventListener('click', handleClick)
+        })
+      }
     }
-  }, [isClient])
+  }, [isClient, pathname, router])
 
   // Add badge counts to the navItems
   const navItemsWithCounts = navItems.map(item => {
@@ -146,23 +174,45 @@ export function DashboardLayout({ children }: DashboardLayoutProps) {
                 <span className="sr-only">Toggle Menu</span>
               </Button>
             </SheetTrigger>
-            <SheetContent side="left" className="w-72 p-0">
-              <div className="flex h-full flex-col">
-                <div className="border-b p-4 bg-gradient-to-br from-blue-500 to-emerald-500 relative overflow-hidden">
-                  {/* Background pattern overlay */}
-                  <div className="absolute inset-0 opacity-15 mix-blend-overlay" 
+            <SheetContent side="left" className="w-80 p-0 border-0">
+              <div className="flex h-full flex-col bg-[rgba(250,250,255,0.85)] backdrop-blur-xl dark:bg-[rgba(25,25,30,0.85)]">
+                <div className="p-6 relative overflow-hidden">
+                  {/* Subtle gradient background */}
+                  <div className="absolute inset-0 bg-gradient-to-br from-blue-100/40 to-purple-100/40 dark:from-blue-900/20 dark:to-purple-900/20">
+                  </div>
+                  
+                  {/* Subtle grid pattern */}
+                  <div className="absolute inset-0 opacity-5 mix-blend-overlay" 
                        style={{ 
-                         backgroundImage: "url('/patterns/circuit-board.svg')", 
-                         backgroundSize: "cover" 
+                         backgroundImage: "url('data:image/svg+xml,%3Csvg width=\"20\" height=\"20\" xmlns=\"http://www.w3.org/2000/svg\"%3E%3Cpath d=\"M0 0h20v20H0z\" fill=\"none\"%3E%3C/path%3E%3Cpath d=\"M10 0v20M0 10h20\" stroke=\"%23000\" stroke-opacity=\".1\" stroke-width=\".5\"%3E%3C/path%3E%3C/svg%3E')",
+                         backgroundSize: "20px 20px" 
                        }}>
                   </div>
-                  <Link href="/" className="flex items-center gap-2 font-semibold relative z-10">
-                    <img src="/AlimaLOGO.svg" alt="Alima" className="h-8 w-auto drop-shadow-lg" />
-                    <span className="text-white font-bold">Alima Dashboard</span>
+                  
+                  <Link 
+                    href="/" 
+                    className="flex items-center gap-3 font-semibold relative z-10"
+                    onClick={() => {
+                      setIsMobileSidebarOpen(false)
+                      // Force refresh after navigation
+                      setTimeout(() => router.refresh(), 0)
+                    }}
+                  >
+                    <div className="w-10 h-10 rounded-xl bg-transparent flex items-center justify-center">
+                      <img src="/AlimaLOGO.svg" alt="Alima" className="h-8 w-auto" />
+                    </div>
+                    <div className="flex flex-col">
+                      <span className="text-base font-bold text-gray-900 dark:text-white">Alima</span>
+                      <span className="text-xs text-gray-500 dark:text-gray-400">Dashboard</span>
+                    </div>
                   </Link>
                 </div>
-                <ScrollArea className="flex-1 py-2">
-                  <nav className="grid gap-1 px-2">
+                
+                <ScrollArea className="flex-1 px-3 pt-3">
+                  <div className="mb-2 px-3 py-1">
+                    <h3 className="text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider">Menu</h3>
+                  </div>
+                  <nav className="grid gap-0.5">
                     {navItemsWithCounts.map((item) => {
                       const isActive = currentPath === item.path
                       return (
@@ -171,35 +221,57 @@ export function DashboardLayout({ children }: DashboardLayoutProps) {
                           href={item.path}
                           onClick={() => setIsMobileSidebarOpen(false)}
                           className={cn(
-                            "flex items-center gap-3 rounded-lg px-3 py-2 text-sm font-medium transition-colors",
-                            "hover:bg-accent hover:text-accent-foreground",
-                            isActive ? "bg-accent text-accent-foreground" : "text-muted-foreground"
+                            "flex items-center gap-3 rounded-xl px-3 py-2.5 text-sm font-medium transition-all duration-200",
+                            isActive 
+                              ? "bg-white dark:bg-gray-800/50 text-blue-600 dark:text-blue-400 shadow-sm" 
+                              : "text-gray-700 dark:text-gray-300 hover:bg-white/70 dark:hover:bg-gray-800/30"
                           )}
                         >
-                          {item.icon}
-                          {item.title}
+                          <div className={cn(
+                            "w-9 h-9 rounded-full flex items-center justify-center",
+                            isActive 
+                              ? "bg-blue-100 dark:bg-blue-900/30 text-blue-600 dark:text-blue-400" 
+                              : "bg-gray-100 dark:bg-gray-800/50 text-gray-600 dark:text-gray-400"
+                          )}>
+                            {item.icon}
+                          </div>
+                          <span>{item.title}</span>
                           {item.badge && (
-                            <Badge variant="destructive" className="ml-auto animate-pulse">
+                            <div className="ml-auto flex h-5 w-5 items-center justify-center rounded-full bg-red-500 text-[10px] font-medium text-white">
                               {item.badge}
-                            </Badge>
+                            </div>
                           )}
                         </Link>
                       )
                     })}
                   </nav>
-                </ScrollArea>
-                <div className="border-t p-4 bg-gradient-to-br from-blue-400/10 to-emerald-400/10">
-                  <div className="flex items-center gap-4 pb-4">
-                    <Avatar>
-                      <AvatarImage src={user?.avatar || "/placeholder-user.jpg"} alt={user?.name || "User"} />
-                      <AvatarFallback>{user?.name?.[0] || "U"}</AvatarFallback>
-                    </Avatar>
-                    <div>
-                      <p className="text-sm font-medium">{user?.name || "User"}</p>
-                      <p className="text-xs text-muted-foreground">{user?.email}</p>
+                  
+                  <div className="mt-6 mb-2 px-3 py-1">
+                    <h3 className="text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider">Account</h3>
+                  </div>
+                  
+                  <div className="px-3 pb-4">
+                    <div className="rounded-xl bg-white/70 dark:bg-gray-800/30 backdrop-blur-sm p-3 shadow-sm">
+                      <div className="flex items-center gap-3">
+                        <Avatar className="h-10 w-10 rounded-xl border-2 border-white dark:border-gray-800 shadow-sm">
+                          <AvatarImage src={user?.avatar || "/placeholder-user.jpg"} alt={user?.name || "User"} />
+                          <AvatarFallback className="rounded-xl">{user?.name?.[0] || "U"}</AvatarFallback>
+                        </Avatar>
+                        <div>
+                          <p className="text-sm font-medium text-gray-900 dark:text-white">{user?.name || "User"}</p>
+                          <p className="text-xs text-gray-500 dark:text-gray-400">{user?.email}</p>
+                        </div>
+                      </div>
                     </div>
                   </div>
-                  <Button variant="destructive" className="w-full" onClick={handleSignOut}>
+                </ScrollArea>
+                
+                <div className="border-t border-gray-200/50 dark:border-gray-800/50 p-4">
+                  <Button 
+                    variant="destructive" 
+                    className="w-full rounded-xl bg-gradient-to-r from-red-500 to-red-600 hover:from-red-600 hover:to-red-700 text-white shadow-sm transition-all duration-200" 
+                    onClick={handleSignOut}
+                  >
                     <LogOut className="mr-2 h-4 w-4" />
                     Sign Out
                   </Button>
@@ -207,7 +279,11 @@ export function DashboardLayout({ children }: DashboardLayoutProps) {
               </div>
             </SheetContent>
           </Sheet>
-          <Link href="/" className="flex items-center gap-2 font-semibold md:hidden">
+          <Link 
+            href="/" 
+            className="flex items-center gap-2 font-semibold md:hidden"
+            onClick={() => setTimeout(() => router.refresh(), 0)}
+          >
             <img src="/AlimaLOGO.svg" alt="Alima" className="h-8 w-auto" />
           </Link>
         </div>
@@ -238,7 +314,11 @@ export function DashboardLayout({ children }: DashboardLayoutProps) {
       {/* Desktop Sidebar */}
       <aside className="fixed hidden h-screen w-64 flex-col border-r bg-background md:flex">
         <div className="flex h-16 items-center border-b px-6">
-          <Link href="/" className="flex items-center gap-2 font-semibold">
+          <Link 
+            href="/" 
+            className="flex items-center gap-2 font-semibold"
+            onClick={() => setTimeout(() => router.refresh(), 0)}
+          >
             <img src="/AlimaLOGO.svg" alt="Alima" className="h-8 w-auto" />
             <span>Alima Dashboard</span>
           </Link>

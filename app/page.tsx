@@ -155,7 +155,7 @@ export default function Home() {
         {/* 1. HEADLINE - Hero Section (acts as main headline/tagline) */}
         <Suspense fallback={<div className="h-[600px] w-full bg-neutral-100 dark:bg-neutral-900" />}>
           <div className="mx-auto max-w-7xl px-6 sm:px-8 lg:px-10">
-            <section className="py-16 md:py-24" id="home">
+            <section className="pt-16 md:pt-24 pb-16 md:pb-24" id="home">
               <div className="grid grid-cols-1 gap-10 lg:grid-cols-2 lg:gap-20 items-center">
                 <div className="order-2 lg:order-1" data-aos="fade-right" data-aos-delay="200">
                   <h1 className="text-3xl font-bold tracking-tight sm:text-4xl md:text-5xl mb-8">
@@ -186,65 +186,101 @@ export default function Home() {
                 </div>
                 <div className="order-1 lg:order-2" data-aos="fade-left" data-aos-delay="300">
                   <div className="relative mx-auto max-w-md lg:max-w-none">
-                    <div className="relative h-[450px] flex items-center justify-center">
-                      <div className="relative grid grid-cols-2 grid-rows-2 gap-6 max-w-md mx-auto">
-                        {/* Top-left person */}
-                        <div className="relative bg-[#ffd280] rounded-2xl overflow-hidden shadow-lg transform rotate-2 z-10">
-                          <div className="absolute top-2 right-2 w-6 h-6 bg-white/30 rounded-full"></div>
-                          <img 
-                            alt="Person in orange shirt" 
-                            className="w-full h-48 object-cover object-top"
-                            // Use placeholder if offline, original src if online
-                            src={isOnline ? "/images/people/person1.jpg" : placeholderImg}
-                          />
-                        </div>
-                        
-                        {/* Top-right person */}
-                        <div className="relative bg-[#c4a7ff] rounded-2xl overflow-hidden shadow-lg transform -rotate-1 translate-y-4 z-20">
-                          <div className="absolute top-2 left-2 w-4 h-4 bg-white/30 rounded-full"></div>
+                    <div className="relative h-[500px] flex items-center justify-center">
+                      {/* Background decorative gradient blobs */}
+                      <div className="absolute w-64 h-64 bg-gradient-to-r from-purple-200/40 to-blue-200/40 rounded-full blur-3xl top-10 left-10 animate-pulse-slow"></div>
+                      <div className="absolute w-72 h-72 bg-gradient-to-r from-amber-200/40 to-rose-200/40 rounded-full blur-3xl bottom-10 right-10 animate-pulse-slower"></div>
+                      
+                      {/* Aesthetic image gallery with modern design */}
+                      <div className="relative mx-auto w-full max-w-2xl">
+                        {/* Center person in black - Main image */}
+                        <div className="absolute left-1/2 top-1/2 transform -translate-x-1/2 -translate-y-1/2 z-40 w-60 h-72 rounded-2xl overflow-hidden border-2 border-white/20 shadow-[0_20px_50px_rgba(8,_112,_184,_0.2)] hover:shadow-[0_15px_30px_rgba(8,_112,_184,_0.4)] transition-all duration-500 group">
+                          <div className="absolute inset-0 bg-gradient-to-b from-transparent via-transparent to-[#c4a7ff]/70 z-10 opacity-50 group-hover:opacity-70 transition-opacity duration-300"></div>
                           <img 
                             alt="Person with glasses" 
-                            className="w-full h-52 object-cover object-top"
-                            // Use placeholder if offline, original src if online
-                            src={isOnline ? "/images/people/person2.jpg" : placeholderImg} 
+                            className="w-full h-full object-cover object-top scale-105 group-hover:scale-110 transition-transform duration-700"
+                            src="/person in black.png"
+                            onError={(e) => {
+                              if (!isOnline) {
+                                e.currentTarget.src = "/placeholder.jpg";
+                              }
+                            }}
                           />
-                        </div>
-                        
-                        {/* Bottom-left - decorative element */}
-                        <div className="relative bg-[#a0e4ff] rounded-2xl overflow-hidden shadow-lg transform -rotate-3 z-20 flex items-center justify-center h-32">
-                          <div className="absolute w-full h-full flex items-center justify-center">
-                            <div className="w-16 h-16 flex items-center justify-center">
-                              <div className="h-3 w-3 rounded-full bg-white mx-1"></div>
-                              <div className="h-3 w-3 rounded-full bg-white mx-1"></div>
-                              <div className="h-3 w-3 rounded-full bg-white mx-1"></div>
-                              <div className="h-3 w-3 rounded-full bg-white mx-1"></div>
-                            </div>
+                          <div className="absolute inset-x-0 bottom-0 p-4 z-20 translate-y-5 group-hover:translate-y-0 transition-transform duration-300">
+                            <div className="h-1 w-10 bg-white/80 rounded-full mb-2"></div>
+                            <h3 className="text-white text-sm font-medium opacity-0 group-hover:opacity-100 transition-opacity duration-300">Creative Designer</h3>
                           </div>
                         </div>
                         
-                        {/* Bottom-right person */}
-                        <div className="relative bg-[#b7e5a2] rounded-2xl overflow-hidden shadow-lg transform rotate-1 -translate-y-2 z-10">
-                          <div className="absolute bottom-2 right-2 w-5 h-5 bg-white/30 rounded-full"></div>
+                        {/* Person in red - Angled position */}
+                        <div className="absolute top-5 -left-10 w-48 h-44 rounded-2xl overflow-hidden transform rotate-[-8deg] z-30 border-2 border-white/20 shadow-[0_10px_30px_rgba(249,_115,_22,_0.2)] hover:shadow-[0_15px_30px_rgba(249,_115,_22,_0.4)] transition-all duration-500 hover:rotate-[-4deg] hover:scale-105 group">
+                          <div className="absolute inset-0 bg-gradient-to-b from-transparent via-transparent to-[#ffd280]/70 z-10 opacity-50 group-hover:opacity-70 transition-opacity duration-300"></div>
+                          <img 
+                            alt="Person in orange shirt" 
+                            className="w-full h-full object-cover object-top scale-105 group-hover:scale-110 transition-transform duration-700"
+                            src="/Person in red.png"
+                            onError={(e) => {
+                              if (!isOnline) {
+                                e.currentTarget.src = "/placeholder.jpg";
+                              }
+                            }}
+                          />
+                          <div className="absolute inset-x-0 bottom-0 p-4 z-20 translate-y-6 group-hover:translate-y-0 transition-transform duration-300">
+                            <div className="h-1 w-10 bg-white/80 rounded-full mb-2"></div>
+                            <h3 className="text-white text-sm font-medium opacity-0 group-hover:opacity-100 transition-opacity duration-300">Marketing Lead</h3>
+                          </div>
+                        </div>
+                        
+                        {/* Person in gray - Angled position */}
+                        <div className="absolute -bottom-5 -right-10 w-48 h-44 rounded-2xl overflow-hidden transform rotate-[8deg] z-30 border-2 border-white/20 shadow-[0_10px_30px_rgba(34,_197,_94,_0.2)] hover:shadow-[0_15px_30px_rgba(34,_197,_94,_0.4)] transition-all duration-500 hover:rotate-[4deg] hover:scale-105 group">
+                          <div className="absolute inset-0 bg-gradient-to-b from-transparent via-transparent to-[#b7e5a2]/70 z-10 opacity-50 group-hover:opacity-70 transition-opacity duration-300"></div>
                           <img 
                             alt="Person in pink" 
-                            className="w-full h-48 object-cover object-top"
-                            // Use placeholder if offline, original src if online
-                            src={isOnline ? "/images/people/person3.jpg" : placeholderImg}
+                            className="w-full h-full object-cover object-top scale-105 group-hover:scale-110 transition-transform duration-700"
+                            src="/person in gray.png"
+                            onError={(e) => {
+                              if (!isOnline) {
+                                e.currentTarget.src = "/placeholder.jpg";
+                              }
+                            }}
                           />
+                          <div className="absolute inset-x-0 bottom-0 p-4 z-20 translate-y-6 group-hover:translate-y-0 transition-transform duration-300">
+                            <div className="h-1 w-10 bg-white/80 rounded-full mb-2"></div>
+                            <h3 className="text-white text-sm font-medium opacity-0 group-hover:opacity-100 transition-opacity duration-300">Product Manager</h3>
+                          </div>
+                        </div>
+                        
+                        {/* Decorative blue card with circles */}
+                        <div className="absolute left-1/2 bottom-10 -translate-x-1/2 w-40 h-40 rounded-2xl bg-gradient-to-br from-[#a0e4ff]/90 to-[#90d4ff]/90 transform rotate-[-12deg] z-20 shadow-lg flex items-center justify-center group hover:rotate-[-6deg] transition-all duration-500 hover:scale-105 border border-white/30 overflow-hidden backdrop-blur-sm">
+                          <div className="relative flex items-center justify-center w-full h-full">
+                            <div className="absolute -top-4 -right-4 w-16 h-16 bg-white/20 rounded-full"></div>
+                            <div className="absolute -bottom-4 -left-4 w-12 h-12 bg-white/20 rounded-full"></div>
+                            <div className="flex space-x-2">
+                              <div className="h-3 w-3 rounded-full bg-white animate-pulse"></div>
+                              <div className="h-3 w-3 rounded-full bg-white animate-pulse delay-75"></div>
+                              <div className="h-3 w-3 rounded-full bg-white animate-pulse delay-150"></div>
+                              <div className="h-3 w-3 rounded-full bg-white animate-pulse delay-300"></div>
+                            </div>
+                          </div>
                         </div>
                       </div>
                       
                       {/* Decorative elements */}
-                      <div className="absolute top-1/3 right-1/3 text-[#10b981]">
-                        <Plus className="h-6 w-6" strokeWidth={1.5} />
+                      <div className="absolute top-16 left-10 text-[#10b981]">
+                        <Plus className="h-5 w-5" strokeWidth={2} />
                       </div>
-                      
-                      <div className="absolute bottom-1/4 left-1/3 text-[#3b82f6]">
-                        <Circle className="h-4 w-4" fill="#3b82f6" strokeWidth={0} />
+                      <div className="absolute top-32 right-10 text-[#f97316]">
+                        <Circle className="h-4 w-4" fill="none" strokeWidth={2} />
                       </div>
-                      
-                      <div className="absolute top-1/2 right-1/4 h-3 w-3 rounded-full bg-[#f9a8d4]"></div>
-                      <div className="absolute bottom-1/3 left-1/4 h-3 w-3 rounded-full bg-[#fcd34d]"></div>
+                      <div className="absolute bottom-16 left-16 text-[#3b82f6]">
+                        <svg width="24" height="24" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg" className="h-6 w-6">
+                          <path d="M12 22C17.5228 22 22 17.5228 22 12C22 6.47715 17.5228 2 12 2C6.47715 2 2 6.47715 2 12C2 17.5228 6.47715 22 12 22Z" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
+                          <path d="M12 8V16" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
+                          <path d="M8 12H16" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
+                        </svg>
+                      </div>
+                      <div className="absolute bottom-36 right-20 h-2 w-2 rounded-full bg-[#f9a8d4]"></div>
+                      <div className="absolute top-40 left-24 h-2 w-2 rounded-full bg-[#fcd34d]"></div>
                     </div>
                     
                     {/* User Statistics */}

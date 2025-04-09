@@ -5,6 +5,7 @@ import { Card, CardContent } from "@/components/ui/card"
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar"
 import { ChevronLeft, ChevronRight, Quote } from "lucide-react"
 import { Button } from "@/components/ui/button"
+import { useNetworkStatus } from "@/app/context/network-status-context"
 
 interface Testimonial {
   id: string
@@ -63,6 +64,7 @@ export function Testimonials() {
   const [fadeIn, setFadeIn] = useState(true)
   const [isPaused, setIsPaused] = useState(false)
   const pauseTimeoutRef = useRef<NodeJS.Timeout | null>(null)
+  const { isOnline } = useNetworkStatus()
 
   // Function to handle automatic rotation
   const rotateTestimonial = () => {
@@ -118,6 +120,11 @@ export function Testimonials() {
   }
 
   const currentTestimonial = testimonials[currentIndex]
+  
+  // Get secure avatar URL that respects network status
+  const avatarSrc = currentTestimonial.avatar.startsWith('http') 
+    ? (isOnline ? currentTestimonial.avatar : "/placeholder.jpg") 
+    : currentTestimonial.avatar
 
   return (
     <section className="bg-gradient-to-b from-background to-muted py-16">
@@ -135,7 +142,7 @@ export function Testimonials() {
               <div className="flex flex-col md:flex-row">
                 <div className="bg-primary/10 p-6 md:p-10 md:w-1/3 flex flex-col items-center justify-center">
                   <Avatar className="h-24 w-24 border-4 border-background">
-                    <AvatarImage src={currentTestimonial.avatar} alt={currentTestimonial.name} />
+                    <AvatarImage src={avatarSrc} alt={currentTestimonial.name} />
                     <AvatarFallback className="text-2xl">
                       {currentTestimonial.name.charAt(0)}
                     </AvatarFallback>

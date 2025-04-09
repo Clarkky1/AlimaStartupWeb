@@ -4,6 +4,10 @@ import './globals.css';
 import { Metadata } from 'next';
 import { cn } from "@/lib/utils";
 import 'aos/dist/aos.css'; // Import AOS styles
+import { ThemeProvider } from "@/components/theme-provider";
+import { Navbar } from "@/components/navbar";
+import { Footer } from "@/components/footer";
+import { ChatButtonWrapper } from "@/components/chat-button-wrapper";
 
 // Import providers in a specific order to prevent circular dependencies
 import { Toaster } from "@/components/ui/toaster";
@@ -47,6 +51,7 @@ export const metadata: Metadata = {
   manifest: '/site.webmanifest',
 };
 
+// Server Component
 export default function RootLayout({
   children,
 }: {
@@ -79,9 +84,16 @@ export default function RootLayout({
         <NetworkStatusProvider>
           <AuthProvider>
             <CategoryProvider>
-              <ClientLayout>
-                {children}
-              </ClientLayout>
+              <ThemeProvider
+                attribute="class"
+                defaultTheme="light"
+                disableTransitionOnChange
+              >
+                <ClientLayout>
+                  {children}
+                </ClientLayout>
+                <ChatButtonWrapper />
+              </ThemeProvider>
             </CategoryProvider>
             <Toaster />
           </AuthProvider>

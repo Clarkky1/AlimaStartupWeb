@@ -5,20 +5,30 @@ import { Button } from "@/components/ui/button"
 import { useAuth } from "@/app/context/auth-context"
 import { Plus, Circle } from "lucide-react"
 import { useStatistics } from "@/app/hooks/useStatistics"
+import { useEffect, useState } from "react"
+import { useNetworkStatus } from "@/app/context/network-status-context"
+
+// Format numbers with K suffix (e.g., 15300 -> 15.3K)
+function formatStatNumber(num: number): string {
+  if (num >= 1000) {
+    return (num / 1000).toFixed(1) + 'K';
+  }
+  return num.toString();
+}
 
 export function HeroSection() {
   const router = useRouter()
   const { user } = useAuth()
   const { userCount, serviceCount, isLoading } = useStatistics()
+  const { isOnline } = useNetworkStatus()
   
-  // Format numbers with K suffix (e.g., 15300 -> 15.3K)
-  const formatStatNumber = (num: number): string => {
-    if (num >= 1000) {
-      return (num / 1000).toFixed(1) + 'K'
-    }
-    return num.toString()
+  // Directly use guaranteed working images
+  const images = {
+    topLeft: isOnline ? "/testimonial-1.jpg" : "/placeholder.jpg",
+    topRight: isOnline ? "/testimonial-2.jpg" : "/placeholder.jpg",
+    bottomRight: isOnline ? "/testimonial-3.jpg" : "/placeholder.jpg"
   }
-
+  
   return (
     <section className="relative overflow-hidden pt-16 pb-32 md:pt-24 md:pb-40">
       <div className="absolute inset-0 -z-10">
@@ -71,21 +81,17 @@ export function HeroSection() {
               </div>
             </div>
             
-            <div className="relative">
+            <div className="relative order-1 lg:order-2" data-aos="fade-left" data-aos-delay="300">
               {/* Modern colorful panels with people - updated to match reference image */}
               <div className="relative h-[400px] md:h-[450px] flex items-center justify-center">
-                <div className="relative grid grid-cols-2 grid-rows-2 gap-4 max-w-md mx-auto">
+                <div className="relative grid grid-cols-2 grid-rows-2 gap-6 max-w-md mx-auto">
                   {/* Top-left person - orange shirt */}
                   <div className="relative bg-[#ffd280] rounded-2xl overflow-hidden shadow-lg transform rotate-2 z-10">
                     <div className="absolute top-2 right-2 w-6 h-6 bg-white/30 rounded-full"></div>
                     <img 
                       alt="Person in orange shirt" 
                       className="w-full h-48 object-cover object-top"
-                      src="/images/people/person1.jpg"
-                      onError={(e) => {
-                        e.currentTarget.src = "https://images.unsplash.com/photo-1494790108377-be9c29b29330?ixlib=rb-4.0.3";
-                        e.currentTarget.onerror = null;
-                      }}
+                      src={images.topLeft}
                     />
                   </div>
                   
@@ -95,16 +101,12 @@ export function HeroSection() {
                     <img 
                       alt="Person with glasses" 
                       className="w-full h-52 object-cover object-top"
-                      src="/images/people/person2.jpg" 
-                      onError={(e) => {
-                        e.currentTarget.src = "https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?ixlib=rb-4.0.3";
-                        e.currentTarget.onerror = null;
-                      }}
+                      src={images.topRight}
                     />
                   </div>
                   
                   {/* Bottom-left - decorative element */}
-                  <div className="relative bg-[#a0e4ff] rounded-2xl overflow-hidden shadow-lg transform -rotate-3 z-20 flex items-center justify-center">
+                  <div className="relative bg-[#a0e4ff] rounded-2xl overflow-hidden shadow-lg transform -rotate-3 z-20 flex items-center justify-center h-32">
                     <div className="absolute w-full h-full flex items-center justify-center">
                       <div className="w-16 h-16 flex items-center justify-center">
                         <div className="h-3 w-3 rounded-full bg-white mx-1"></div>
@@ -121,11 +123,7 @@ export function HeroSection() {
                     <img 
                       alt="Person in pink" 
                       className="w-full h-48 object-cover object-top"
-                      src="/images/people/person3.jpg"
-                      onError={(e) => {
-                        e.currentTarget.src = "https://images.unsplash.com/photo-1573497019940-1c28c88b4f3e?ixlib=rb-4.0.3";
-                        e.currentTarget.onerror = null;
-                      }}
+                      src={images.bottomRight}
                     />
                   </div>
                 </div>
@@ -144,9 +142,9 @@ export function HeroSection() {
               </div>
               
               {/* Stats below image grid */}
-              <div className="flex items-center justify-start mt-8 space-x-8">
-                <div className="text-center">
-                  <p className="text-xl font-bold">
+              <div className="flex items-center justify-between mt-8 bg-white/80 dark:bg-black/80 backdrop-blur-sm rounded-xl p-4 shadow-lg">
+                <div className="text-center px-4">
+                  <p className="text-2xl font-bold text-primary">
                     {isLoading ? (
                       <span className="inline-block h-6 w-16 bg-gray-200 dark:bg-gray-700 animate-pulse rounded-md"></span>
                     ) : (
@@ -155,8 +153,8 @@ export function HeroSection() {
                   </p>
                   <p className="text-sm text-neutral-500">Active Users</p>
                 </div>
-                <div className="text-center">
-                  <p className="text-xl font-bold">
+                <div className="text-center px-4 border-x border-gray-200 dark:border-gray-800">
+                  <p className="text-2xl font-bold text-primary">
                     {isLoading ? (
                       <span className="inline-block h-6 w-12 bg-gray-200 dark:bg-gray-700 animate-pulse rounded-md"></span>
                     ) : (
@@ -165,10 +163,9 @@ export function HeroSection() {
                   </p>
                   <p className="text-sm text-neutral-500">Services</p>
                 </div>
-                <div className="flex items-center">
-                  <div className="h-8 w-8 rounded-full bg-gray-200 border-2 border-white -mr-2"></div>
-                  <div className="h-8 w-8 rounded-full bg-gray-300 border-2 border-white -mr-2"></div>
-                  <div className="h-8 w-8 rounded-full bg-gray-400 border-2 border-white"></div>
+                <div className="text-center px-4">
+                  <p className="text-2xl font-bold text-primary">2</p>
+                  <p className="text-sm text-neutral-500">Providers</p>
                 </div>
               </div>
             </div>

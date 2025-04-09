@@ -1,14 +1,7 @@
 'use client'
 
-import { usePathname } from 'next/navigation'
-import { ChatButton } from './chat-button'
-
+// ChatButtonWrapper component that completely hides the chat button
 export function ChatButtonWrapper() {
-  const pathname = usePathname()
-  // Only show chat button on home page
-  const isHomePage = pathname === '/'
-
-  if (!isHomePage) return null
-  
-  return <ChatButton />
+  // Return null to hide the chat button completely
+  return null
 } 

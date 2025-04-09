@@ -10,7 +10,8 @@ export function ChatButton() {
   const emailRef = useRef<HTMLInputElement>(null)
   const messageRef = useRef<HTMLTextAreaElement>(null)
 
-  const toggleChat = () => {
+  const toggleChat = (e: React.MouseEvent<HTMLButtonElement>) => {
+    e.preventDefault() // Prevent default to stop scrolling
     setIsOpen(!isOpen)
     // Reset to input form when reopening
     if (!isOpen) {
@@ -33,11 +34,12 @@ export function ChatButton() {
   return (
     <>
       {/* Chat button */}
-      <div className="fixed bottom-6 right-6 z-50">
+      <div className="fixed bottom-6 right-6 z-50" onClick={(e) => e.stopPropagation()}>
         <button
           onClick={toggleChat}
-          className="flex items-center justify-center w-14 h-14 rounded-full bg-primary text-white shadow-lg hover:shadow-xl transition-all duration-300 hover:scale-105 focus:outline-none"
+          className="flex items-center justify-center w-14 h-14 rounded-full bg-primary text-white shadow-lg hover:bg-primary/90 transition-colors focus:outline-none"
           aria-label="Open chat"
+          type="button"
         >
           {isOpen ? (
             <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="lucide lucide-x">

@@ -59,6 +59,60 @@ const AnimationStyles = () => {
         50% { opacity: 0.65; }
       }
       
+      @keyframes moving-gradient {
+        0% { 
+          background-position: 0% 50%;
+          transform: rotate(0deg);
+        }
+        50% { 
+          background-position: 100% 50%;
+          transform: rotate(1deg);
+        }
+        100% { 
+          background-position: 0% 50%;
+          transform: rotate(0deg);
+        }
+      }
+      
+      @keyframes roaming-blob {
+        0% {
+          transform: translateY(0) translateX(0) scale(1);
+        }
+        20% {
+          transform: translateY(-20px) translateX(15px) scale(1.05);
+        }
+        40% {
+          transform: translateY(-10px) translateX(30px) scale(0.95);
+        }
+        60% {
+          transform: translateY(15px) translateX(20px) scale(1.02);
+        }
+        80% {
+          transform: translateY(25px) translateX(-10px) scale(0.98);
+        }
+        100% {
+          transform: translateY(0) translateX(0) scale(1);
+        }
+      }
+      
+      @keyframes circle-roam {
+        0% {
+          transform: translateY(0) translateX(0) scale(1);
+        }
+        25% {
+          transform: translateY(-30px) translateX(25px) scale(1.1);
+        }
+        50% {
+          transform: translateY(0) translateX(50px) scale(0.95);
+        }
+        75% {
+          transform: translateY(30px) translateX(25px) scale(1.05);
+        }
+        100% {
+          transform: translateY(0) translateX(0) scale(1);
+        }
+      }
+      
       .animate-float-slow {
         animation: float-slow 6s ease-in-out infinite;
       }
@@ -102,6 +156,26 @@ export default function Home() {
   const placeholderImg = "/placeholder.jpg";
   const [loadKey, setLoadKey] = useState(Date.now());
   const pathname = usePathname();
+  const [currentImageIndex, setCurrentImageIndex] = useState(0);
+  
+  // Images for the Get In Touch section carousel
+  const getInTouchImages = [
+    "/Get in touch 2.png",
+    "/Get in touch 3.png", 
+    "/Get in touch 4.png",
+    "/Get in touch 5.png"
+  ];
+  
+  // Handle image slideshow for Get In Touch section
+  useEffect(() => {
+    const interval = setInterval(() => {
+      setCurrentImageIndex((prevIndex) => 
+        prevIndex === getInTouchImages.length - 1 ? 0 : prevIndex + 1
+      );
+    }, 5000); // Change image every 5 seconds
+    
+    return () => clearInterval(interval);
+  }, []);
   
   // Reset the component on each visit by forcing a complete remount
   useEffect(() => {
@@ -1052,15 +1126,15 @@ export default function Home() {
                 </div>
               </div>
               
-              {/* More questions button */}
-              <div className="mt-12 text-center" data-aos="fade-up" data-aos-delay="200">
+              {/* More questions button - Hidden */}
+              {/* <div className="mt-12 text-center" data-aos="fade-up" data-aos-delay="200">
                 <Link href="/support" className="inline-flex items-center justify-center px-6 py-3 border border-transparent text-base font-medium rounded-full text-primary bg-primary/5 hover:bg-primary/10 transition-colors duration-300">
                   View all FAQs
                   <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5 ml-2" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
                     <path d="M5 12h14M12 5l7 7-7 7"/>
                   </svg>
                 </Link>
-              </div>
+              </div> */}
             </div>
           </div>
         </div>
@@ -1075,12 +1149,94 @@ export default function Home() {
               <div className="absolute inset-0 bg-gradient-to-br from-emerald-500 to-blue-600 opacity-90"></div>
               <div className="absolute inset-0 bg-[url('/patterns/dot-pattern.svg')] opacity-10"></div>
               
+              {/* Image Carousel */}
+              <div className="absolute inset-0 overflow-hidden">
+                {getInTouchImages.map((image, index) => (
+                  <div 
+                    key={image} 
+                    className="absolute inset-0 transition-opacity duration-1000 ease-in-out"
+                    style={{ 
+                      opacity: index === currentImageIndex ? 0.15 : 0,
+                      backgroundImage: `url(${image})`,
+                      backgroundSize: 'cover',
+                      backgroundPosition: 'center',
+                    }}
+                  />
+                ))}
+              </div>
+              
               {/* Decorative elements */}
               <div className="absolute top-0 left-0 w-full h-full overflow-hidden pointer-events-none">
                 <div className="absolute -top-[10%] -left-[10%] w-[50%] h-[50%] bg-white/10 rounded-full blur-3xl"></div>
                 <div className="absolute -bottom-[10%] -right-[10%] w-[50%] h-[50%] bg-white/10 rounded-full blur-3xl"></div>
               </div>
-              
+
+              {/* Colorful candy-like moving blobs */}
+              <div className="absolute top-0 left-0 w-full h-full overflow-hidden pointer-events-none">
+                {/* Top left blob - Pink */}
+                <div className="absolute top-[15%] left-[15%] w-[20%] h-[20%] rounded-full blur-sm" style={{
+                  background: 'radial-gradient(circle, rgba(255,105,180,0.6) 0%, rgba(255,20,147,0.4) 70%)',
+                  animation: 'moving-gradient 6s ease-in-out infinite, roaming-blob 14s ease-in-out infinite'
+                }}></div>
+                
+                {/* Top right blob - Blue */}
+                <div className="absolute top-[20%] right-[20%] w-[18%] h-[18%] rounded-full blur-sm" style={{
+                  background: 'radial-gradient(circle, rgba(70,130,255,0.6) 0%, rgba(50,100,235,0.4) 70%)',
+                  animation: 'moving-gradient 7s ease-in-out infinite reverse, roaming-blob 16s ease-in-out infinite reverse'
+                }}></div>
+                
+                {/* Bottom left blob - Green */}
+                <div className="absolute bottom-[22%] left-[22%] w-[16%] h-[16%] rounded-full blur-sm" style={{
+                  background: 'radial-gradient(circle, rgba(50,220,150,0.6) 0%, rgba(30,180,120,0.4) 70%)',
+                  animation: 'moving-gradient 8s ease-in-out infinite alternate, roaming-blob 18s ease-in-out infinite'
+                }}></div>
+                
+                {/* Bottom right blob - Purple */}
+                <div className="absolute bottom-[18%] right-[18%] w-[19%] h-[19%] rounded-full blur-sm" style={{
+                  background: 'radial-gradient(circle, rgba(180,90,255,0.6) 0%, rgba(140,70,200,0.4) 70%)',
+                  animation: 'moving-gradient 9s ease-in-out infinite alternate-reverse, roaming-blob 20s ease-in-out infinite reverse'
+                }}></div>
+                
+                {/* Center blob - Yellow/Orange */}
+                <div className="absolute top-[40%] left-[40%] w-[15%] h-[15%] rounded-full blur-sm" style={{
+                  background: 'radial-gradient(circle, rgba(255,175,75,0.5) 0%, rgba(255,140,0,0.3) 70%)',
+                  animation: 'moving-gradient 10s ease-in-out infinite, roaming-blob 15s ease-in-out infinite alternate'
+                }}></div>
+              </div>
+
+              {/* Perfect circles with better roaming animation */}
+              <div className="absolute top-0 left-0 w-full h-full overflow-hidden pointer-events-none">
+                {/* Top left circle - Pink */}
+                <div className="absolute top-[15%] left-[15%] w-[70px] h-[70px] rounded-full blur-sm" style={{
+                  background: 'radial-gradient(circle, rgba(255,105,180,0.7) 0%, rgba(255,20,147,0.5) 70%)',
+                  animation: 'circle-roam 18s ease-in-out infinite'
+                }}></div>
+                
+                {/* Top right circle - Blue */}
+                <div className="absolute top-[20%] right-[20%] w-[60px] h-[60px] rounded-full blur-sm" style={{
+                  background: 'radial-gradient(circle, rgba(70,130,255,0.7) 0%, rgba(50,100,235,0.5) 70%)',
+                  animation: 'circle-roam 22s ease-in-out infinite reverse'
+                }}></div>
+                
+                {/* Bottom left circle - Green */}
+                <div className="absolute bottom-[22%] left-[22%] w-[55px] h-[55px] rounded-full blur-sm" style={{
+                  background: 'radial-gradient(circle, rgba(50,220,150,0.7) 0%, rgba(30,180,120,0.5) 70%)',
+                  animation: 'circle-roam 20s ease-in-out infinite'
+                }}></div>
+                
+                {/* Bottom right circle - Purple */}
+                <div className="absolute bottom-[18%] right-[18%] w-[65px] h-[65px] rounded-full blur-sm" style={{
+                  background: 'radial-gradient(circle, rgba(180,90,255,0.7) 0%, rgba(140,70,200,0.5) 70%)',
+                  animation: 'circle-roam 24s ease-in-out infinite reverse'
+                }}></div>
+                
+                {/* Center circle - Yellow/Orange */}
+                <div className="absolute top-[40%] left-[40%] w-[50px] h-[50px] rounded-full blur-sm" style={{
+                  background: 'radial-gradient(circle, rgba(255,175,75,0.7) 0%, rgba(255,140,0,0.5) 70%)',
+                  animation: 'circle-roam 19s ease-in-out infinite'
+                }}></div>
+              </div>
+
               <div className="relative z-10 py-20 px-6 md:py-28 md:px-20 backdrop-blur-[2px]">
                 <div className="max-w-2xl mx-auto">
                   <h2 className="mb-6 text-4xl font-semibold tracking-tight md:text-5xl text-white leading-tight">
@@ -1115,7 +1271,10 @@ export default function Home() {
               {/* Cursor follower */}
               <div className="opacity-0 group-hover:opacity-100 absolute -inset-2 blur-xl bg-gradient-to-r from-blue-500 to-green-400 rounded-full w-32 h-32 transition-all duration-500 cursor-none pointer-events-none" 
                    id="cursor-follower"></div>
-              <div className="rounded-[28px] backdrop-blur-xl bg-white/20 dark:bg-black/20 border border-white/30 dark:border-white/10 py-16 px-8 md:py-20 md:px-12 text-center relative z-10">
+              <div className="rounded-[28px] backdrop-blur-xl bg-white/20 dark:bg-black/20 py-16 px-8 md:py-20 md:px-12 text-center relative z-10 border-2 border-gray-200/30 shadow-lg"
+                   style={{
+                     boxShadow: '0 0 20px rgba(200,200,200,0.15)'
+                   }}>
                 <h2 className="text-3xl md:text-5xl font-bold mb-8 tracking-tight bg-clip-text text-transparent bg-gradient-to-r from-primary to-primary/70 dark:from-primary dark:to-blue-400">Ready to Get Started?</h2>
                 <p className="text-xl leading-relaxed text-neutral-800 dark:text-white/90 mb-12 max-w-2xl mx-auto font-light">
                 Join Alima today and connect with skilled professionals or find new clients for your services.

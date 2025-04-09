@@ -182,16 +182,18 @@ export function Navbar() {
             {user ? (
               <DropdownMenu>
                 <DropdownMenuTrigger asChild>
-                  <Button variant="ghost" className="relative h-10 w-10 rounded-full p-0 overflow-hidden">
-                    <Avatar className="h-10 w-10 border border-white/10 shadow-[0_0_10px_rgba(59,130,246,0.1)]">
-                      <AvatarImage
-                        src={user.avatar || user.profilePicture || user.photoURL || '/default-avatar.png'}
-                        alt="User avatar"
-                      />
-                      <AvatarFallback className="bg-primary/10 text-primary">
-                        {user.name ? user.name.charAt(0).toUpperCase() : 'U'}
-                      </AvatarFallback>
-                    </Avatar>
+                  <div className="relative">
+                    <Button variant="ghost" className="h-10 w-10 rounded-full p-0 overflow-hidden">
+                      <Avatar className="h-10 w-10 border border-white/10 shadow-[0_0_10px_rgba(59,130,246,0.1)]">
+                        <AvatarImage
+                          src={user.avatar || user.profilePicture || user.photoURL || '/default-avatar.png'}
+                          alt="User avatar"
+                        />
+                        <AvatarFallback className="bg-primary/10 text-primary">
+                          {user.name ? user.name.charAt(0).toUpperCase() : 'U'}
+                        </AvatarFallback>
+                      </Avatar>
+                    </Button>
                     {messageCounts > 0 && (
                       <Badge 
                         className="absolute -top-1 -right-1 h-5 w-5 flex items-center justify-center p-0 bg-red-500 text-white shadow-[0_0_5px_rgba(239,68,68,0.5)]" 
@@ -200,7 +202,7 @@ export function Navbar() {
                         {messageCounts}
                       </Badge>
                     )}
-                  </Button>
+                  </div>
                 </DropdownMenuTrigger>
                 <DropdownMenuContent align="end" className="mt-1 bg-background/80 backdrop-blur-md border border-white/10">
                   <DropdownMenuLabel>

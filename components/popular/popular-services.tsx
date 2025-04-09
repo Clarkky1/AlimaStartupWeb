@@ -1052,6 +1052,7 @@ export function PopularServices({ category, limit: serviceLimit = 8 }: PopularSe
         </div>
       )}
 
+      <h2 className="text-2xl font-bold mb-4">Search Services</h2>
       <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
         <Tabs 
           value={activeTab} 

@@ -13,16 +13,6 @@ import { useNetworkStatus } from "@/app/context/network-status-context";
 import { PlaceholderImage } from "@/components/ui/placeholder-image";
 import { usePathname } from "next/navigation";
 
-// Declare AOS global type to fix TypeScript error
-declare global {
-  interface Window {
-    AOS: {
-      init: (params?: any) => void;
-      refresh: () => void;
-    }
-  }
-}
-
 // Client component for animations
 const AnimationStyles = () => {
   useEffect(() => {
@@ -138,22 +128,6 @@ export default function Home() {
       }
     }
   }, []); // Only run on initial mount
-  
-  // Add an effect that resets the component when navigating back to the homepage
-  useEffect(() => {
-    if (pathname === '/') {
-      // Force remount when navigating back to home page
-      setLoadKey(Date.now());
-      
-      // Re-initialize AOS animations
-      if (typeof window !== 'undefined' && window.AOS) {
-        window.AOS.refresh();
-      }
-      
-      // Update the load time
-      sessionStorage.setItem('homeLoadTime', Date.now().toString());
-    }
-  }, [pathname]);
   
   // Fetch statistics with the loadKey to force refresh
   const { userCount, serviceCount, providerCount, isLoading } = useStatistics();
@@ -617,26 +591,26 @@ export default function Home() {
                   <div className="relative z-10">
                     <div className="flex items-center mb-6">
                       <div className="h-14 w-14 rounded-full bg-white/20 dark:bg-white/10 mr-4 overflow-hidden">
-                        <PlaceholderImage
-                          src="/testimonial-1.jpg"
-                          alt="User" 
+                      <PlaceholderImage
+                        src="/testimonial-1.jpg"
+                        alt="User" 
                           width={56}
                           height={56}
-                          className="h-full w-full object-cover"
-                        />
-                      </div>
-                      <div>
+                        className="h-full w-full object-cover"
+                      />
+                    </div>
+                    <div>
                         <h4 className="font-semibold text-neutral-800 dark:text-white">Sarah Johnson</h4>
                         <p className="text-sm text-neutral-600 dark:text-neutral-300">Business Owner</p>
-                      </div>
                     </div>
+                  </div>
                     <p className="text-base text-neutral-700 dark:text-neutral-200">"I found the perfect web developer for my e-commerce store. The entire process was smooth and the communication tools made the project easy to manage."</p>
                     <div className="flex mt-5">
-                      {[1, 2, 3, 4, 5].map((star) => (
-                        <svg key={star} className="h-5 w-5 text-yellow-500" fill="currentColor" viewBox="0 0 20 20">
-                          <path d="M9.049 2.927c.3-.921 1.603-.921 1.902 0l1.07 3.292a1 1 0 00.95.69h3.462c.969 0 1.371 1.24.588 1.81l-2.8 2.034a1 1 0 00-.364 1.118l1.07 3.292c.3.921-.755 1.688-1.54 1.118l-2.8-2.034a1 1 0 00-1.175 0l-2.8 2.034c-.784.57-1.838-.197-1.539-1.118l1.07-3.292a1 1 0 00-.364-1.118L2.98 8.72c-.783-.57-.38-1.81.588-1.81h3.461a1 1 0 00.951-.69l1.07-3.292z" />
-                        </svg>
-                      ))}
+                    {[1, 2, 3, 4, 5].map((star) => (
+                      <svg key={star} className="h-5 w-5 text-yellow-500" fill="currentColor" viewBox="0 0 20 20">
+                        <path d="M9.049 2.927c.3-.921 1.603-.921 1.902 0l1.07 3.292a1 1 0 00.95.69h3.462c.969 0 1.371 1.24.588 1.81l-2.8 2.034a1 1 0 00-.364 1.118l1.07 3.292c.3.921-.755 1.688-1.54 1.118l-2.8-2.034a1 1 0 00-1.175 0l-2.8 2.034c-.784.57-1.838-.197-1.539-1.118l1.07-3.292a1 1 0 00-.364-1.118L2.98 8.72c-.783-.57-.38-1.81.588-1.81h3.461a1 1 0 00.951-.69l1.07-3.292z" />
+                      </svg>
+                    ))}
                     </div>
                   </div>
                 </div>
@@ -649,26 +623,26 @@ export default function Home() {
                   <div className="relative z-10">
                     <div className="flex items-center mb-6">
                       <div className="h-14 w-14 rounded-full bg-white/20 dark:bg-white/10 mr-4 overflow-hidden">
-                        <PlaceholderImage
-                          src="/testimonial-2.jpg"
-                          alt="User"
+                      <PlaceholderImage
+                        src="/testimonial-2.jpg"
+                        alt="User"
                           width={56}
                           height={56}
-                          className="h-full w-full object-cover"
-                        />
-                      </div>
-                      <div>
+                        className="h-full w-full object-cover"
+                      />
+                    </div>
+                    <div>
                         <h4 className="font-semibold text-neutral-800 dark:text-white">Michael Torres</h4>
                         <p className="text-sm text-neutral-600 dark:text-neutral-300">Freelance Designer</p>
-                      </div>
                     </div>
+                  </div>
                     <p className="text-base text-neutral-700 dark:text-neutral-200">"Alima has transformed my freelance business. I've connected with clients I never would have found otherwise, and the platform handles all the payment processing."</p>
                     <div className="flex mt-5">
-                      {[1, 2, 3, 4, 5].map((star) => (
-                        <svg key={star} className="h-5 w-5 text-yellow-500" fill="currentColor" viewBox="0 0 20 20">
-                          <path d="M9.049 2.927c.3-.921 1.603-.921 1.902 0l1.07 3.292a1 1 0 00.95.69h3.462c.969 0 1.371 1.24.588 1.81l-2.8 2.034a1 1 0 00-.364 1.118l1.07 3.292c.3.921-.755 1.688-1.54 1.118l-2.8-2.034a1 1 0 00-1.175 0l-2.8 2.034c-.784.57-1.838-.197-1.539-1.118l1.07-3.292a1 1 0 00-.364-1.118L2.98 8.72c-.783-.57-.38-1.81.588-1.81h3.461a1 1 0 00.951-.69l1.07-3.292z" />
-                        </svg>
-                      ))}
+                    {[1, 2, 3, 4, 5].map((star) => (
+                      <svg key={star} className="h-5 w-5 text-yellow-500" fill="currentColor" viewBox="0 0 20 20">
+                        <path d="M9.049 2.927c.3-.921 1.603-.921 1.902 0l1.07 3.292a1 1 0 00.95.69h3.462c.969 0 1.371 1.24.588 1.81l-2.8 2.034a1 1 0 00-.364 1.118l1.07 3.292c.3.921-.755 1.688-1.54 1.118l-2.8-2.034a1 1 0 00-1.175 0l-2.8 2.034c-.784.57-1.838-.197-1.539-1.118l1.07-3.292a1 1 0 00-.364-1.118L2.98 8.72c-.783-.57-.38-1.81.588-1.81h3.461a1 1 0 00.951-.69l1.07-3.292z" />
+                      </svg>
+                    ))}
                     </div>
                   </div>
                 </div>
@@ -681,26 +655,26 @@ export default function Home() {
                   <div className="relative z-10">
                     <div className="flex items-center mb-6">
                       <div className="h-14 w-14 rounded-full bg-white/20 dark:bg-white/10 mr-4 overflow-hidden">
-                        <PlaceholderImage
-                          src="/testimonial-3.jpg"
-                          alt="User"
+                      <PlaceholderImage
+                        src="/testimonial-3.jpg"
+                        alt="User"
                           width={56}
                           height={56}
-                          className="h-full w-full object-cover"
-                        />
-                      </div>
-                      <div>
+                        className="h-full w-full object-cover"
+                      />
+                    </div>
+                    <div>
                         <h4 className="font-semibold text-neutral-800 dark:text-white">Leila Amado</h4>
                         <p className="text-sm text-neutral-600 dark:text-neutral-300">Small Business Owner</p>
-                      </div>
                     </div>
+                  </div>
                     <p className="text-base text-neutral-700 dark:text-neutral-200">"The verification system gave me confidence in hiring service providers. I've found amazing talent for multiple projects and the quality has been consistently excellent."</p>
                     <div className="flex mt-5">
-                      {[1, 2, 3, 4, 5].map((star) => (
-                        <svg key={star} className="h-5 w-5 text-yellow-500" fill="currentColor" viewBox="0 0 20 20">
-                          <path d="M9.049 2.927c.3-.921 1.603-.921 1.902 0l1.07 3.292a1 1 0 00.95.69h3.462c.969 0 1.371 1.24.588 1.81l-2.8 2.034a1 1 0 00-.364 1.118l1.07 3.292c.3.921-.755 1.688-1.54 1.118l-2.8-2.034a1 1 0 00-1.175 0l-2.8 2.034c-.784.57-1.838-.197-1.539-1.118l1.07-3.292a1 1 0 00-.364-1.118L2.98 8.72c-.783-.57-.38-1.81.588-1.81h3.461a1 1 0 00.951-.69l1.07-3.292z" />
-                        </svg>
-                      ))}
+                    {[1, 2, 3, 4, 5].map((star) => (
+                      <svg key={star} className="h-5 w-5 text-yellow-500" fill="currentColor" viewBox="0 0 20 20">
+                        <path d="M9.049 2.927c.3-.921 1.603-.921 1.902 0l1.07 3.292a1 1 0 00.95.69h3.462c.969 0 1.371 1.24.588 1.81l-2.8 2.034a1 1 0 00-.364 1.118l1.07 3.292c.3.921-.755 1.688-1.54 1.118l-2.8-2.034a1 1 0 00-1.175 0l-2.8 2.034c-.784.57-1.838-.197-1.539-1.118l1.07-3.292a1 1 0 00-.364-1.118L2.98 8.72c-.783-.57-.38-1.81.588-1.81h3.461a1 1 0 00.951-.69l1.07-3.292z" />
+                      </svg>
+                    ))}
                     </div>
                   </div>
                 </div>
@@ -733,15 +707,15 @@ export default function Home() {
                 <h3 className="text-xl font-medium mb-4">For Clients</h3>
                 <p className="text-gray-600 dark:text-gray-400">
                   Find trustworthy, skilled professionals quickly and confidently for any service you need, with complete transparency.
-                </p>
-              </div>
+                  </p>
+                </div>
 
               <div className="bg-white dark:bg-gray-900/60 backdrop-blur-lg rounded-3xl p-8 shadow-lg ring-1 ring-gray-200/50 dark:ring-white/10 transition-all duration-300 hover:shadow-xl hover:-translate-y-1" data-aos="fade-up" data-aos-delay="200">
                 <div className="w-16 h-16 mb-6 rounded-2xl bg-gradient-to-br from-purple-100 to-indigo-50 dark:from-purple-900/30 dark:to-indigo-900/20 flex items-center justify-center">
                   <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" className="w-8 h-8 text-purple-600 dark:text-purple-400">
                     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M20.25 14.15v4.25c0 1.094-.787 2.036-1.872 2.18-2.087.277-4.216.42-6.378.42s-4.291-.143-6.378-.42c-1.085-.144-1.872-1.086-1.872-2.18v-4.25m16.5 0a2.18 2.18 0 00.75-1.661V8.706c0-1.081-.768-2.015-1.837-2.175a48.114 48.114 0 00-3.413-.387m4.5 8.006c-.194.165-.42.295-.673.38A23.978 23.978 0 0112 15.75c-2.648 0-5.195-.429-7.577-1.22a2.016 2.016 0 01-.673-.38m0 0A2.18 2.18 0 013 12.489V8.706c0-1.081.768-2.015 1.837-2.175a48.111 48.111 0 013.413-.387m7.5 0V5.25A2.25 2.25 0 0013.5 3h-3a2.25 2.25 0 00-2.25 2.25v.894m7.5 0a48.667 48.667 0 00-7.5 0M12 12.75h.008v.008H12v-.008z" />
                   </svg>
-                </div>
+                  </div>
                 <h3 className="text-xl font-medium mb-4">For Service Providers</h3>
                 <p className="text-gray-600 dark:text-gray-400">
                   Showcase your skills, connect with clients who value quality work, and build a thriving business on your terms.
@@ -758,9 +732,9 @@ export default function Home() {
                 <p className="text-gray-600 dark:text-gray-400">
                   Foster local economies where skilled professionals thrive and communities benefit from high-quality, accessible services.
                 </p>
+                </div>
               </div>
-            </div>
-
+              
             {/* Comment out the "Join Our Community" button */}
             {/* <div className="mt-16 text-center">
               <Button className="bg-gradient-to-r from-indigo-600 to-purple-600 hover:from-indigo-700 hover:to-purple-700 dark:from-indigo-500 dark:to-purple-500 text-white font-medium py-6 px-8 rounded-full transition-all shadow-lg hover:shadow-xl" data-aos="fade-up" data-aos-delay="300">
@@ -1154,7 +1128,7 @@ export default function Home() {
                   Browse services
                 </Link>
               </div>
-            </div>
+              </div>
             </div>
           </div>
         </div>

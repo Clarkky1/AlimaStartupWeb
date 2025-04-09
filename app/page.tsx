@@ -13,6 +13,16 @@ import { useNetworkStatus } from "@/app/context/network-status-context";
 import { PlaceholderImage } from "@/components/ui/placeholder-image";
 import { usePathname } from "next/navigation";
 
+// Declare AOS global type to fix TypeScript error
+declare global {
+  interface Window {
+    AOS: {
+      init: (params?: any) => void;
+      refresh: () => void;
+    }
+  }
+}
+
 // Client component for animations
 const AnimationStyles = () => {
   useEffect(() => {
@@ -128,6 +138,22 @@ export default function Home() {
       }
     }
   }, []); // Only run on initial mount
+  
+  // Add an effect that resets the component when navigating back to the homepage
+  useEffect(() => {
+    if (pathname === '/') {
+      // Force remount when navigating back to home page
+      setLoadKey(Date.now());
+      
+      // Re-initialize AOS animations
+      if (typeof window !== 'undefined' && window.AOS) {
+        window.AOS.refresh();
+      }
+      
+      // Update the load time
+      sessionStorage.setItem('homeLoadTime', Date.now().toString());
+    }
+  }, [pathname]);
   
   // Fetch statistics with the loadKey to force refresh
   const { userCount, serviceCount, providerCount, isLoading } = useStatistics();

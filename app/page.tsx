@@ -768,39 +768,7 @@ export default function Home() {
         </div>
         
         {/* 4. PROOF/PORTFOLIO - Top Service Providers Section */}
-        <div id="track-record" className="py-32 bg-gradient-to-b from-transparent via-white to-transparent dark:from-transparent dark:via-black dark:to-transparent relative scroll-mt-40 overflow-hidden">
-          {/* Background gradient elements */}
-          <div className="absolute -top-[20%] -right-[10%] w-[40%] h-[40%] bg-gradient-to-br from-sky-100/30 to-indigo-100/30 dark:from-sky-900/20 dark:to-indigo-900/20 rounded-full blur-3xl"></div>
-          <div className="absolute -bottom-[20%] -left-[10%] w-[40%] h-[40%] bg-gradient-to-br from-amber-100/30 to-rose-100/30 dark:from-amber-900/20 dark:to-rose-900/20 rounded-full blur-3xl"></div>
-          
-          <div className="container mx-auto px-6 sm:px-8 relative z-10">
-            <div className="mx-auto max-w-5xl lg:max-w-6xl">
-              <div className="mb-16 text-center">
-                <h2 className="text-3xl font-semibold tracking-tight md:text-4xl mb-5 bg-clip-text text-transparent bg-gradient-to-r from-gray-900 to-gray-600 dark:from-white dark:to-gray-300" data-aos="fade-up">Our Track Record</h2>
-                <p className="text-gray-600 dark:text-gray-300 max-w-2xl mx-auto text-lg" data-aos="fade-up" data-aos-delay="100">
-                  See the successful connections we've made and the quality of our service providers
-                </p>
-              </div>
-              
-              <div className="relative backdrop-blur-sm bg-white/60 dark:bg-black/40 border border-white/30 dark:border-white/10 p-8 rounded-3xl shadow-sm border-b-0 hidden" data-aos="fade-up" data-aos-delay="200">
-                <Suspense fallback={<div className="h-[300px] w-full bg-neutral-100/50 dark:bg-neutral-900/50 rounded-3xl flex items-center justify-center">
-                  <div className="animate-pulse flex space-x-4">
-                    <div className="rounded-full bg-neutral-200 dark:bg-neutral-700 h-12 w-12"></div>
-                    <div className="flex-1 space-y-4 py-1">
-                      <div className="h-4 bg-neutral-200 dark:bg-neutral-700 rounded w-3/4"></div>
-                      <div className="space-y-2">
-                        <div className="h-4 bg-neutral-200 dark:bg-neutral-700 rounded"></div>
-                        <div className="h-4 bg-neutral-200 dark:bg-neutral-700 rounded w-5/6"></div>
-                      </div>
-                    </div>
-                  </div>
-                </div>}>
-                  <TopProviders key={`providers-${loadKey}`} />
-                </Suspense>
-              </div>
-            </div>
-          </div>
-        </div>
+        
 
         {/* 5. PROOF/TESTIMONIALS */}
         <div id="testimonials" className="py-24 bg-gradient-to-b from-transparent via-neutral-50 to-transparent dark:from-transparent dark:via-neutral-950 dark:to-transparent relative scroll-mt-40">

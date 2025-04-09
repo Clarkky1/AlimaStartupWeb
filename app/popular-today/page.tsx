@@ -37,11 +37,10 @@ export default function PopularTodayPage() {
 
   return (
     <div className="flex min-h-screen flex-col bg-white text-black dark:bg-black dark:text-white">
-      {/* Minimal spacing for fixed navbar */}
-      <div className="pt-4 md:pt-6"></div>
+      {/* Removed spacing to bring hero closer to navbar */}
       
       {/* Hero Section */}
-      <div className="relative overflow-hidden bg-gradient-to-b from-neutral-100 to-white py-24 dark:from-neutral-900 dark:to-black">
+      <div className="relative overflow-hidden bg-gradient-to-b from-neutral-100 to-white py-16 mt-0 dark:from-neutral-900 dark:to-black">
         <div className="container relative mx-auto px-6">
           <div className="mx-auto max-w-2xl text-center">
             <h1 className="mb-8 text-5xl font-semibold tracking-tight md:text-6xl">Popular Today</h1>

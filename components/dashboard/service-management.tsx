@@ -449,9 +449,9 @@ export function ServiceManagement() {
           <h1 className="text-3xl font-bold tracking-tight">Services</h1>
           <p className="text-muted-foreground">Manage your services and offerings</p>
         </div>
-        <Button size="lg" onClick={() => setIsAddDialogOpen(true)}>
-          <Plus className="mr-2 h-5 w-5" />
-          Add Service
+        <Button size="sm" className="sm:size-lg" onClick={() => setIsAddDialogOpen(true)}>
+          <Plus className="h-4 w-4 sm:mr-2 sm:h-5 sm:w-5" />
+          <span className="hidden sm:inline">Add Service</span>
         </Button>
       </div>
 
@@ -482,7 +482,7 @@ export function ServiceManagement() {
               Get started by adding your first service
             </p>
             <Button className="mt-4" onClick={() => setIsAddDialogOpen(true)}>
-              <Plus className="mr-2 h-5 w-5" />
+              <Plus className="mr-2 h-4 w-4 sm:h-5 sm:w-5" />
               Add Service
             </Button>
           </div>

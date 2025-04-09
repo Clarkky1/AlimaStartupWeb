@@ -279,13 +279,6 @@ export function DashboardLayout({ children }: DashboardLayoutProps) {
               </div>
             </SheetContent>
           </Sheet>
-          <Link 
-            href="/" 
-            className="flex items-center gap-2 font-semibold md:hidden"
-            onClick={() => setTimeout(() => router.refresh(), 0)}
-          >
-            <img src="/AlimaLOGO.svg" alt="Alima" className="h-8 w-auto" />
-          </Link>
         </div>
         <DropdownMenu>
           <DropdownMenuTrigger asChild>

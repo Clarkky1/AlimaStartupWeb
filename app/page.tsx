@@ -56,6 +56,52 @@ export default function Home() {
     return num.toString()
   }
 
+  // Add the cursor follower script
+  useEffect(() => {
+    const cursorFollower = document.getElementById('cursor-follower');
+    const targetElement = cursorFollower?.parentElement;
+    
+    if (!cursorFollower || !targetElement) return;
+    
+    const handleMouseMove = (e: MouseEvent) => {
+      const rect = targetElement.getBoundingClientRect();
+      const x = e.clientX - rect.left - 64; // Centering the 128px cursor follower
+      const y = e.clientY - rect.top - 64;
+      
+      // Add a subtle delay for smoother following
+      cursorFollower.style.transition = 'transform 0.2s ease-out, background 0.3s ease';
+      cursorFollower.style.transform = `translate(${x}px, ${y}px)`;
+      
+      // Change gradient color based on position
+      const normalizedX = (e.clientX - rect.left) / rect.width;
+      if (normalizedX < 0.5) {
+        cursorFollower.style.background = 'radial-gradient(circle, rgba(59,130,246,0.5) 0%, rgba(37,99,235,0.2) 70%)';
+      } else {
+        cursorFollower.style.background = 'radial-gradient(circle, rgba(16,185,129,0.5) 0%, rgba(5,150,105,0.2) 70%)';
+      }
+    };
+    
+    const handleMouseEnter = () => {
+      cursorFollower.style.opacity = '1';
+      targetElement.style.cursor = 'none';
+    };
+    
+    const handleMouseLeave = () => {
+      cursorFollower.style.opacity = '0';
+      targetElement.style.cursor = 'auto';
+    };
+    
+    targetElement.addEventListener('mousemove', handleMouseMove);
+    targetElement.addEventListener('mouseenter', handleMouseEnter);
+    targetElement.addEventListener('mouseleave', handleMouseLeave);
+    
+    return () => {
+      targetElement.removeEventListener('mousemove', handleMouseMove);
+      targetElement.removeEventListener('mouseenter', handleMouseEnter);
+      targetElement.removeEventListener('mouseleave', handleMouseLeave);
+    };
+  }, []);
+
   return (
     <div className="flex min-h-screen flex-col bg-white text-black dark:bg-black dark:text-white relative overflow-hidden" key={loadKey}>
       {/* Background elements */}
@@ -377,83 +423,98 @@ export default function Home() {
               
               <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
                 {/* Testimonial 1 */}
-                <div className="bg-white dark:bg-neutral-900 p-6 rounded-xl shadow-sm border border-neutral-200 dark:border-neutral-800" data-aos="fade-up" data-aos-delay="100">
-                  <div className="flex items-center mb-4">
-                    <div className="h-12 w-12 rounded-full bg-neutral-200 dark:bg-neutral-700 mr-4 overflow-hidden">
-                      <PlaceholderImage
-                        src="/testimonial-1.jpg"
-                        alt="User" 
-                        width={48}
-                        height={48}
-                        className="h-full w-full object-cover"
-                      />
+                <div className="backdrop-blur-xl bg-white/20 dark:bg-black/20 border border-white/30 dark:border-white/10 p-8 rounded-2xl shadow-lg relative overflow-hidden group" data-aos="fade-up" data-aos-delay="100">
+                  <div className="absolute -top-20 -left-20 w-40 h-40 bg-gradient-to-r from-blue-500/20 to-purple-500/20 rounded-full blur-3xl animate-float-slow pointer-events-none"></div>
+                  <div className="absolute -bottom-20 -right-20 w-40 h-40 bg-gradient-to-r from-primary/20 to-green-400/20 rounded-full blur-3xl animate-float-medium pointer-events-none"></div>
+                  
+                  <div className="relative z-10">
+                    <div className="flex items-center mb-6">
+                      <div className="h-14 w-14 rounded-full bg-white/20 dark:bg-white/10 mr-4 overflow-hidden">
+                        <PlaceholderImage
+                          src="/testimonial-1.jpg"
+                          alt="User" 
+                          width={56}
+                          height={56}
+                          className="h-full w-full object-cover"
+                        />
+                      </div>
+                      <div>
+                        <h4 className="font-semibold text-neutral-800 dark:text-white">Sarah Johnson</h4>
+                        <p className="text-sm text-neutral-600 dark:text-neutral-300">Business Owner</p>
+                      </div>
                     </div>
-                    <div>
-                      <h4 className="font-semibold">Sarah Johnson</h4>
-                      <p className="text-sm text-muted-foreground">Business Owner</p>
+                    <p className="text-base text-neutral-700 dark:text-neutral-200">"I found the perfect web developer for my e-commerce store. The entire process was smooth and the communication tools made the project easy to manage."</p>
+                    <div className="flex mt-5">
+                      {[1, 2, 3, 4, 5].map((star) => (
+                        <svg key={star} className="h-5 w-5 text-yellow-500" fill="currentColor" viewBox="0 0 20 20">
+                          <path d="M9.049 2.927c.3-.921 1.603-.921 1.902 0l1.07 3.292a1 1 0 00.95.69h3.462c.969 0 1.371 1.24.588 1.81l-2.8 2.034a1 1 0 00-.364 1.118l1.07 3.292c.3.921-.755 1.688-1.54 1.118l-2.8-2.034a1 1 0 00-1.175 0l-2.8 2.034c-.784.57-1.838-.197-1.539-1.118l1.07-3.292a1 1 0 00-.364-1.118L2.98 8.72c-.783-.57-.38-1.81.588-1.81h3.461a1 1 0 00.951-.69l1.07-3.292z" />
+                        </svg>
+                      ))}
                     </div>
-                  </div>
-                  <p className="text-sm">"I found the perfect web developer for my e-commerce store. The entire process was smooth and the communication tools made the project easy to manage."</p>
-                  <div className="flex mt-4">
-                    {[1, 2, 3, 4, 5].map((star) => (
-                      <svg key={star} className="h-5 w-5 text-yellow-500" fill="currentColor" viewBox="0 0 20 20">
-                        <path d="M9.049 2.927c.3-.921 1.603-.921 1.902 0l1.07 3.292a1 1 0 00.95.69h3.462c.969 0 1.371 1.24.588 1.81l-2.8 2.034a1 1 0 00-.364 1.118l1.07 3.292c.3.921-.755 1.688-1.54 1.118l-2.8-2.034a1 1 0 00-1.175 0l-2.8 2.034c-.784.57-1.838-.197-1.539-1.118l1.07-3.292a1 1 0 00-.364-1.118L2.98 8.72c-.783-.57-.38-1.81.588-1.81h3.461a1 1 0 00.951-.69l1.07-3.292z" />
-                      </svg>
-                    ))}
                   </div>
                 </div>
                 
                 {/* Testimonial 2 */}
-                <div className="bg-white dark:bg-neutral-900 p-6 rounded-xl shadow-sm border border-neutral-200 dark:border-neutral-800" data-aos="fade-up" data-aos-delay="200">
-                  <div className="flex items-center mb-4">
-                    <div className="h-12 w-12 rounded-full bg-neutral-200 dark:bg-neutral-700 mr-4 overflow-hidden">
-                      <PlaceholderImage
-                        src="/testimonial-2.jpg"
-                        alt="User"
-                        width={48}
-                        height={48}
-                        className="h-full w-full object-cover"
-                      />
+                <div className="backdrop-blur-xl bg-white/20 dark:bg-black/20 border border-white/30 dark:border-white/10 p-8 rounded-2xl shadow-lg relative overflow-hidden group" data-aos="fade-up" data-aos-delay="200">
+                  <div className="absolute -top-20 -right-20 w-40 h-40 bg-gradient-to-r from-pink-500/20 to-orange-500/20 rounded-full blur-3xl animate-float-medium pointer-events-none"></div>
+                  <div className="absolute -bottom-20 -left-20 w-40 h-40 bg-gradient-to-r from-yellow-500/20 to-green-500/20 rounded-full blur-3xl animate-float-slow pointer-events-none"></div>
+                  
+                  <div className="relative z-10">
+                    <div className="flex items-center mb-6">
+                      <div className="h-14 w-14 rounded-full bg-white/20 dark:bg-white/10 mr-4 overflow-hidden">
+                        <PlaceholderImage
+                          src="/testimonial-2.jpg"
+                          alt="User"
+                          width={56}
+                          height={56}
+                          className="h-full w-full object-cover"
+                        />
+                      </div>
+                      <div>
+                        <h4 className="font-semibold text-neutral-800 dark:text-white">Michael Torres</h4>
+                        <p className="text-sm text-neutral-600 dark:text-neutral-300">Freelance Designer</p>
+                      </div>
                     </div>
-                    <div>
-                      <h4 className="font-semibold">Michael Torres</h4>
-                      <p className="text-sm text-muted-foreground">Freelance Designer</p>
+                    <p className="text-base text-neutral-700 dark:text-neutral-200">"Alima has transformed my freelance business. I've connected with clients I never would have found otherwise, and the platform handles all the payment processing."</p>
+                    <div className="flex mt-5">
+                      {[1, 2, 3, 4, 5].map((star) => (
+                        <svg key={star} className="h-5 w-5 text-yellow-500" fill="currentColor" viewBox="0 0 20 20">
+                          <path d="M9.049 2.927c.3-.921 1.603-.921 1.902 0l1.07 3.292a1 1 0 00.95.69h3.462c.969 0 1.371 1.24.588 1.81l-2.8 2.034a1 1 0 00-.364 1.118l1.07 3.292c.3.921-.755 1.688-1.54 1.118l-2.8-2.034a1 1 0 00-1.175 0l-2.8 2.034c-.784.57-1.838-.197-1.539-1.118l1.07-3.292a1 1 0 00-.364-1.118L2.98 8.72c-.783-.57-.38-1.81.588-1.81h3.461a1 1 0 00.951-.69l1.07-3.292z" />
+                        </svg>
+                      ))}
                     </div>
-                  </div>
-                  <p className="text-sm">"Alima has transformed my freelance business. I've connected with clients I never would have found otherwise, and the platform handles all the payment processing."</p>
-                  <div className="flex mt-4">
-                    {[1, 2, 3, 4, 5].map((star) => (
-                      <svg key={star} className="h-5 w-5 text-yellow-500" fill="currentColor" viewBox="0 0 20 20">
-                        <path d="M9.049 2.927c.3-.921 1.603-.921 1.902 0l1.07 3.292a1 1 0 00.95.69h3.462c.969 0 1.371 1.24.588 1.81l-2.8 2.034a1 1 0 00-.364 1.118l1.07 3.292c.3.921-.755 1.688-1.54 1.118l-2.8-2.034a1 1 0 00-1.175 0l-2.8 2.034c-.784.57-1.838-.197-1.539-1.118l1.07-3.292a1 1 0 00-.364-1.118L2.98 8.72c-.783-.57-.38-1.81.588-1.81h3.461a1 1 0 00.951-.69l1.07-3.292z" />
-                      </svg>
-                    ))}
                   </div>
                 </div>
                 
                 {/* Testimonial 3 */}
-                <div className="bg-white dark:bg-neutral-900 p-6 rounded-xl shadow-sm border border-neutral-200 dark:border-neutral-800" data-aos="fade-up" data-aos-delay="300">
-                  <div className="flex items-center mb-4">
-                    <div className="h-12 w-12 rounded-full bg-neutral-200 dark:bg-neutral-700 mr-4 overflow-hidden">
-                      <PlaceholderImage
-                        src="/testimonial-3.jpg"
-                        alt="User"
-                        width={48}
-                        height={48}
-                        className="h-full w-full object-cover"
-                      />
+                <div className="backdrop-blur-xl bg-white/20 dark:bg-black/20 border border-white/30 dark:border-white/10 p-8 rounded-2xl shadow-lg relative overflow-hidden group" data-aos="fade-up" data-aos-delay="300">
+                  <div className="absolute -top-20 -left-20 w-40 h-40 bg-gradient-to-r from-indigo-500/20 to-blue-500/20 rounded-full blur-3xl animate-float-medium pointer-events-none"></div>
+                  <div className="absolute -bottom-20 -right-20 w-40 h-40 bg-gradient-to-r from-violet-500/20 to-purple-500/20 rounded-full blur-3xl animate-float-slow pointer-events-none"></div>
+                  
+                  <div className="relative z-10">
+                    <div className="flex items-center mb-6">
+                      <div className="h-14 w-14 rounded-full bg-white/20 dark:bg-white/10 mr-4 overflow-hidden">
+                        <PlaceholderImage
+                          src="/testimonial-3.jpg"
+                          alt="User"
+                          width={56}
+                          height={56}
+                          className="h-full w-full object-cover"
+                        />
+                      </div>
+                      <div>
+                        <h4 className="font-semibold text-neutral-800 dark:text-white">Leila Amado</h4>
+                        <p className="text-sm text-neutral-600 dark:text-neutral-300">Small Business Owner</p>
+                      </div>
                     </div>
-                    <div>
-                      <h4 className="font-semibold">Leila Amado</h4>
-                      <p className="text-sm text-muted-foreground">Small Business Owner</p>
+                    <p className="text-base text-neutral-700 dark:text-neutral-200">"The verification system gave me confidence in hiring service providers. I've found amazing talent for multiple projects and the quality has been consistently excellent."</p>
+                    <div className="flex mt-5">
+                      {[1, 2, 3, 4, 5].map((star) => (
+                        <svg key={star} className="h-5 w-5 text-yellow-500" fill="currentColor" viewBox="0 0 20 20">
+                          <path d="M9.049 2.927c.3-.921 1.603-.921 1.902 0l1.07 3.292a1 1 0 00.95.69h3.462c.969 0 1.371 1.24.588 1.81l-2.8 2.034a1 1 0 00-.364 1.118l1.07 3.292c.3.921-.755 1.688-1.54 1.118l-2.8-2.034a1 1 0 00-1.175 0l-2.8 2.034c-.784.57-1.838-.197-1.539-1.118l1.07-3.292a1 1 0 00-.364-1.118L2.98 8.72c-.783-.57-.38-1.81.588-1.81h3.461a1 1 0 00.951-.69l1.07-3.292z" />
+                        </svg>
+                      ))}
                     </div>
-                  </div>
-                  <p className="text-sm">"The verification system gave me confidence in hiring service providers. I've found amazing talent for multiple projects and the quality has been consistently excellent."</p>
-                  <div className="flex mt-4">
-                    {[1, 2, 3, 4, 5].map((star) => (
-                      <svg key={star} className="h-5 w-5 text-yellow-500" fill="currentColor" viewBox="0 0 20 20">
-                        <path d="M9.049 2.927c.3-.921 1.603-.921 1.902 0l1.07 3.292a1 1 0 00.95.69h3.462c.969 0 1.371 1.24.588 1.81l-2.8 2.034a1 1 0 00-.364 1.118l1.07 3.292c.3.921-.755 1.688-1.54 1.118l-2.8-2.034a1 1 0 00-1.175 0l-2.8 2.034c-.784.57-1.838-.197-1.539-1.118l1.07-3.292a1 1 0 00-.364-1.118L2.98 8.72c-.783-.57-.38-1.81.588-1.81h3.461a1 1 0 00.951-.69l1.07-3.292z" />
-                      </svg>
-                    ))}
                   </div>
                 </div>
               </div>
@@ -726,42 +787,64 @@ export default function Home() {
         </div>
         
         {/* 8. CALL TO ACTION with Contact Section */}
-        <div id="contact" className="relative py-24 overflow-hidden bg-white/95 dark:bg-black/95 scroll-mt-40">
+        <div id="contact" className="relative py-36 overflow-hidden bg-white/95 dark:bg-black/95 scroll-mt-40">
           <div className="container mx-auto px-4 relative z-10">
-            <div className="rounded-3xl bg-neutral-100 p-14 text-center dark:bg-neutral-900 mb-20" data-aos="zoom-in" data-aos-delay="100">
-              <h2 className="mb-4 text-3xl font-semibold tracking-tight md:text-4xl">Get In Touch</h2>
-              <p className="mx-auto mb-8 max-w-2xl text-lg text-neutral-600 dark:text-neutral-300">
-                Have questions about Alima or interested in joining our team? We'd love to hear from you!
-              </p>
-              <div className="flex flex-wrap justify-center gap-4">
-                <button className="inline-flex items-center justify-center rounded-full border border-transparent bg-primary px-8 py-6 text-base font-medium text-white shadow-sm hover:bg-primary/90 focus:outline-none focus:ring-2 focus:ring-primary focus:ring-offset-2">
-                  <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="mr-2 h-5 w-5">
-                    <path d="M4 4h16c1.1 0 2 .9 2 2v12c0 1.1-.9 2-2 2H4c-1.1 0-2-.9-2-2V6c0-1.1.9-2 2-2z"></path>
-                    <polyline points="22,6 12,13 2,6"></polyline>
-                  </svg>
-                  Contact Us
-                </button>
-                <button className="inline-flex items-center justify-center rounded-full border border-neutral-300 bg-transparent px-8 py-6 text-base font-medium text-neutral-900 hover:bg-neutral-100 focus:outline-none focus:ring-2 focus:ring-primary focus:ring-offset-2 dark:border-neutral-700 dark:text-neutral-100 dark:hover:bg-neutral-800">
-                  <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="mr-2 h-5 w-5">
-                    <path d="M23 3a10.9 10.9 0 0 1-3.14 1.53 4.48 4.48 0 0 0-7.86 3v1A10.66 10.66 0 0 1 3 4s-4 9 5 13a11.64 11.64 0 0 1-7 2c9 5 20 0 20-11.5a4.5 4.5 0 0 0-.08-.83A7.72 7.72 0 0 0 23 3z"></path>
-                  </svg>
-                  Follow Us
-                </button>
+            {/* Get In Touch Section with Apple-inspired aesthetics */}
+            <div className="rounded-[32px] text-center mb-40 relative overflow-hidden shadow-2xl" 
+                style={{ 
+                  backgroundImage: "url('/Get in touch.svg')",
+                  backgroundSize: "cover",
+                  backgroundPosition: "center"
+                }} 
+                data-aos="fade-up" 
+                data-aos-delay="100">
+              <div className="backdrop-blur-[2px] bg-black/10">
+                <div className="relative z-10 py-24 px-12 md:py-32 md:px-20">
+                  <h2 className="mb-8 text-4xl font-semibold tracking-tight md:text-5xl text-white leading-tight">
+                    Get In Touch
+                  </h2>
+                  <p className="mx-auto mb-12 max-w-2xl text-xl leading-relaxed text-white/90 font-light">
+                    Have questions about Alima or interested in joining our team? We'd love to hear from you!
+                  </p>
+                  <div className="flex flex-wrap justify-center gap-6">
+                    <button className="inline-flex items-center justify-center rounded-full border-0 bg-white px-10 py-5 text-base font-medium text-primary shadow-lg hover:bg-white/95 focus:outline-none transition duration-200 ease-in-out transform hover:-translate-y-1">
+                      <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="mr-3 h-5 w-5">
+                        <path d="M4 4h16c1.1 0 2 .9 2 2v12c0 1.1-.9 2-2 2H4c-1.1 0-2-.9-2-2V6c0-1.1.9-2 2-2z"></path>
+                        <polyline points="22,6 12,13 2,6"></polyline>
+                      </svg>
+                      Contact Us
+                    </button>
+                    <button className="inline-flex items-center justify-center rounded-full border border-white/40 bg-white/10 backdrop-blur-sm px-10 py-5 text-base font-medium text-white hover:bg-white/20 focus:outline-none transition duration-200 ease-in-out transform hover:-translate-y-1">
+                      <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="mr-3 h-5 w-5">
+                        <path d="M18 2h-3a5 5 0 0 0-5 5v3H7v4h3v8h4v-8h3l1-4h-4V7a1 1 0 0 1 1-1h3z"></path>
+                      </svg>
+                      Follow Us
+                    </button>
+                  </div>
+                </div>
               </div>
             </div>
             
-            <div className="max-w-4xl mx-auto text-center" data-aos="fade-up" data-aos-delay="200">
-              <h2 className="text-3xl md:text-4xl font-bold mb-6">Ready to Get Started?</h2>
-              <p className="text-lg text-muted-foreground mb-8 max-w-2xl mx-auto">
-                Join Alima today and connect with skilled professionals or find new clients for your services.
-              </p>
-              <div className="flex flex-wrap justify-center gap-4">
-                <Link href="/signup" className={buttonVariants({ size: "lg", className: "rounded-full px-8" })}>
-                  Sign up now
-                </Link>
-                <Link href="/popular-today" className={buttonVariants({ variant: "outline", size: "lg", className: "rounded-full px-8" })}>
-                  Browse services
-                </Link>
+            {/* Ready to Get Started Section with glass morphism */}
+            <div className="max-w-5xl mx-auto p-[1px] rounded-[32px] shadow-xl bg-gradient-to-b from-white/30 to-white/10 dark:from-white/10 dark:to-white/5 backdrop-blur-xl" 
+                 data-aos="fade-up" 
+                 data-aos-delay="200">
+              {/* Cursor follower */}
+              <div className="opacity-0 group-hover:opacity-100 absolute -inset-2 blur-xl bg-gradient-to-r from-blue-500 to-green-400 rounded-full w-32 h-32 transition-all duration-500 cursor-none pointer-events-none" 
+                   id="cursor-follower"></div>
+              <div className="rounded-[28px] backdrop-blur-xl bg-white/20 dark:bg-black/20 border border-white/30 dark:border-white/10 py-16 px-8 md:py-20 md:px-12 text-center relative z-10">
+                <h2 className="text-3xl md:text-5xl font-bold mb-8 tracking-tight bg-clip-text text-transparent bg-gradient-to-r from-primary to-primary/70 dark:from-primary dark:to-blue-400">Ready to Get Started?</h2>
+                <p className="text-xl leading-relaxed text-neutral-800 dark:text-white/90 mb-12 max-w-2xl mx-auto font-light">
+                  Join Alima today and connect with skilled professionals or find new clients for your services.
+                </p>
+                <div className="flex flex-wrap justify-center gap-6 mb-8">
+                  <Link href="/signup" className="inline-flex items-center justify-center rounded-full bg-gradient-to-r from-primary to-primary/80 px-10 py-5 text-lg font-medium text-white shadow-lg hover:shadow-xl transition duration-200 ease-in-out transform hover:-translate-y-1 hover:from-primary hover:to-primary/90">
+                    Sign up now
+                  </Link>
+                  <Link href="/popular-today" className="inline-flex items-center justify-center rounded-full border border-white/40 bg-white/10 backdrop-blur-md px-10 py-5 text-lg font-medium text-neutral-900 dark:text-white shadow-sm hover:shadow-md hover:bg-white/20 dark:hover:bg-white/10 transition duration-200 ease-in-out transform hover:-translate-y-1">
+                    Browse services
+                  </Link>
+                </div>
               </div>
             </div>
           </div>

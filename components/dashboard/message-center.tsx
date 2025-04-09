@@ -317,9 +317,8 @@ const UploadPaymentProofDialog = ({
   return (
     <Dialog>
       <DialogTrigger asChild>
-        <Button variant="outline" size="sm">
-          <Upload className="w-4 h-4 mr-2" />
-          Upload Payment Proof
+        <Button variant="outline" size="icon" title="Upload Payment Proof">
+          <Upload className="w-4 h-4" />
         </Button>
       </DialogTrigger>
       <DialogContent className="w-[95%] max-w-md p-4 sm:p-6">
@@ -378,7 +377,9 @@ const UploadPaymentProofDialog = ({
               placeholder="Enter payment amount"
               min="0"
               step="0.01"
+              required
             />
+            <p className="text-xs text-muted-foreground">This amount will be visible in the payment confirmation</p>
           </div>
           
           {/* File upload */}
@@ -396,12 +397,8 @@ const UploadPaymentProofDialog = ({
                 }
               }}
               disabled={isUploading}
+              required
             />
-            {isUploading && (
-              <div className="flex justify-center mt-2">
-                <div className="animate-spin rounded-full h-6 w-6 border-b-2 border-primary"></div>
-              </div>
-            )}
           </div>
         </div>
       </DialogContent>
@@ -2374,9 +2371,9 @@ export function MessageCenter() {
                                               
                                               {message.paymentAmount && (
                                                 <div className="text-xs font-semibold">
-                                                  <span className="font-medium">Amount:</span> ₱{typeof message.paymentAmount === 'number' 
+                                                  <span className="font-medium">Amount:</span> <span className="text-green-600 dark:text-green-400">₱{typeof message.paymentAmount === 'number' 
                                                     ? message.paymentAmount.toLocaleString() 
-                                                    : message.paymentAmount}
+                                                    : message.paymentAmount}</span>
                                                 </div>
                                               )}
                                             </div>
@@ -2398,20 +2395,26 @@ export function MessageCenter() {
                                                   onClick={() => handleConfirmPayment(message)}
                                                 >
                                                   <CheckCircle className="mr-1 h-3 w-3" />
-                                                  Confirm Payment (₱{typeof message.paymentAmount === 'number' 
-                                                    ? message.paymentAmount.toLocaleString() 
-                                                    : message.paymentAmount})
+                                                  Confirm Payment
+                                                  <span className="ml-1 font-bold text-white">
+                                                    (₱{typeof message.paymentAmount === 'number' 
+                                                      ? message.paymentAmount.toLocaleString() 
+                                                      : message.paymentAmount})
+                                                  </span>
                                                 </Button>
                                               </div>
                                             )}
                                             
                                             {/* Payment confirmed indicator */}
                                             {message.paymentConfirmed && (
-                                              <div className="mt-2 flex items-center text-xs text-green-600">
+                                              <div className="mt-2 flex items-center text-xs bg-green-100 dark:bg-green-900/30 text-green-700 dark:text-green-400 p-2 rounded-md">
                                                 <CheckCircle className="mr-1 h-3 w-3" />
-                                                Payment Confirmed (₱{typeof message.paymentAmount === 'number' 
-                                                  ? message.paymentAmount.toLocaleString() 
-                                                  : message.paymentAmount})
+                                                <span>Payment Confirmed</span>
+                                                <span className="ml-1 font-bold">
+                                                  (₱{typeof message.paymentAmount === 'number' 
+                                                    ? message.paymentAmount.toLocaleString() 
+                                                    : message.paymentAmount})
+                                                </span>
                                               </div>
                                             )}
                                           </div>
@@ -2460,8 +2463,17 @@ export function MessageCenter() {
                           placeholder="Type your message..."
                           className="resize-none min-h-[50px] flex-1"
                         />
-                        <div className="flex flex-col gap-2">
-                          {/* Add payment proof button */}
+                        <div className="flex items-center gap-2">
+                          {/* Send button */}
+                          <Button 
+                            type="submit" 
+                            size="icon" 
+                            disabled={!newMessage.trim()} 
+                          >
+                            <Send className="h-4 w-4" />
+                          </Button>
+                          
+                          {/* Add payment proof button - Now positioned side-by-side */}
                           {selectedConversation && (
                             <UploadPaymentProofDialog
                               onUpload={(imageUrl, serviceId, amount) => {
@@ -2499,15 +2511,6 @@ export function MessageCenter() {
                               }
                             />
                           )}
-                          
-                          <Button 
-                            type="submit" 
-                            size="icon" 
-                            disabled={!newMessage.trim()} 
-                            className="mt-1"
-                          >
-                            <Send className="h-4 w-4" />
-                          </Button>
                         </div>
                       </form>
                     </div>

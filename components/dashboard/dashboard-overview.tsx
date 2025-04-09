@@ -60,6 +60,7 @@ interface CategoryData {
   value: number;
   contactPercentage?: number;
   revenue?: number;
+  serviceCount?: number;
 }
 
 // Add interface for document data
@@ -93,6 +94,7 @@ interface CombinedTransactionData {
     [key: string]: any;
   };
   timestamp?: any;
+  serviceType?: string;
   [key: string]: any;
 }
 
@@ -281,12 +283,21 @@ export function DashboardOverview() {
                 where("type", "in", ["payment_proof", "payment_confirmation", "payment"])
               );
               
-              // Get both transactions and notifications
+              // Also query messages with payment proof
+              const messagesRef = collection(db, "messages");
+              const paymentMessagesQuery = query(
+                messagesRef,
+                where("receiverId", "==", user.uid),
+                where("paymentProof", "!=", null)
+              );
+              
+              // Get transactions, notifications, and payment messages
               Promise.all([
                 getDocs(allTransactionsQuery),
-                getDocs(paymentNotificationsQuery)
-              ]).then(([allTransactionsSnap, paymentNotificationsSnap]) => {
-                console.log(`Found ${allTransactionsSnap.size} total transactions and ${paymentNotificationsSnap.size} payment notifications for user ${user.uid}`);
+                getDocs(paymentNotificationsQuery),
+                getDocs(paymentMessagesQuery)
+              ]).then(([allTransactionsSnap, paymentNotificationsSnap, paymentMessagesSnap]) => {
+                console.log(`Found ${allTransactionsSnap.size} transactions, ${paymentNotificationsSnap.size} payment notifications, and ${paymentMessagesSnap.size} payment messages for user ${user.uid}`);
                 
                 // Extract transaction dates from notifications if not found in transactions
                 const paymentDates = paymentNotificationsSnap.docs.map(doc => {
@@ -295,9 +306,35 @@ export function DashboardOverview() {
                     parsedDate: parseFirestoreDate(data.timestamp),
                     amount: data.data?.amount || 0,
                     serviceId: data.data?.serviceId,
+                    serviceType: data.data?.serviceType || "Unknown",
                     id: doc.id,
                     type: 'notification',
                     data: data.data,
+                    ...data
+                  } as CombinedTransactionData;
+                });
+                
+                // Extract payment data from messages with payment proof
+                const messagePayments = paymentMessagesSnap.docs.map(doc => {
+                  const data = doc.data();
+                  // Try to extract amount from the message text if it's a payment message
+                  let amount = 0;
+                  if (data.text) {
+                    // Look for amount patterns in the text like "₱500" or "500 pesos"
+                    const amountMatch = data.text.match(/₱(\d+([.,]\d+)?)|(\d+([.,]\d+)?)(\s+)?(?:pesos|php)/i);
+                    if (amountMatch) {
+                      amount = parseFloat(amountMatch[1] || amountMatch[3]);
+                    }
+                  }
+                  
+                  return {
+                    parsedDate: parseFirestoreDate(data.timestamp),
+                    amount: amount,
+                    conversationId: data.conversationId,
+                    serviceId: data.serviceId || "",
+                    id: doc.id,
+                    type: 'message_payment',
+                    paymentProof: data.paymentProof,
                     ...data
                   } as CombinedTransactionData;
                 });
@@ -309,256 +346,305 @@ export function DashboardOverview() {
                     ...data,
                     parsedDate: parseFirestoreDate(data.createdAt),
                     id: doc.id,
-                    type: 'transaction'
+                    type: 'transaction',
+                    serviceType: data.serviceType || "Unknown"
                   } as CombinedTransactionData;
                 });
                 
-                // Combine both sources, keeping unique entries by ID
-                const combinedTransactionData = [...allFilteredTransactions];
+                // Look up conversation-related service details for message payments
+                const conversationIds = messagePayments
+                  .filter(mp => !mp.serviceId && mp.conversationId)
+                  .map(mp => mp.conversationId);
                 
-                // Only add notification data if we don't already have a transaction with the same ID
-                paymentDates.forEach(notification => {
-                  if (notification.data && notification.data.transactionId) {
-                    // Check if this transaction is already included
-                    const existingTransaction = combinedTransactionData.find(
-                      t => t.id === notification.data?.transactionId
-                    );
+                if (conversationIds.length > 0) {
+                  // Fetch conversations to get serviceId
+                  const conversationsRef = collection(db, "conversations");
+                  const conversationQuery = query(
+                    conversationsRef,
+                    where(documentId(), "in", conversationIds)
+                  );
+                  
+                  getDocs(conversationQuery).then((conversationsSnap) => {
+                    // Map conversation IDs to service IDs
+                    const conversationServiceMap = new Map<string, string>();
+                    const conversationServiceTitleMap = new Map<string, string>();
                     
-                    if (!existingTransaction) {
-                      combinedTransactionData.push(notification);
-                    }
-                  } else {
-                    // No transaction ID, so add as a separate entry
-                    combinedTransactionData.push(notification);
-                  }
-                });
-                
-                console.log(`Combined transaction data: ${combinedTransactionData.length} entries`);
-
-                // Calculate revenue from current period
-                const serviceRevenueMap = new Map<string, number>();
-                const currentRevenue = combinedTransactionData.reduce((sum, doc) => {
-                  // Use type casting to avoid TypeScript errors
-                  const amount = typeof doc.amount === 'string' ? parseFloat(doc.amount) : (doc.amount || 0);
-                  
-                  // Record revenue for each service
-                  if (doc.serviceId && amount) {
-                    const currentServiceTotal = serviceRevenueMap.get(doc.serviceId) || 0;
-                    serviceRevenueMap.set(doc.serviceId, currentServiceTotal + amount);
-                  }
-                  
-                  return sum + amount;
-                }, 0);
-                
-                // For previous period comparison, use a date filter
-                const previousPeriodData = combinedTransactionData.filter(tx => {
-                  if (!tx.parsedDate) return false;
-                  return tx.parsedDate >= previousStartDate && tx.parsedDate <= currentStartDate;
-                });
-                
-                // Calculate revenue from previous period
-                const previousRevenue = previousPeriodData.reduce((sum, doc) => {
-                  const amount = typeof doc.amount === 'string' ? parseFloat(doc.amount) : (doc.amount || 0);
-                  return sum + amount;
-                }, 0);
-                
-                // Calculate revenue change percentage
-                const revenueChange = previousRevenue > 0 
-                  ? ((currentRevenue - previousRevenue) / previousRevenue) * 100 
-                  : 0;
-                
-                // Generate timeline data based on transactions and conversations
-                const newTimelineData: TimelineData[] = [];
-                
-                // Set date format based on timeframe
-                let dateFormat: Intl.DateTimeFormatOptions;
-                let dateStep: number;
-                let datePeriod: string;
-                
-                if (timeframe === 'week') {
-                  dateFormat = { weekday: 'short' };
-                  dateStep = 1; // days
-                  datePeriod = 'day';
-                } else if (timeframe === 'month') {
-                  dateFormat = { day: 'numeric' };
-                  dateStep = 1; // days
-                  datePeriod = 'day';
-                } else { // year
-                  dateFormat = { month: 'short' };
-                  dateStep = 1; // months
-                  datePeriod = 'month';
-                }
-                
-                // Create date points for timeline based on timeframe
-                const dates: Date[] = [];
-                let current = new Date(currentStartDate);
-                
-                while (current <= now) {
-                  dates.push(new Date(current));
-                  if (datePeriod === 'day') {
-                    current.setDate(current.getDate() + dateStep);
-                  } else {
-                    current.setMonth(current.getMonth() + dateStep);
-                  }
-                }
-                
-                // Count transactions and conversations for each date point
-                dates.forEach(date => {
-                  const dateLabel = date.toLocaleDateString(undefined, dateFormat);
-                  
-                  // Filter transactions for this date point
-                  const dateTransactions = combinedTransactionData.filter(doc => {
-                    if (!doc.parsedDate) return false;
-                    
-                    // Use the utility function for safer date parsing
-                    const transactionDate = parseFirestoreDate(doc.parsedDate);
-                    
-                    if (datePeriod === 'day') {
-                      return transactionDate.getDate() === date.getDate() && 
-                             transactionDate.getMonth() === date.getMonth() &&
-                             transactionDate.getFullYear() === date.getFullYear();
-                    } else {
-                      return transactionDate.getMonth() === date.getMonth() &&
-                             transactionDate.getFullYear() === date.getFullYear();
-                    }
-                  });
-                  
-                  // Filter conversations for this date point
-                  const dateConversations = conversationsSnap.docs.filter(doc => {
-                    const data = doc.data();
-                    if (!data.createdAt) return false;
-                    
-                    // Use the utility function for safer date parsing
-                    const conversationDate = parseFirestoreDate(data.createdAt);
-                    
-                    if (datePeriod === 'day') {
-                      return conversationDate.getDate() === date.getDate() && 
-                             conversationDate.getMonth() === date.getMonth() &&
-                             conversationDate.getFullYear() === date.getFullYear();
-                    } else {
-                      return conversationDate.getMonth() === date.getMonth() &&
-                             conversationDate.getFullYear() === date.getFullYear();
-                    }
-                  });
-                  
-                  newTimelineData.push({
-                    date: dateLabel,
-                    transactions: dateTransactions.length,
-                    contacts: dateConversations.length
-                  });
-                });
-                
-                // Calculate category data
-                const categoryCountMap = new Map<string, number>();
-                const categoryRevenueMap = new Map<string, number>();
-                
-                // Count services by category
-                services.forEach(service => {
-                  const category = service.category || 'Other';
-                  const currentCount = categoryCountMap.get(category) || 0;
-                  categoryCountMap.set(category, currentCount + 1);
-                  
-                  // Add revenue data if available
-                  if (serviceRevenueMap.has(service.id)) {
-                    const currentRevenue = categoryRevenueMap.get(category) || 0;
-                    categoryRevenueMap.set(category, currentRevenue + (serviceRevenueMap.get(service.id) || 0));
-                  }
-                });
-                
-                // Convert category data to array format
-                const newCategoryData: CategoryData[] = Array.from(categoryCountMap.entries()).map(([name, value]) => ({
-                  name,
-                  value,
-                  revenue: categoryRevenueMap.get(name) || 0
-                }));
-                
-                // Sort categories by value (count)
-                newCategoryData.sort((a, b) => b.value - a.value);
-                
-                // Calculate contacted services percentage
-                const serviceIds = new Set(services.map(s => s.id));
-                const contactedServiceIds = new Set<string>();
-                
-                // Find all services that have been contacted
-                conversationsSnap.docs.forEach(doc => {
-                  const data = doc.data();
-                  if (data.serviceId && serviceIds.has(data.serviceId)) {
-                    contactedServiceIds.add(data.serviceId);
-                  }
-                });
-                
-                const contactedServicesPercentage = serviceIds.size > 0
-                  ? (contactedServiceIds.size / serviceIds.size) * 100
-                  : 0;
-                
-                // Use the fallback if we have transactions but timeline/filtering isn't working
-                let finalRevenue = currentRevenue;
-                let finalTransactionsCount = combinedTransactionData.length;
-                let finalTimelineData = newTimelineData;
-                
-                // If notifications are available, use those for count instead
-                const paymentNotificationCount = paymentNotificationsSnap.size;
-                if (paymentNotificationCount > 0) {
-                  console.log(`Using payment notification count (${paymentNotificationCount}) for transactions display`);
-                  finalTransactionsCount = Math.max(finalTransactionsCount, paymentNotificationCount);
-                }
-                
-                // If we have no data from the filtered results but do have transactions,
-                // use all transactions as a fallback
-                if (finalRevenue === 0 && allTransactionsSnap.size > 0) {
-                  console.log("Using all transactions as fallback since filtered queries found no results");
-                  
-                  // Calculate total revenue from all transactions
-                  finalRevenue = allTransactionsSnap.docs.reduce((sum: number, doc: any) => {
-                    const data = doc.data();
-                    const amount = typeof data.amount === 'string' ? parseFloat(data.amount) : data.amount;
-                    return sum + (amount || 0);
-                  }, 0);
-                  
-                  // Use the higher value between transactions and notifications
-                  finalTransactionsCount = Math.max(allTransactionsSnap.size, paymentNotificationCount);
-                  
-                  // Create artificial timeline data if needed
-                  if (finalTimelineData.every(item => item.contacts === 0 && item.transactions === 0)) {
-                    // Distribute transactions across the timeline artificially
-                    allTransactionsSnap.docs.forEach((doc: any, idx: number) => {
-                      const timelineIdx = idx % finalTimelineData.length;
-                      finalTimelineData[timelineIdx].transactions += 1;
-                    });
-                    
-                    // Add some contacts for visual appeal
-                    finalTimelineData.forEach((item, idx) => {
-                      if (item.transactions > 0) {
-                        item.contacts = Math.max(1, Math.floor(item.transactions * 1.5));
+                    conversationsSnap.docs.forEach(doc => {
+                      const data = doc.data();
+                      if (data.serviceId) {
+                        conversationServiceMap.set(doc.id, data.serviceId);
+                      }
+                      if (data.serviceTitle) {
+                        conversationServiceTitleMap.set(doc.id, data.serviceTitle);
                       }
                     });
-                  }
+                    
+                    // Update message payments with service information
+                    messagePayments.forEach(payment => {
+                      if (payment.conversationId && conversationServiceMap.has(payment.conversationId)) {
+                        payment.serviceId = conversationServiceMap.get(payment.conversationId);
+                      }
+                      if (payment.conversationId && conversationServiceTitleMap.has(payment.conversationId)) {
+                        payment.serviceTitle = conversationServiceTitleMap.get(payment.conversationId);
+                      }
+                    });
+                    
+                    // Combine all data sources with the updated message payments
+                    finalizeRevenueCalculation(
+                      [...allFilteredTransactions, ...paymentDates, ...messagePayments],
+                      services,
+                      timeframe
+                    );
+                  }).catch(error => {
+                    console.error("Error fetching conversation details:", error);
+                    // Still proceed with the data we have
+                    finalizeRevenueCalculation(
+                      [...allFilteredTransactions, ...paymentDates, ...messagePayments],
+                      services,
+                      timeframe
+                    );
+                  });
+                } else {
+                  // No conversation lookups needed, continue with data we have
+                  finalizeRevenueCalculation(
+                    [...allFilteredTransactions, ...paymentDates, ...messagePayments],
+                    services,
+                    timeframe
+                  );
                 }
                 
-                // Update state with all the calculated data
-                setStats({
-                  contacts: conversationsSnap?.size || 0,
-                  contactsChange: 0, // Calculate this if needed
-                  transactions: finalTransactionsCount,
-                  transactionsChange: previousPeriodData.length > 0
-                    ? ((finalTransactionsCount - previousPeriodData.length) / previousPeriodData.length) * 100
-                    : 0,
-                  rating: parseFloat(averageRating.toFixed(1)) || 0,
-                  ratingChange: parseFloat(ratingChange.toFixed(1)) || 0,
-                  revenue: finalRevenue.toFixed(2),
-                  revenueChange: parseFloat(revenueChange.toFixed(1)) || 0,
-                  serviceContactPercentage: parseFloat(contactedServicesPercentage.toFixed(1)) || 0,
-                  totalServices: totalServices,
-                  contactedServices: contactedServiceIds.size
-                });
-                
-                setCategoryData(newCategoryData);
-                setTimelineData(finalTimelineData);
-                
-                // Store transaction data in state for calendar
-                setAllTransactions(combinedTransactionData);
-                
-                setIsLoading(false);
+                // Helper function to finalize revenue calculations
+                function finalizeRevenueCalculation(
+                  combinedTransactionData: CombinedTransactionData[],
+                  services: any[],
+                  timeframe: string
+                ) {
+                  // Log transaction sources for debugging
+                  const transactionSources = {
+                    transaction: combinedTransactionData.filter(tx => tx.type === 'transaction').length,
+                    notification: combinedTransactionData.filter(tx => tx.type === 'notification').length,
+                    message_payment: combinedTransactionData.filter(tx => tx.type === 'message_payment').length,
+                  };
+                  console.log("Revenue sources:", transactionSources);
+                  
+                  // First, map service IDs to names for better display
+                  const serviceNameMap = new Map<string, string>();
+                  services.forEach(service => {
+                    serviceNameMap.set(service.id, service.title);
+                  });
+
+                  // Add direct service title mappings from messages
+                  combinedTransactionData.forEach(tx => {
+                    if (tx.serviceId && tx.serviceTitle && !serviceNameMap.has(tx.serviceId)) {
+                      serviceNameMap.set(tx.serviceId, tx.serviceTitle);
+                    }
+                  });
+
+                  // Define date ranges for current and previous periods
+                  const today = new Date();
+                  const currentEndDate = new Date(today);
+                  const currentStartDate = new Date(today);
+                  currentStartDate.setDate(currentStartDate.getDate() - 30); // Last 30 days
+                  
+                  const previousEndDate = new Date(currentStartDate);
+                  previousEndDate.setDate(previousEndDate.getDate() - 1);
+                  const previousStartDate = new Date(previousEndDate);
+                  previousStartDate.setDate(previousStartDate.getDate() - 30); // Previous 30 days
+
+                  // Calculate current revenue and total revenue
+                  const currentTransactions = combinedTransactionData.filter(t => {
+                    return t.parsedDate && t.parsedDate >= currentStartDate && t.parsedDate <= currentEndDate;
+                  });
+                  const previousTransactions = combinedTransactionData.filter(t => {
+                    return t.parsedDate && t.parsedDate >= previousStartDate && t.parsedDate <= previousEndDate;
+                  });
+
+                  // Enhanced revenue tracking that syncs with message payment data
+                  let currentRevenue = 0;
+                  let serviceRevenues: Record<string, {revenue: number, count: number, name: string}> = {};
+                  
+                  // Process all transactions and message payments in current period
+                  currentTransactions.forEach(transaction => {
+                    const amount = Number(transaction.amount || 0);
+                    
+                    if (!isNaN(amount) && amount > 0) {
+                      currentRevenue += amount;
+                      
+                      // For revenue tracking by service
+                      if (transaction.serviceId) {
+                        const serviceName = serviceNameMap.get(transaction.serviceId) || 'Unknown Service';
+                        
+                        if (!serviceRevenues[transaction.serviceId]) {
+                          serviceRevenues[transaction.serviceId] = {
+                            revenue: 0,
+                            count: 0,
+                            name: serviceName
+                          };
+                        }
+                        
+                        serviceRevenues[transaction.serviceId].revenue += amount;
+                        serviceRevenues[transaction.serviceId].count += 1;
+                      } 
+                      // For message payments without serviceId but with conversationId
+                      else if (transaction.type === 'message_payment' && transaction.conversationId) {
+                        // Find the conversation from our conversationsData
+                        const conversationData = conversationsSnap.docs.map(doc => doc.data() as ConversationData).find((c: ConversationData) => c.id === transaction.conversationId);
+                        
+                        if (conversationData && conversationData.serviceId) {
+                          const serviceName = serviceNameMap.get(conversationData.serviceId) || 'Unknown Service';
+                          
+                          if (!serviceRevenues[conversationData.serviceId]) {
+                            serviceRevenues[conversationData.serviceId] = {
+                              revenue: 0,
+                              count: 0,
+                              name: serviceName
+                            };
+                          }
+                          
+                          serviceRevenues[conversationData.serviceId].revenue += amount;
+                          serviceRevenues[conversationData.serviceId].count += 1;
+                          
+                          console.log(`Adding ${amount} revenue to service ${serviceName} from message payment in conversation ${transaction.conversationId}`);
+                          console.log(`Current revenue for ${serviceName}: ${serviceRevenues[conversationData.serviceId].revenue}`);
+                        } else {
+                          // Track as unknown service if we can't determine the service
+                          const unknownServiceId = 'unknown';
+                          
+                          if (!serviceRevenues[unknownServiceId]) {
+                            serviceRevenues[unknownServiceId] = {
+                              revenue: 0,
+                              count: 0,
+                              name: 'Unknown Service'
+                            };
+                          }
+                          
+                          serviceRevenues[unknownServiceId].revenue += amount;
+                          serviceRevenues[unknownServiceId].count += 1;
+                          console.log(`Adding ${amount} revenue to Unknown Service from message payment - conversation not found: ${transaction.conversationId}`);
+                        }
+                      }
+                    }
+                  });
+                  
+                  // Create sorted topServices array with additional metrics
+                  const topServices = Object.entries(serviceRevenues)
+                    .map(([id, data]) => ({
+                      id,
+                      name: data.name,
+                      revenue: data.revenue,
+                      count: data.count,
+                      avgRevenue: data.count > 0 ? data.revenue / data.count : 0
+                    }))
+                    .sort((a, b) => b.revenue - a.revenue)
+                    .slice(0, 5); // Top 5 services
+
+                  console.log("Current Revenue:", currentRevenue, "Top Services:", topServices);
+                  
+                  let previousRevenue = 0;
+                  previousTransactions.forEach(transaction => {
+                    const amount = Number(transaction.amount || 0);
+                    if (!isNaN(amount) && amount > 0) {
+                      previousRevenue += amount;
+                    }
+                  });
+                  
+                  // Calculate revenue change percentage
+                  const revenueChange = previousRevenue > 0 
+                    ? ((currentRevenue - previousRevenue) / previousRevenue) * 100 
+                    : 100;
+                  
+                  console.log(`Revenue calculations: Current: ${currentRevenue}, Previous: ${previousRevenue}, Change: ${revenueChange}%`);
+
+                  // Calculate contacted services percentage
+                  const serviceIds = new Set(services.map(s => s.id));
+                  const contactedServiceIds = new Set<string>();
+                  
+                  // Find all services that have been contacted
+                  combinedTransactionData.forEach(tx => {
+                    if (tx.serviceId && serviceIds.has(tx.serviceId)) {
+                      contactedServiceIds.add(tx.serviceId);
+                    }
+                  });
+                  
+                  const contactedServicesPercentage = serviceIds.size > 0
+                    ? (contactedServiceIds.size / serviceIds.size) * 100
+                    : 0;
+                  
+                  // Use the fallback if we have transactions but timeline/filtering isn't working
+                  let finalRevenue = currentRevenue;
+                  let finalTransactionsCount = combinedTransactionData.length;
+                  let finalTimelineData = timelineData;
+                  
+                  // If notifications are available, use those for count instead
+                  const paymentNotificationCount = paymentNotificationsSnap.size;
+                  if (paymentNotificationCount > 0) {
+                    console.log(`Using payment notification count (${paymentNotificationCount}) for transactions display`);
+                    finalTransactionsCount = Math.max(finalTransactionsCount, paymentNotificationCount);
+                  }
+                  
+                  // If we have no data from the filtered results but do have transactions,
+                  // use all transactions as a fallback
+                  if (finalRevenue === 0 && allTransactionsSnap.size > 0) {
+                    console.log("Using all transactions as fallback since filtered queries found no results");
+                    
+                    // Calculate total revenue from all transactions
+                    finalRevenue = allTransactionsSnap.docs.reduce((sum: number, doc: any) => {
+                      const data = doc.data();
+                      const amount = typeof data.amount === 'string' ? parseFloat(data.amount) : data.amount;
+                      return sum + (amount || 0);
+                    }, 0);
+                    
+                    // Use the higher value between transactions and notifications
+                    finalTransactionsCount = Math.max(allTransactionsSnap.size, paymentNotificationCount);
+                    
+                    // Create artificial timeline data if needed
+                    if (finalTimelineData.every(item => item.contacts === 0 && item.transactions === 0)) {
+                      // Distribute transactions across the timeline artificially
+                      allTransactionsSnap.docs.forEach((doc: any, idx: number) => {
+                        const timelineIdx = idx % finalTimelineData.length;
+                        finalTimelineData[timelineIdx].transactions += 1;
+                      });
+                      
+                      // Add some contacts for visual appeal
+                      finalTimelineData.forEach((item, idx) => {
+                        if (item.transactions > 0) {
+                          item.contacts = Math.max(1, Math.floor(item.transactions * 1.5));
+                        }
+                      });
+                    }
+                  }
+                  
+                  // Update state with all the calculated data
+                  setStats({
+                    contacts: conversationsSnap?.size || 0,
+                    contactsChange: 0, // Calculate this if needed
+                    transactions: finalTransactionsCount,
+                    transactionsChange: previousTransactions.length > 0
+                      ? ((finalTransactionsCount - previousTransactions.length) / previousTransactions.length) * 100
+                      : 0,
+                    rating: parseFloat(averageRating.toFixed(1)) || 0,
+                    ratingChange: parseFloat(ratingChange.toFixed(1)) || 0,
+                    revenue: finalRevenue.toFixed(2),
+                    revenueChange: parseFloat(revenueChange.toFixed(1)) || 0,
+                    serviceContactPercentage: parseFloat(contactedServicesPercentage.toFixed(1)) || 0,
+                    totalServices: totalServices,
+                    contactedServices: contactedServiceIds.size,
+                    topServices: topServices // Add top services to stats
+                  });
+                  
+                  setCategoryData(Object.entries(serviceRevenues).map(([id, data]) => ({
+                    name: id,
+                    value: data.revenue,
+                    revenue: data.revenue,
+                    serviceCount: data.count
+                  })));
+                  setTimelineData(finalTimelineData);
+                  
+                  // Store transaction data in state for calendar
+                  setAllTransactions(combinedTransactionData);
+                  
+                  setIsLoading(false);
+                }
               }).catch(error => {
                 console.error("Error processing transactions:", error);
                 setError("Failed to fetch transaction data");
@@ -1212,7 +1298,7 @@ export function DashboardOverview() {
                       <span className="text-sm font-medium">{category.name}</span>
                     </div>
                     <div className="flex items-center gap-2">
-                      <span className="text-sm text-muted-foreground">{category.value} services</span>
+                      <span className="text-sm text-muted-foreground">{category.serviceCount || category.value} services</span>
                       {category.contactPercentage !== undefined && category.contactPercentage > 0 && (
                         <Badge variant="outline" className="ml-2 text-xs">
                           {category.contactPercentage}% contacts
@@ -1239,6 +1325,84 @@ export function DashboardOverview() {
               ))}
             </div>
           )}
+        </CardContent>
+      </Card>
+
+      {/* Top Performing Services section - enhanced with bar graph */}
+      <Card className="overflow-hidden bg-gradient-to-br from-amber-50 to-amber-100 border-amber-200">
+        <CardHeader>
+          <CardTitle className="text-amber-900">Top Performing Services</CardTitle>
+          <CardDescription className="text-amber-700">
+            Your highest-revenue generating services
+          </CardDescription>
+        </CardHeader>
+        <CardContent>
+          {stats.topServices && stats.topServices.length > 0 ? (
+            <div className="space-y-6">
+              {(stats.topServices as Array<{id: string; name: string; revenue: number; count: number; avgRevenue: number}>).map((service, index) => (
+                <div key={service.id} className="space-y-1 relative group">
+                  <div className="flex items-center justify-between">
+                    <div className="flex items-center gap-2">
+                      <div className={`w-5 h-5 rounded-full flex items-center justify-center text-xs text-white bg-amber-${500 + (index * 100)}`}>
+                        {index + 1}
+                      </div>
+                      <span className="text-sm font-medium text-amber-900 truncate max-w-[200px]" title={service.name}>
+                        {service.name}
+                      </span>
+                    </div>
+                    <span className="text-sm font-bold text-amber-900">
+                      {formatCurrency(service.revenue)}
+                    </span>
+                  </div>
+                  
+                  {/* Bar graph with hover effect */}
+                  <div className="h-8 w-full bg-amber-100 rounded-md overflow-hidden relative">
+                    <div 
+                      className="h-full rounded-md bg-amber-500 flex items-center px-2"
+                      style={{ 
+                        width: `${Math.max(10, (service.revenue / ((stats.topServices as Array<{id: string; name: string; revenue: number}>)[0]?.revenue || 1)) * 100)}%`,
+                        opacity: 1 - (index * 0.15)
+                      }}
+                    >
+                      <span className="text-xs text-white font-semibold truncate">
+                        {service.count} clients
+                      </span>
+                    </div>
+                    
+                    {/* Tooltip on hover */}
+                    <div className="absolute bottom-full left-1/2 -translate-x-1/2 mb-2 z-10 hidden group-hover:block bg-white rounded-md shadow-md p-3 border border-amber-200 text-left min-w-[180px]">
+                      <p className="text-sm font-bold text-amber-900 mb-1">{service.name}</p>
+                      <div className="space-y-1 text-xs">
+                        <div className="flex justify-between">
+                          <span className="text-amber-700">Total Revenue:</span>
+                          <span className="font-medium text-amber-900">{formatCurrency(service.revenue)}</span>
+                        </div>
+                        <div className="flex justify-between">
+                          <span className="text-amber-700">Times Chosen:</span>
+                          <span className="font-medium text-amber-900">{service.count}</span>
+                        </div>
+                        <div className="flex justify-between">
+                          <span className="text-amber-700">Avg. Per Client:</span>
+                          <span className="font-medium text-amber-900">{formatCurrency(service.avgRevenue)}</span>
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+              ))}
+            </div>
+          ) : (
+            <div className="flex h-40 items-center justify-center">
+              <p className="text-sm text-amber-700">No service revenue data available</p>
+            </div>
+          )}
+          
+          <div className="mt-4 pt-4 border-t border-amber-200">
+            <p className="text-xs text-amber-700">
+              Revenue is calculated based on services chosen and paid for by your clients.
+              The bars show how many clients have chosen each service.
+            </p>
+          </div>
         </CardContent>
       </Card>
     </div>

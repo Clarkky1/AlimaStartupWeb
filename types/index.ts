@@ -82,11 +82,21 @@ export interface DashboardStats {
   serviceContactPercentage: number;
   totalServices: number;
   contactedServices: number;
+  topServices?: Array<{
+    id: string;
+    name: string;
+    revenue: number;
+    count: number;
+    avgRevenue: number;
+  }>;
 }
 
 export interface CategoryData {
   name: string;
   value: number;
+  revenue?: number;
+  serviceCount?: number;
+  contactPercentage?: number;
 }
 
 export interface TimelineData {

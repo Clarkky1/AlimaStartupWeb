@@ -6,7 +6,7 @@ import { TopProviders } from "@/components/popular/top-providers"
 import { buttonVariants } from "@/components/ui/button"
 import Link from "next/link"
 import { Suspense, useEffect, useState, useCallback } from "react"
-import { CheckCircle, Search, MessageSquare, CreditCard, Plus, Circle } from "lucide-react"
+import { CheckCircle, Search, MessageSquare, CreditCard, Plus, Circle, UserRoundSearch, MessagesSquare, X } from "lucide-react"
 import { Button } from "@/components/ui/button"
 import { useStatistics } from "@/app/hooks/useStatistics"
 import { useNetworkStatus } from "@/app/context/network-status-context";
@@ -244,7 +244,7 @@ export default function Home() {
         {/* 1. HEADLINE - Hero Section (acts as main headline/tagline) */}
         <Suspense fallback={<div className="h-[600px] w-full bg-neutral-100 dark:bg-neutral-900" />}>
           <div className="mx-auto max-w-7xl px-6 sm:px-8 lg:px-10">
-            <section className="pt-16 md:pt-24 pb-16 md:pb-24" id="home">
+            <section className="pt-16 md:pt-24 pb-16 md:pb-24 bg-transparent" id="home">
               <div className="grid grid-cols-1 gap-10 lg:grid-cols-2 lg:gap-20 items-center">
                 <div className="order-2 lg:order-1" data-aos="fade-right" data-aos-delay="200">
                   <h1 className="text-3xl font-bold tracking-tight sm:text-4xl md:text-5xl mb-8">
@@ -336,9 +336,9 @@ export default function Home() {
                           <div className="absolute inset-x-0 bottom-0 p-4 z-20 translate-y-6 group-hover:translate-y-0 transition-transform duration-300">
                             <div className="h-1 w-10 bg-white/80 rounded-full mb-2"></div>
                             <h3 className="text-white text-sm font-medium opacity-0 group-hover:opacity-100 transition-opacity duration-300">Product Manager</h3>
-                          </div>
                         </div>
-                        
+                      </div>
+                      
                         {/* Decorative blue card with circles */}
                         <div className="absolute left-1/2 bottom-10 -translate-x-1/2 w-40 h-40 rounded-2xl bg-gradient-to-br from-[#a0e4ff]/90 to-[#90d4ff]/90 transform rotate-[-12deg] z-20 shadow-lg flex items-center justify-center group hover:rotate-[-6deg] transition-all duration-500 hover:scale-105 border border-white/30 overflow-hidden backdrop-blur-sm">
                           <div className="relative flex items-center justify-center w-full h-full">
@@ -349,7 +349,7 @@ export default function Home() {
                               <div className="h-3 w-3 rounded-full bg-white animate-pulse delay-75"></div>
                               <div className="h-3 w-3 rounded-full bg-white animate-pulse delay-150"></div>
                               <div className="h-3 w-3 rounded-full bg-white animate-pulse delay-300"></div>
-                            </div>
+                      </div>
                           </div>
                         </div>
                       </div>
@@ -412,107 +412,128 @@ export default function Home() {
           </div>
         </Suspense>
         
-        {/* 2. PROBLEM - Client's Problem Section */}
-        <div id="problem" className="py-28 bg-white/95 dark:bg-black/95 relative scroll-mt-40">
-          <div className="container mx-auto px-6 relative z-10">
+        {/* 4. PROBLEM WE SOLVE */}
+        <div id="problem" className="py-32 relative scroll-mt-40 bg-gradient-to-b from-white via-white to-transparent dark:from-black dark:via-black dark:to-transparent overflow-hidden">
+          {/* Decorative elements */}
+          <div className="absolute w-[500px] h-[500px] -top-64 -right-64 bg-pink-100/30 dark:bg-pink-900/10 rounded-full blur-3xl"></div>
+          <div className="absolute w-[500px] h-[500px] -bottom-64 -left-64 bg-indigo-100/30 dark:bg-indigo-900/10 rounded-full blur-3xl"></div>
+          
+          <div className="container mx-auto px-6 sm:px-8 relative z-10">
             <div className="mx-auto max-w-5xl lg:max-w-6xl">
-              <h2 className="text-3xl font-semibold tracking-tight md:text-4xl mb-10 text-center" data-aos="fade-up">The Problem We Solve</h2>
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-12 items-center mt-10">
-                <div data-aos="fade-right" data-aos-delay="100">
-                  <p className="text-lg mb-6">
-                    Finding reliable service providers can be time-consuming and frustrating. You often deal with:
+              <div className="grid grid-cols-1 lg:grid-cols-2 gap-16 items-center">
+                <div className="order-2 lg:order-1" data-aos="fade-right">
+                  <h2 className="text-3xl font-semibold md:text-4xl mb-6 bg-clip-text text-transparent bg-gradient-to-r from-gray-900 to-gray-600 dark:from-white dark:to-gray-300">The Problem We Solve</h2>
+                  <p className="text-gray-600 dark:text-gray-300 text-lg mb-8">
+                    Finding reliable service providers should be simple and transparent, yet the process is often filled with uncertainty and risk.
                   </p>
-                  <ul className="space-y-4">
-                    <li className="flex items-start">
-                      <span className="bg-red-100 dark:bg-red-900/30 p-1 rounded-full mr-3 mt-1">
-                        <svg className="h-4 w-4 text-red-500" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
-                        </svg>
-                      </span>
-                      <span>Unreliable providers who deliver poor quality work</span>
-                    </li>
-                    <li className="flex items-start">
-                      <span className="bg-red-100 dark:bg-red-900/30 p-1 rounded-full mr-3 mt-1">
-                        <svg className="h-4 w-4 text-red-500" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
-                        </svg>
-                      </span>
-                      <span>Difficulty finding the right skills for your specific needs</span>
-                    </li>
-                    <li className="flex items-start">
-                      <span className="bg-red-100 dark:bg-red-900/30 p-1 rounded-full mr-3 mt-1">
-                        <svg className="h-4 w-4 text-red-500" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
-                        </svg>
-                      </span>
-                      <span>Lack of transparency in pricing and qualifications</span>
-                    </li>
-                  </ul>
+
+                  <div className="space-y-6">
+                    <div className="flex items-start gap-4">
+                      <div className="flex-shrink-0 w-12 h-12 rounded-2xl bg-gradient-to-br from-red-100 to-red-50 dark:from-red-900/30 dark:to-red-800/20 flex items-center justify-center">
+                        <X className="w-6 h-6 text-red-600 dark:text-red-400" />
                 </div>
-                <div className="border rounded-xl overflow-hidden shadow-lg" data-aos="fade-left" data-aos-delay="200">
-                  <img 
-                    // Use placeholder if offline, original src if online
-                    src={isOnline ? "/problem-image.jpg" : placeholderImg} 
-                    alt="Finding service providers is frustrating" 
-                    className="w-full h-auto" 
-                  />
+                      <div>
+                        <h3 className="text-xl font-medium mb-2">Lack of Trust</h3>
+                        <p className="text-gray-600 dark:text-gray-400">
+                          Traditional methods offer little verification of service provider credentials or reliability
+                        </p>
+                      </div>
+                    </div>
+
+                    <div className="flex items-start gap-4">
+                      <div className="flex-shrink-0 w-12 h-12 rounded-2xl bg-gradient-to-br from-red-100 to-red-50 dark:from-red-900/30 dark:to-red-800/20 flex items-center justify-center">
+                        <X className="w-6 h-6 text-red-600 dark:text-red-400" />
+                      </div>
+                      <div>
+                        <h3 className="text-xl font-medium mb-2">Limited Options</h3>
+                        <p className="text-gray-600 dark:text-gray-400">
+                          Finding the right service provider often relies on word-of-mouth, limiting your choices
+                        </p>
+                      </div>
+                    </div>
+
+                    <div className="flex items-start gap-4">
+                      <div className="flex-shrink-0 w-12 h-12 rounded-2xl bg-gradient-to-br from-red-100 to-red-50 dark:from-red-900/30 dark:to-red-800/20 flex items-center justify-center">
+                        <X className="w-6 h-6 text-red-600 dark:text-red-400" />
+                      </div>
+                      <div>
+                        <h3 className="text-xl font-medium mb-2">Inconsistent Quality</h3>
+                        <p className="text-gray-600 dark:text-gray-400">
+                          Without reliable reviews and ratings, service quality is unpredictable
+                        </p>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+
+                <div className="order-1 lg:order-2 flex justify-center" data-aos="fade-left">
+                  <div className="relative">
+                    <div className="w-[350px] h-[350px] md:w-[400px] md:h-[400px] rounded-3xl overflow-hidden shadow-xl ring-1 ring-gray-200/30 dark:ring-white/10">
+                      <img 
+                        src="/problem-solving.svg" 
+                        alt="The problem we solve" 
+                        className="w-full h-full object-cover"
+                      />
+                    </div>
+                    <div className="absolute -bottom-6 -right-6 w-48 h-48 bg-gradient-to-br from-indigo-100 to-blue-100 dark:from-indigo-900/30 dark:to-blue-900/20 rounded-2xl blur-2xl opacity-70"></div>
+                    <div className="absolute -top-6 -left-6 w-32 h-32 bg-gradient-to-br from-amber-100 to-rose-100 dark:from-amber-900/30 dark:to-rose-900/20 rounded-2xl blur-2xl opacity-70"></div>
+                  </div>
                 </div>
               </div>
             </div>
           </div>
         </div>
         
-        {/* 3. SOLUTION/SERVICES - How It Works Section */}
-        <div id="how-it-works" className="py-32 bg-neutral-50/95 dark:bg-neutral-950/95 relative scroll-mt-40">
-          <div className="container mx-auto px-6 relative z-10">
-            <div className="mx-auto max-w-5xl lg:max-w-6xl text-center">
-              <h2 className="text-3xl font-semibold tracking-tight md:text-4xl mb-5" data-aos="fade-up">How Alima Works</h2>
-              <p className="text-muted-foreground max-w-2xl mx-auto mb-20" data-aos="fade-up" data-aos-delay="100">
-                Our platform makes it easy to connect with the right service providers or find clients for your services
+        {/* 3. HOW IT WORKS */}
+        <div id="how-it-works" className="py-24 relative scroll-mt-40 overflow-hidden bg-gradient-to-b from-transparent via-slate-50 to-transparent dark:from-transparent dark:via-slate-950 dark:to-transparent">
+          {/* Subtle background pattern */}
+          <div className="absolute inset-0 bg-[url('/patterns/grid.svg')] opacity-[0.02] pointer-events-none"></div>
+          <div className="absolute -top-[20%] -right-[10%] w-[40%] h-[40%] bg-gradient-to-br from-blue-100/20 via-indigo-100/15 to-purple-100/10 dark:from-blue-900/10 dark:via-indigo-900/8 dark:to-purple-900/5 rounded-full blur-3xl"></div>
+          
+          <div className="container mx-auto px-4 relative z-10">
+            <div className="text-center mb-16 max-w-3xl mx-auto" data-aos="fade-up">
+              <h2 className="text-3xl font-semibold tracking-tight md:text-4xl lg:text-5xl mb-6 bg-clip-text text-transparent bg-gradient-to-r from-gray-900 to-gray-700 dark:from-white dark:to-gray-300">How Alima Works</h2>
+              <p className="text-gray-600 dark:text-gray-300 text-lg">
+                Our platform makes it easy to connect with skilled professionals and get the services you need
               </p>
-              
-              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-10">
+            </div>
+            
+            <div className="grid grid-cols-1 md:grid-cols-3 gap-8 lg:gap-12">
                 {/* Step 1 */}
-                <div className="flex flex-col items-center p-8" data-aos="zoom-in" data-aos-delay="100">
-                  <div className="rounded-full bg-primary/10 p-5 mb-6">
-                    <Search className="h-10 w-10 text-primary" />
+              <div className="backdrop-blur-xl bg-white/90 dark:bg-black/40 border border-gray-200/50 dark:border-white/5 p-8 rounded-2xl shadow-sm group transition-all duration-300 hover:shadow-md hover:translate-y-[-3px]" data-aos="fade-up" data-aos-delay="100">
+                <div className="flex flex-col items-center text-center">
+                  <div className="w-16 h-16 mb-6 rounded-full flex items-center justify-center bg-gradient-to-br from-blue-500/10 to-purple-500/10 dark:from-blue-500/20 dark:to-purple-500/20">
+                    <UserRoundSearch className="w-8 h-8 text-blue-600 dark:text-blue-400 group-hover:scale-110 transition-transform duration-300" />
                   </div>
-                  <h3 className="text-xl font-semibold mb-3">Discover</h3>
-                  <p className="text-sm text-center text-muted-foreground">
-                    Browse through verified service providers or post your service offering
+                  <h3 className="text-xl font-medium mb-3">Search for Services</h3>
+                  <p className="text-gray-600 dark:text-gray-400">
+                    Browse through our extensive catalog of professional services and find what suits your needs
                   </p>
+                </div>
                 </div>
                 
                 {/* Step 2 */}
-                <div className="flex flex-col items-center p-8" data-aos="zoom-in" data-aos-delay="200">
-                  <div className="rounded-full bg-primary/10 p-5 mb-6">
-                    <CheckCircle className="h-10 w-10 text-primary" />
+              <div className="backdrop-blur-xl bg-white/90 dark:bg-black/40 border border-gray-200/50 dark:border-white/5 p-8 rounded-2xl shadow-sm group transition-all duration-300 hover:shadow-md hover:translate-y-[-3px]" data-aos="fade-up" data-aos-delay="200">
+                <div className="flex flex-col items-center text-center">
+                  <div className="w-16 h-16 mb-6 rounded-full flex items-center justify-center bg-gradient-to-br from-green-500/10 to-teal-500/10 dark:from-green-500/20 dark:to-teal-500/20">
+                    <MessagesSquare className="w-8 h-8 text-green-600 dark:text-green-400 group-hover:scale-110 transition-transform duration-300" />
                   </div>
-                  <h3 className="text-xl font-semibold mb-3">Select</h3>
-                  <p className="text-sm text-center text-muted-foreground">
-                    Choose the perfect match based on reviews, portfolio, and pricing
+                  <h3 className="text-xl font-medium mb-3">Connect and Discuss</h3>
+                  <p className="text-gray-600 dark:text-gray-400">
+                    Communicate directly with service providers to discuss your specific requirements and get quotes
                   </p>
+                </div>
                 </div>
                 
                 {/* Step 3 */}
-                <div className="flex flex-col items-center p-8" data-aos="zoom-in" data-aos-delay="300">
-                  <div className="rounded-full bg-primary/10 p-5 mb-6">
-                    <MessageSquare className="h-10 w-10 text-primary" />
+              <div className="backdrop-blur-xl bg-white/90 dark:bg-black/40 border border-gray-200/50 dark:border-white/5 p-8 rounded-2xl shadow-sm group transition-all duration-300 hover:shadow-md hover:translate-y-[-3px]" data-aos="fade-up" data-aos-delay="300">
+                <div className="flex flex-col items-center text-center">
+                  <div className="w-16 h-16 mb-6 rounded-full flex items-center justify-center bg-gradient-to-br from-amber-500/10 to-orange-500/10 dark:from-amber-500/20 dark:to-orange-500/20">
+                    <CheckCircle className="w-8 h-8 text-amber-600 dark:text-amber-400 group-hover:scale-110 transition-transform duration-300" />
                   </div>
-                  <h3 className="text-xl font-semibold mb-3">Connect</h3>
-                  <p className="text-sm text-center text-muted-foreground">
-                    Communicate directly to discuss requirements and expectations
-                  </p>
-                </div>
-                
-                {/* Step 4 */}
-                <div className="flex flex-col items-center p-8" data-aos="zoom-in" data-aos-delay="400">
-                  <div className="rounded-full bg-primary/10 p-5 mb-6">
-                    <CreditCard className="h-10 w-10 text-primary" />
-                  </div>
-                  <h3 className="text-xl font-semibold mb-3">Transact</h3>
-                  <p className="text-sm text-center text-muted-foreground">
-                    Secure payment and delivery system with satisfaction guarantee
+                  <h3 className="text-xl font-medium mb-3">Hire and Review</h3>
+                  <p className="text-gray-600 dark:text-gray-400">
+                    Select the ideal service provider, receive the service, and share your experience through reviews
                   </p>
                 </div>
               </div>
@@ -521,18 +542,33 @@ export default function Home() {
         </div>
         
         {/* 4. PROOF/PORTFOLIO - Top Service Providers Section */}
-        <div id="track-record" className="py-20 bg-white/95 dark:bg-black/95 relative scroll-mt-40">
-          <div className="container mx-auto px-3 sm:px-4 relative z-10">
+        <div id="track-record" className="py-32 bg-gradient-to-b from-transparent via-white to-transparent dark:from-transparent dark:via-black dark:to-transparent relative scroll-mt-40 overflow-hidden">
+          {/* Background gradient elements */}
+          <div className="absolute -top-[20%] -right-[10%] w-[40%] h-[40%] bg-gradient-to-br from-sky-100/30 to-indigo-100/30 dark:from-sky-900/20 dark:to-indigo-900/20 rounded-full blur-3xl"></div>
+          <div className="absolute -bottom-[20%] -left-[10%] w-[40%] h-[40%] bg-gradient-to-br from-amber-100/30 to-rose-100/30 dark:from-amber-900/20 dark:to-rose-900/20 rounded-full blur-3xl"></div>
+          
+          <div className="container mx-auto px-6 sm:px-8 relative z-10">
             <div className="mx-auto max-w-5xl lg:max-w-6xl">
-              <div className="mb-8 text-center">
-                <h2 className="text-3xl font-semibold tracking-tight md:text-4xl mb-3" data-aos="fade-up">Our Track Record</h2>
-                <p className="text-muted-foreground max-w-2xl mx-auto" data-aos="fade-up" data-aos-delay="100">
+              <div className="mb-16 text-center">
+                <h2 className="text-3xl font-semibold tracking-tight md:text-4xl mb-5 bg-clip-text text-transparent bg-gradient-to-r from-gray-900 to-gray-600 dark:from-white dark:to-gray-300" data-aos="fade-up">Our Track Record</h2>
+                <p className="text-gray-600 dark:text-gray-300 max-w-2xl mx-auto text-lg" data-aos="fade-up" data-aos-delay="100">
                   See the successful connections we've made and the quality of our service providers
                 </p>
               </div>
               
-              <div className="relative" data-aos="fade-up" data-aos-delay="200">
-                <Suspense fallback={<div className="h-[300px] w-full bg-neutral-100 dark:bg-neutral-900 rounded-3xl" />}>
+              <div className="relative backdrop-blur-sm bg-white/60 dark:bg-black/40 border border-white/30 dark:border-white/10 p-8 rounded-3xl shadow-sm" data-aos="fade-up" data-aos-delay="200">
+                <Suspense fallback={<div className="h-[300px] w-full bg-neutral-100/50 dark:bg-neutral-900/50 rounded-3xl flex items-center justify-center">
+                  <div className="animate-pulse flex space-x-4">
+                    <div className="rounded-full bg-neutral-200 dark:bg-neutral-700 h-12 w-12"></div>
+                    <div className="flex-1 space-y-4 py-1">
+                      <div className="h-4 bg-neutral-200 dark:bg-neutral-700 rounded w-3/4"></div>
+                      <div className="space-y-2">
+                        <div className="h-4 bg-neutral-200 dark:bg-neutral-700 rounded"></div>
+                        <div className="h-4 bg-neutral-200 dark:bg-neutral-700 rounded w-5/6"></div>
+                      </div>
+                    </div>
+                  </div>
+                </div>}>
                   <TopProviders key={`providers-${loadKey}`} />
                 </Suspense>
               </div>
@@ -541,7 +577,7 @@ export default function Home() {
         </div>
 
         {/* 5. PROOF/TESTIMONIALS */}
-        <div id="testimonials" className="py-24 bg-neutral-50/95 dark:bg-neutral-950/95 relative scroll-mt-40">
+        <div id="testimonials" className="py-24 bg-gradient-to-b from-transparent via-neutral-50 to-transparent dark:from-transparent dark:via-neutral-950 dark:to-transparent relative scroll-mt-40">
           <div className="container mx-auto px-4 relative z-10">
             <div className="mx-auto max-w-5xl lg:max-w-6xl">
               <h2 className="text-3xl font-semibold tracking-tight md:text-4xl mb-8 text-center" data-aos="fade-up">What Our Users Say</h2>
@@ -647,28 +683,71 @@ export default function Home() {
           </div>
         </div>
         
+        {/* Our Mission Section - Moved after testimonials */}
+        <div id="mission" className="py-32 relative scroll-mt-40 bg-gradient-to-b from-transparent via-white to-transparent dark:from-transparent dark:via-gray-900/80 dark:to-transparent">
+          {/* Decorative elements */}
+          <div className="absolute top-0 inset-x-0 h-40 bg-gradient-to-b from-white/0 dark:from-black/0 to-transparent"></div>
+          <div className="absolute w-[600px] h-[600px] left-[10%] top-[20%] bg-blue-100/40 dark:bg-blue-900/10 rounded-full blur-3xl"></div>
+          
+          <div className="container mx-auto px-6 sm:px-8 relative z-10">
+            <div className="mx-auto max-w-3xl text-center mb-20">
+              <h2 className="text-3xl font-semibold md:text-5xl mb-6 bg-clip-text text-transparent bg-gradient-to-r from-indigo-600 to-purple-600 dark:from-indigo-400 dark:to-purple-400" data-aos="fade-up">Our Mission</h2>
+              <p className="text-xl text-gray-600 dark:text-gray-300" data-aos="fade-up" data-aos-delay="100">
+                To create a trusted community that connects people with the exceptional services they need, while empowering skilled professionals to grow their businesses.
+              </p>
+            </div>
+
+            <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
+              <div className="bg-white dark:bg-gray-900/60 backdrop-blur-lg rounded-3xl p-8 shadow-lg ring-1 ring-gray-200/50 dark:ring-white/10 transition-all duration-300 hover:shadow-xl hover:-translate-y-1" data-aos="fade-up" data-aos-delay="150">
+                <div className="w-16 h-16 mb-6 rounded-2xl bg-gradient-to-br from-indigo-100 to-blue-50 dark:from-indigo-900/30 dark:to-blue-900/20 flex items-center justify-center">
+                  <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" className="w-8 h-8 text-indigo-600 dark:text-indigo-400">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M15 19.128a9.38 9.38 0 002.625.372 9.337 9.337 0 004.121-.952 4.125 4.125 0 00-7.533-2.493M15 19.128v-.003c0-1.113-.285-2.16-.786-3.07M15 19.128v.106A12.318 12.318 0 018.624 21c-2.331 0-4.512-.645-6.374-1.766l-.001-.109a6.375 6.375 0 0111.964-3.07M12 6.375a3.375 3.375 0 11-6.75 0 3.375 3.375 0 016.75 0zm8.25 2.25a2.625 2.625 0 11-5.25 0 2.625 2.625 0 015.25 0z" />
+                  </svg>
+                </div>
+                <h3 className="text-xl font-medium mb-4">For Clients</h3>
+                <p className="text-gray-600 dark:text-gray-400">
+                  Find trustworthy, skilled professionals quickly and confidently for any service you need, with complete transparency.
+                </p>
+              </div>
+
+              <div className="bg-white dark:bg-gray-900/60 backdrop-blur-lg rounded-3xl p-8 shadow-lg ring-1 ring-gray-200/50 dark:ring-white/10 transition-all duration-300 hover:shadow-xl hover:-translate-y-1" data-aos="fade-up" data-aos-delay="200">
+                <div className="w-16 h-16 mb-6 rounded-2xl bg-gradient-to-br from-purple-100 to-indigo-50 dark:from-purple-900/30 dark:to-indigo-900/20 flex items-center justify-center">
+                  <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" className="w-8 h-8 text-purple-600 dark:text-purple-400">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M20.25 14.15v4.25c0 1.094-.787 2.036-1.872 2.18-2.087.277-4.216.42-6.378.42s-4.291-.143-6.378-.42c-1.085-.144-1.872-1.086-1.872-2.18v-4.25m16.5 0a2.18 2.18 0 00.75-1.661V8.706c0-1.081-.768-2.015-1.837-2.175a48.114 48.114 0 00-3.413-.387m4.5 8.006c-.194.165-.42.295-.673.38A23.978 23.978 0 0112 15.75c-2.648 0-5.195-.429-7.577-1.22a2.016 2.016 0 01-.673-.38m0 0A2.18 2.18 0 013 12.489V8.706c0-1.081.768-2.015 1.837-2.175a48.111 48.111 0 013.413-.387m7.5 0V5.25A2.25 2.25 0 0013.5 3h-3a2.25 2.25 0 00-2.25 2.25v.894m7.5 0a48.667 48.667 0 00-7.5 0M12 12.75h.008v.008H12v-.008z" />
+                  </svg>
+                </div>
+                <h3 className="text-xl font-medium mb-4">For Service Providers</h3>
+                <p className="text-gray-600 dark:text-gray-400">
+                  Showcase your skills, connect with clients who value quality work, and build a thriving business on your terms.
+                </p>
+              </div>
+
+              <div className="bg-white dark:bg-gray-900/60 backdrop-blur-lg rounded-3xl p-8 shadow-lg ring-1 ring-gray-200/50 dark:ring-white/10 transition-all duration-300 hover:shadow-xl hover:-translate-y-1" data-aos="fade-up" data-aos-delay="250">
+                <div className="w-16 h-16 mb-6 rounded-2xl bg-gradient-to-br from-blue-100 to-cyan-50 dark:from-blue-900/30 dark:to-cyan-900/20 flex items-center justify-center">
+                  <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" className="w-8 h-8 text-blue-600 dark:text-blue-400">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M21 8.25c0-2.485-2.099-4.5-4.688-4.5-1.935 0-3.597 1.126-4.312 2.733-.715-1.607-2.377-2.733-4.313-2.733C5.1 3.75 3 5.765 3 8.25c0 7.22 9 12 9 12s9-4.78 9-12z" />
+                  </svg>
+                </div>
+                <h3 className="text-xl font-medium mb-4">For Communities</h3>
+                <p className="text-gray-600 dark:text-gray-400">
+                  Foster local economies where skilled professionals thrive and communities benefit from high-quality, accessible services.
+                </p>
+              </div>
+            </div>
+
+            {/* Comment out the "Join Our Community" button */}
+            {/* <div className="mt-16 text-center">
+              <Button className="bg-gradient-to-r from-indigo-600 to-purple-600 hover:from-indigo-700 hover:to-purple-700 dark:from-indigo-500 dark:to-purple-500 text-white font-medium py-6 px-8 rounded-full transition-all shadow-lg hover:shadow-xl" data-aos="fade-up" data-aos-delay="300">
+                <Link href="/auth/register">Join Our Community</Link>
+              </Button>
+            </div> */}
+          </div>
+        </div>
+        
         {/* 6. ABOUT US */}
-        <div id="about" className="py-24 bg-white/95 dark:bg-black/95 relative scroll-mt-40">
+        <div id="about" className="py-24 bg-gradient-to-b from-transparent via-white to-transparent dark:from-transparent dark:via-black dark:to-transparent relative scroll-mt-40">
           <div className="container mx-auto px-4 relative z-10">
             <div className="mx-auto max-w-5xl lg:max-w-6xl">
-              <div className="mb-24 grid gap-16 md:grid-cols-2 md:items-center">
-                <div data-aos="fade-right" data-aos-delay="100">
-                  <h2 className="text-3xl font-semibold tracking-tight md:text-4xl mb-6">Our Mission</h2>
-                  <p className="mb-6 text-lg leading-relaxed text-neutral-600 dark:text-neutral-300">
-                    Alima was created with a simple but powerful mission: to build a platform that connects skilled service providers with those who need their expertise. Whether you're looking for local services or global remote work, Alima provides a seamless experience for both service providers and clients.
-                  </p>
-                  <p className="text-lg leading-relaxed text-neutral-600 dark:text-neutral-300">
-                    Our platform ensures secure transactions, transparent reviews, and easy communication between parties. We believe in creating opportunities for people to showcase their talents and find quality services at competitive prices.
-                  </p>
-                </div>
-                <div className="relative aspect-square overflow-hidden rounded-3xl bg-neutral-100 dark:bg-neutral-900" data-aos="fade-left" data-aos-delay="200">
-                  <div className="absolute inset-0 flex items-center justify-center">
-                    <div className="text-6xl font-bold text-primary/20">Alima</div>
-                  </div>
-                  <div className="absolute -bottom-4 left-1/2 h-32 w-64 -translate-x-1/2 rounded-full bg-primary/20 blur-3xl"></div>
-                </div>
-              </div>
-              
               {/* Team Section */}
               <div className="mb-24">
                 <div className="mb-12 text-center" data-aos="fade-up">
@@ -881,38 +960,113 @@ export default function Home() {
         </div>
         
         {/* 7. FAQ */}
-        <div id="faq" className="py-24 bg-neutral-50/95 dark:bg-neutral-950/95 relative scroll-mt-40">
+        <div id="faq" className="py-24 relative scroll-mt-40 overflow-hidden bg-gradient-to-b from-transparent via-gray-50 to-transparent dark:from-transparent dark:via-gray-950 dark:to-transparent">
+          {/* Apple-inspired glassmorphism background */}
+          <div className="absolute inset-0 bg-[url('/patterns/subtle-grid.svg')] opacity-[0.03] pointer-events-none"></div>
+          <div className="absolute -top-[20%] -left-[10%] w-[40%] h-[40%] bg-gradient-to-br from-blue-100/30 via-indigo-100/20 to-purple-100/10 dark:from-blue-900/20 dark:via-indigo-900/15 dark:to-purple-900/10 rounded-full blur-3xl"></div>
+          <div className="absolute -bottom-[20%] -right-[10%] w-[40%] h-[40%] bg-gradient-to-br from-teal-100/20 via-emerald-100/15 to-green-100/10 dark:from-teal-900/15 dark:via-emerald-900/10 dark:to-green-900/5 rounded-full blur-3xl"></div>
+          
           <div className="container mx-auto px-4 relative z-10">
             <div className="mx-auto max-w-5xl lg:max-w-6xl">
-              <h2 className="text-3xl font-semibold tracking-tight md:text-4xl mb-8 text-center" data-aos="fade-up">Frequently Asked Questions</h2>
+              <div className="text-center mb-16" data-aos="fade-up">
+                <h2 className="text-3xl font-semibold tracking-tight md:text-4xl lg:text-5xl mb-6 bg-clip-text text-transparent bg-gradient-to-r from-gray-900 to-gray-700 dark:from-white dark:to-gray-300">Frequently Asked Questions</h2>
+                <p className="text-gray-600 dark:text-gray-300 mb-0 max-w-2xl mx-auto text-lg">
+                  Everything you need to know about using Alima
+                </p>
+              </div>
               
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                <div className="bg-white dark:bg-neutral-900 p-6 rounded-xl shadow-sm border border-neutral-200 dark:border-neutral-800" data-aos="fade-up" data-aos-delay="100">
-                  <h3 className="text-lg font-semibold mb-3">How do I find the right service provider?</h3>
-                  <p className="text-muted-foreground">Our platform offers detailed profiles, reviews, and portfolios so you can evaluate service providers. You can also filter by location, price range, and category to find the perfect match.</p>
+              <div className="grid grid-cols-1 gap-4" data-aos="fade-up" data-aos-delay="150">
+                {/* FAQ Item 1 */}
+                <div className="group">
+                  <div className="backdrop-blur-xl bg-white/80 dark:bg-black/50 border border-gray-200/50 dark:border-white/5 p-8 rounded-2xl shadow-sm transition-all duration-300 hover:shadow-md hover:translate-y-[-2px]">
+                    <div className="flex items-start justify-between">
+                      <h3 className="text-xl font-medium mb-4 text-gray-900 dark:text-white">How do I find the right service provider?</h3>
+                      <div className="ml-4 flex-shrink-0 flex items-center justify-center w-8 h-8 rounded-full bg-gray-100 dark:bg-gray-800 group-hover:bg-primary/10 dark:group-hover:bg-primary/20 transition-colors duration-300">
+                        <svg className="w-5 h-5 text-gray-500 dark:text-gray-400 group-hover:text-primary dark:group-hover:text-primary transition-colors duration-300" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+                          <path d="M12 5v14M5 12h14" strokeLinecap="round" strokeLinejoin="round"/>
+                        </svg>
+                      </div>
+                    </div>
+                    <p className="text-gray-600 dark:text-gray-300 text-base leading-relaxed">Our platform offers detailed profiles, reviews, and portfolios so you can evaluate service providers. You can also filter by location, price range, and category to find the perfect match.</p>
+                  </div>
                 </div>
                 
-                <div className="bg-white dark:bg-neutral-900 p-6 rounded-xl shadow-sm border border-neutral-200 dark:border-neutral-800" data-aos="fade-up" data-aos-delay="150">
-                  <h3 className="text-lg font-semibold mb-3">How much does it cost to join Alima?</h3>
-                  <p className="text-muted-foreground">Creating an account on Alima is completely free. Service providers pay a small commission on completed jobs, while clients can browse, contact, and hire providers at no cost.</p>
+                {/* FAQ Item 2 */}
+                <div className="group">
+                  <div className="backdrop-blur-xl bg-white/80 dark:bg-black/50 border border-gray-200/50 dark:border-white/5 p-8 rounded-2xl shadow-sm transition-all duration-300 hover:shadow-md hover:translate-y-[-2px]">
+                    <div className="flex items-start justify-between">
+                      <h3 className="text-xl font-medium mb-4 text-gray-900 dark:text-white">How much does it cost to join Alima?</h3>
+                      <div className="ml-4 flex-shrink-0 flex items-center justify-center w-8 h-8 rounded-full bg-gray-100 dark:bg-gray-800 group-hover:bg-primary/10 dark:group-hover:bg-primary/20 transition-colors duration-300">
+                        <svg className="w-5 h-5 text-gray-500 dark:text-gray-400 group-hover:text-primary dark:group-hover:text-primary transition-colors duration-300" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+                          <path d="M12 5v14M5 12h14" strokeLinecap="round" strokeLinejoin="round"/>
+                        </svg>
+                      </div>
+                    </div>
+                    <p className="text-gray-600 dark:text-gray-300 text-base leading-relaxed">Creating an account on Alima is completely free. Service providers pay a small commission on completed jobs, while clients can browse, contact, and hire providers at no cost.</p>
+                  </div>
                 </div>
                 
-                <div className="bg-white dark:bg-neutral-900 p-6 rounded-xl shadow-sm border border-neutral-200 dark:border-neutral-800" data-aos="fade-up" data-aos-delay="200">
-                  <h3 className="text-lg font-semibold mb-3">How are payments handled?</h3>
-                  <p className="text-muted-foreground">We provide a secure payment system that protects both clients and service providers. Funds are held in escrow until the work is completed and approved, ensuring satisfaction for all parties.</p>
+                {/* FAQ Item 3 */}
+                <div className="group">
+                  <div className="backdrop-blur-xl bg-white/80 dark:bg-black/50 border border-gray-200/50 dark:border-white/5 p-8 rounded-2xl shadow-sm transition-all duration-300 hover:shadow-md hover:translate-y-[-2px]">
+                    <div className="flex items-start justify-between">
+                      <h3 className="text-xl font-medium mb-4 text-gray-900 dark:text-white">How are payments handled?</h3>
+                      <div className="ml-4 flex-shrink-0 flex items-center justify-center w-8 h-8 rounded-full bg-gray-100 dark:bg-gray-800 group-hover:bg-primary/10 dark:group-hover:bg-primary/20 transition-colors duration-300">
+                        <svg className="w-5 h-5 text-gray-500 dark:text-gray-400 group-hover:text-primary dark:group-hover:text-primary transition-colors duration-300" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+                          <path d="M12 5v14M5 12h14" strokeLinecap="round" strokeLinejoin="round"/>
+                        </svg>
+                      </div>
+                    </div>
+                    <p className="text-gray-600 dark:text-gray-300 text-base leading-relaxed">We provide a secure payment system that protects both clients and service providers. Funds are held in escrow until the work is completed and approved, ensuring satisfaction for all parties.</p>
+                  </div>
                 </div>
                 
-                <div className="bg-white dark:bg-neutral-900 p-6 rounded-xl shadow-sm border border-neutral-200 dark:border-neutral-800" data-aos="fade-up" data-aos-delay="250">
-                  <h3 className="text-lg font-semibold mb-3">What if I'm not satisfied with the service?</h3>
-                  <p className="text-muted-foreground">Our satisfaction guarantee ensures you only pay for work that meets your requirements. If issues arise, our dispute resolution team will help mediate and find a fair solution.</p>
+                {/* FAQ Item 4 */}
+                <div className="group">
+                  <div className="backdrop-blur-xl bg-white/80 dark:bg-black/50 border border-gray-200/50 dark:border-white/5 p-8 rounded-2xl shadow-sm transition-all duration-300 hover:shadow-md hover:translate-y-[-2px]">
+                    <div className="flex items-start justify-between">
+                      <h3 className="text-xl font-medium mb-4 text-gray-900 dark:text-white">What if I'm not satisfied with the service?</h3>
+                      <div className="ml-4 flex-shrink-0 flex items-center justify-center w-8 h-8 rounded-full bg-gray-100 dark:bg-gray-800 group-hover:bg-primary/10 dark:group-hover:bg-primary/20 transition-colors duration-300">
+                        <svg className="w-5 h-5 text-gray-500 dark:text-gray-400 group-hover:text-primary dark:group-hover:text-primary transition-colors duration-300" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+                          <path d="M12 5v14M5 12h14" strokeLinecap="round" strokeLinejoin="round"/>
+                        </svg>
                 </div>
+              </div>
+                    <p className="text-gray-600 dark:text-gray-300 text-base leading-relaxed">Our satisfaction guarantee ensures you only pay for work that meets your requirements. If issues arise, our dispute resolution team will help mediate and find a fair solution.</p>
+                  </div>
+                </div>
+                
+                {/* FAQ Item 5 */}
+                <div className="group">
+                  <div className="backdrop-blur-xl bg-white/80 dark:bg-black/50 border border-gray-200/50 dark:border-white/5 p-8 rounded-2xl shadow-sm transition-all duration-300 hover:shadow-md hover:translate-y-[-2px]">
+                    <div className="flex items-start justify-between">
+                      <h3 className="text-xl font-medium mb-4 text-gray-900 dark:text-white">Can I offer multiple services as a provider?</h3>
+                      <div className="ml-4 flex-shrink-0 flex items-center justify-center w-8 h-8 rounded-full bg-gray-100 dark:bg-gray-800 group-hover:bg-primary/10 dark:group-hover:bg-primary/20 transition-colors duration-300">
+                        <svg className="w-5 h-5 text-gray-500 dark:text-gray-400 group-hover:text-primary dark:group-hover:text-primary transition-colors duration-300" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+                          <path d="M12 5v14M5 12h14" strokeLinecap="round" strokeLinejoin="round"/>
+                        </svg>
+                      </div>
+                    </div>
+                    <p className="text-gray-600 dark:text-gray-300 text-base leading-relaxed">Yes, service providers can list multiple services under different categories. This allows you to showcase your diverse skill set and attract a wider range of clients.</p>
+                  </div>
+                </div>
+              </div>
+              
+              {/* More questions button */}
+              <div className="mt-12 text-center" data-aos="fade-up" data-aos-delay="200">
+                <Link href="/support" className="inline-flex items-center justify-center px-6 py-3 border border-transparent text-base font-medium rounded-full text-primary bg-primary/5 hover:bg-primary/10 transition-colors duration-300">
+                  View all FAQs
+                  <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5 ml-2" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                    <path d="M5 12h14M12 5l7 7-7 7"/>
+                  </svg>
+                </Link>
               </div>
             </div>
           </div>
         </div>
         
         {/* 8. CALL TO ACTION with Contact Section */}
-        <div id="contact" className="relative py-36 overflow-hidden bg-white/95 dark:bg-black/95 scroll-mt-40">
+        <div id="contact" className="relative py-36 overflow-hidden bg-gradient-to-b from-transparent via-white to-transparent dark:from-transparent dark:via-black dark:to-transparent scroll-mt-40">
           <div className="container mx-auto px-4 relative z-10">
             {/* Get In Touch Section with modern design */}
             <div className="rounded-[32px] text-center mb-40 relative overflow-hidden shadow-2xl" 
@@ -933,22 +1087,22 @@ export default function Home() {
                     Get In Touch
                   </h2>
                   <p className="mx-auto mb-10 max-w-xl text-xl leading-relaxed text-white/90 font-light">
-                    Have questions about Alima or interested in joining our team? We'd love to hear from you!
-                  </p>
-                  <div className="flex flex-wrap justify-center gap-4">
+                Have questions about Alima or interested in joining our team? We'd love to hear from you!
+              </p>
+              <div className="flex flex-wrap justify-center gap-4">
                     <button className="inline-flex items-center justify-center rounded-full border-0 bg-white px-8 py-4 text-base font-medium text-primary shadow-lg hover:bg-white/95 focus:outline-none transition duration-200 ease-in-out transform hover:-translate-y-1">
-                      <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="mr-2 h-5 w-5">
-                        <path d="M4 4h16c1.1 0 2 .9 2 2v12c0 1.1-.9 2-2 2H4c-1.1 0-2-.9-2-2V6c0-1.1.9-2 2-2z"></path>
-                        <polyline points="22,6 12,13 2,6"></polyline>
-                      </svg>
+                  <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="mr-2 h-5 w-5">
+                    <path d="M4 4h16c1.1 0 2 .9 2 2v12c0 1.1-.9 2-2 2H4c-1.1 0-2-.9-2-2V6c0-1.1.9-2 2-2z"></path>
+                    <polyline points="22,6 12,13 2,6"></polyline>
+                  </svg>
                       Contact us
-                    </button>
+                </button>
                     <button className="inline-flex items-center justify-center rounded-full border border-white/40 bg-white/10 backdrop-blur-sm px-8 py-4 text-base font-medium text-white hover:bg-white/20 focus:outline-none transition duration-200 ease-in-out transform hover:-translate-y-1">
-                      <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="mr-2 h-5 w-5">
+                  <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="mr-2 h-5 w-5">
                         <path d="M18 2h-3a5 5 0 0 0-5 5v3H7v4h3v8h4v-8h3l1-4h-4V7a1 1 0 0 1 1-1h3z"></path>
-                      </svg>
+                  </svg>
                       Follow us
-                    </button>
+                </button>
                   </div>
                 </div>
               </div>
@@ -964,17 +1118,17 @@ export default function Home() {
               <div className="rounded-[28px] backdrop-blur-xl bg-white/20 dark:bg-black/20 border border-white/30 dark:border-white/10 py-16 px-8 md:py-20 md:px-12 text-center relative z-10">
                 <h2 className="text-3xl md:text-5xl font-bold mb-8 tracking-tight bg-clip-text text-transparent bg-gradient-to-r from-primary to-primary/70 dark:from-primary dark:to-blue-400">Ready to Get Started?</h2>
                 <p className="text-xl leading-relaxed text-neutral-800 dark:text-white/90 mb-12 max-w-2xl mx-auto font-light">
-                  Join Alima today and connect with skilled professionals or find new clients for your services.
-                </p>
+                Join Alima today and connect with skilled professionals or find new clients for your services.
+              </p>
                 <div className="flex flex-wrap justify-center gap-6 mb-8">
                   <Link href="/signup" className="inline-flex items-center justify-center rounded-full bg-gradient-to-r from-primary to-primary/80 px-10 py-5 text-lg font-medium text-white shadow-lg hover:shadow-xl transition duration-200 ease-in-out transform hover:-translate-y-1 hover:from-primary hover:to-primary/90">
-                    Sign up now
-                  </Link>
+                  Sign up now
+                </Link>
                   <Link href="/popular-today" className="inline-flex items-center justify-center rounded-full border border-white/40 bg-white/10 backdrop-blur-md px-10 py-5 text-lg font-medium text-neutral-900 dark:text-white shadow-sm hover:shadow-md hover:bg-white/20 dark:hover:bg-white/10 transition duration-200 ease-in-out transform hover:-translate-y-1">
-                    Browse services
-                  </Link>
-                </div>
+                  Browse services
+                </Link>
               </div>
+            </div>
             </div>
           </div>
         </div>

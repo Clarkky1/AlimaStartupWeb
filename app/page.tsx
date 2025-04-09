@@ -62,15 +62,15 @@ const AnimationStyles = () => {
       @keyframes moving-gradient {
         0% { 
           background-position: 0% 50%;
-          transform: rotate(0deg);
+          transform: rotate(0deg) scale(1);
         }
         50% { 
           background-position: 100% 50%;
-          transform: rotate(1deg);
+          transform: rotate(5deg) scale(1.1);
         }
         100% { 
           background-position: 0% 50%;
-          transform: rotate(0deg);
+          transform: rotate(0deg) scale(1);
         }
       }
       
@@ -99,18 +99,170 @@ const AnimationStyles = () => {
         0% {
           transform: translateY(0) translateX(0) scale(1);
         }
-        25% {
-          transform: translateY(-30px) translateX(25px) scale(1.1);
+        20% {
+          transform: translateY(-150px) translateX(200px) scale(1.2);
         }
-        50% {
-          transform: translateY(0) translateX(50px) scale(0.95);
+        40% {
+          transform: translateY(100px) translateX(300px) scale(0.9);
         }
-        75% {
-          transform: translateY(30px) translateX(25px) scale(1.05);
+        60% {
+          transform: translateY(200px) translateX(100px) scale(1.1);
+        }
+        80% {
+          transform: translateY(150px) translateX(-250px) scale(0.95);
         }
         100% {
           transform: translateY(0) translateX(0) scale(1);
         }
+      }
+      
+      @keyframes bounce-movement {
+        0% {
+          transform: translateX(-150px) scale(1);
+        }
+        25% {
+          transform: translateX(150px) scale(1.1);
+        }
+        50% {
+          transform: translateX(400px) scale(0.9);
+        }
+        75% {
+          transform: translateX(150px) scale(1.05);
+        }
+        100% {
+          transform: translateX(-150px) scale(1);
+        }
+      }
+      
+      @keyframes bounce-movement-1 {
+        0% {
+          transform: translateX(-200px) translateY(0px) scale(1);
+        }
+        25% {
+          transform: translateX(100px) translateY(-80px) scale(1.1);
+        }
+        50% {
+          transform: translateX(400px) translateY(50px) scale(0.9);
+        }
+        75% {
+          transform: translateX(100px) translateY(120px) scale(1.05);
+        }
+        100% {
+          transform: translateX(-200px) translateY(0px) scale(1);
+        }
+      }
+      
+      @keyframes bounce-movement-2 {
+        0% {
+          transform: translateX(300px) translateY(30px) scale(0.95);
+        }
+        25% {
+          transform: translateX(100px) translateY(150px) scale(1.1);
+        }
+        50% {
+          transform: translateX(-250px) translateY(60px) scale(0.9);
+        }
+        75% {
+          transform: translateX(100px) translateY(-50px) scale(1.05);
+        }
+        100% {
+          transform: translateX(300px) translateY(30px) scale(0.95);
+        }
+      }
+      
+      @keyframes bounce-movement-3 {
+        0% {
+          transform: translateX(0px) translateY(-100px) scale(1);
+        }
+        25% {
+          transform: translateX(250px) translateY(50px) scale(1.05);
+        }
+        50% {
+          transform: translateX(100px) translateY(150px) scale(0.95);
+        }
+        75% {
+          transform: translateX(-200px) translateY(20px) scale(1.1);
+        }
+        100% {
+          transform: translateX(0px) translateY(-100px) scale(1);
+        }
+      }
+      
+      @keyframes bounce-left-right {
+        0% { transform: translateX(-150%) translateY(0); }
+        50% { transform: translateX(150%) translateY(0); }
+        100% { transform: translateX(-150%) translateY(0); }
+      }
+      
+      @keyframes bounce-right-left {
+        0% { transform: translateX(150%) translateY(0); }
+        50% { transform: translateX(-150%) translateY(0); }
+        100% { transform: translateX(150%) translateY(0); }
+      }
+      
+      @keyframes bounce-top-bottom {
+        0% { transform: translateX(0) translateY(-100%); }
+        50% { transform: translateX(0) translateY(100%); }
+        100% { transform: translateX(0) translateY(-100%); }
+      }
+      
+      @keyframes bounce-bottom-top {
+        0% { transform: translateX(0) translateY(70%); }
+        50% { transform: translateX(0) translateY(-70%); }
+        100% { transform: translateX(0) translateY(70%); }
+      }
+      
+      @keyframes bounce-diagonal-1 {
+        0% { transform: translateX(-120%) translateY(-120%); }
+        50% { transform: translateX(120%) translateY(120%); }
+        100% { transform: translateX(-120%) translateY(-120%); }
+      }
+      
+      @keyframes bounce-diagonal-2 {
+        0% { transform: translateX(120%) translateY(-120%); }
+        50% { transform: translateX(-120%) translateY(120%); }
+        100% { transform: translateX(120%) translateY(-120%); }
+      }
+      
+      @keyframes random-path-1 {
+        0% { transform: translate(0, 0) scale(1); }
+        20% { transform: translate(120%, -70%) scale(1.1); }
+        40% { transform: translate(50%, 100%) scale(0.9); }
+        60% { transform: translate(-80%, 80%) scale(1.05); }
+        80% { transform: translate(-120%, -40%) scale(0.95); }
+        100% { transform: translate(0, 0) scale(1); }
+      }
+      
+      @keyframes random-path-2 {
+        0% { transform: translate(0, 0) scale(0.95); }
+        25% { transform: translate(-90%, -60%) scale(1.1); }
+        50% { transform: translate(70%, -90%) scale(0.9); }
+        75% { transform: translate(100%, 70%) scale(1.05); }
+        100% { transform: translate(0, 0) scale(0.95); }
+      }
+      
+      @keyframes random-path-3 {
+        0% { transform: translate(0, 0) scale(1); }
+        33% { transform: translate(80%, 60%) scale(0.9); }
+        66% { transform: translate(-100%, 40%) scale(1.1); }
+        100% { transform: translate(0, 0) scale(1); }
+      }
+      
+      @keyframes random-path-4 {
+        0% { transform: translate(0, 0) scale(1.05); }
+        20% { transform: translate(-60%, 90%) scale(0.9); }
+        40% { transform: translate(50%, 50%) scale(1.1); }
+        60% { transform: translate(90%, -70%) scale(0.95); }
+        80% { transform: translate(-40%, -80%) scale(1); }
+        100% { transform: translate(0, 0) scale(1.05); }
+      }
+      
+      @keyframes random-path-5 {
+        0% { transform: translate(0, 0) scale(0.9); }
+        25% { transform: translate(70%, 50%) scale(1.1); }
+        50% { transform: translate(-50%, -90%) scale(1); }
+        75% { transform: translate(-80%, 20%) scale(0.95); }
+        100% { transform: translate(0, 0) scale(0.9); }
       }
       
       .animate-float-slow {
@@ -630,7 +782,7 @@ export default function Home() {
                 </p>
               </div>
               
-              <div className="relative backdrop-blur-sm bg-white/60 dark:bg-black/40 border border-white/30 dark:border-white/10 p-8 rounded-3xl shadow-sm" data-aos="fade-up" data-aos-delay="200">
+              <div className="relative backdrop-blur-sm bg-white/60 dark:bg-black/40 border border-white/30 dark:border-white/10 p-8 rounded-3xl shadow-sm border-b-0 hidden" data-aos="fade-up" data-aos-delay="200">
                 <Suspense fallback={<div className="h-[300px] w-full bg-neutral-100/50 dark:bg-neutral-900/50 rounded-3xl flex items-center justify-center">
                   <div className="animate-pulse flex space-x-4">
                     <div className="rounded-full bg-neutral-200 dark:bg-neutral-700 h-12 w-12"></div>
@@ -1171,69 +1323,36 @@ export default function Home() {
                 <div className="absolute -bottom-[10%] -right-[10%] w-[50%] h-[50%] bg-white/10 rounded-full blur-3xl"></div>
               </div>
 
-              {/* Colorful candy-like moving blobs */}
+              {/* Blobs with random movement patterns */}
               <div className="absolute top-0 left-0 w-full h-full overflow-hidden pointer-events-none">
-                {/* Top left blob - Pink */}
-                <div className="absolute top-[15%] left-[15%] w-[20%] h-[20%] rounded-full blur-sm" style={{
-                  background: 'radial-gradient(circle, rgba(255,105,180,0.6) 0%, rgba(255,20,147,0.4) 70%)',
-                  animation: 'moving-gradient 6s ease-in-out infinite, roaming-blob 14s ease-in-out infinite'
+                {/* Pink blob - random path 1 */}
+                <div className="absolute top-[15%] left-[20%] w-[230px] h-[230px] rounded-full blur-xl" style={{
+                  background: 'radial-gradient(circle, rgba(255,105,180,0.8) 0%, rgba(255,20,147,0.6) 70%)',
+                  animation: 'random-path-1 28s ease-in-out infinite'
                 }}></div>
                 
-                {/* Top right blob - Blue */}
-                <div className="absolute top-[20%] right-[20%] w-[18%] h-[18%] rounded-full blur-sm" style={{
-                  background: 'radial-gradient(circle, rgba(70,130,255,0.6) 0%, rgba(50,100,235,0.4) 70%)',
-                  animation: 'moving-gradient 7s ease-in-out infinite reverse, roaming-blob 16s ease-in-out infinite reverse'
+                {/* Blue blob - random path 2 */}
+                <div className="absolute top-[70%] left-[75%] w-[250px] h-[250px] rounded-full blur-xl" style={{
+                  background: 'radial-gradient(circle, rgba(70,130,255,0.8) 0%, rgba(50,100,235,0.6) 70%)',
+                  animation: 'random-path-2 16s ease-in-out infinite'
                 }}></div>
                 
-                {/* Bottom left blob - Green */}
-                <div className="absolute bottom-[22%] left-[22%] w-[16%] h-[16%] rounded-full blur-sm" style={{
-                  background: 'radial-gradient(circle, rgba(50,220,150,0.6) 0%, rgba(30,180,120,0.4) 70%)',
-                  animation: 'moving-gradient 8s ease-in-out infinite alternate, roaming-blob 18s ease-in-out infinite'
+                {/* Green blob - random path 3 */}
+                <div className="absolute top-[25%] left-[70%] w-[260px] h-[260px] rounded-full blur-xl" style={{
+                  background: 'radial-gradient(circle, rgba(50,220,150,0.8) 0%, rgba(30,180,120,0.6) 70%)',
+                  animation: 'random-path-3 15s ease-in-out infinite'
                 }}></div>
                 
-                {/* Bottom right blob - Purple */}
-                <div className="absolute bottom-[18%] right-[18%] w-[19%] h-[19%] rounded-full blur-sm" style={{
-                  background: 'radial-gradient(circle, rgba(180,90,255,0.6) 0%, rgba(140,70,200,0.4) 70%)',
-                  animation: 'moving-gradient 9s ease-in-out infinite alternate-reverse, roaming-blob 20s ease-in-out infinite reverse'
+                {/* Purple blob - random path 4 */}
+                <div className="absolute top-[65%] left-[15%] w-[240px] h-[240px] rounded-full blur-xl" style={{
+                  background: 'radial-gradient(circle, rgba(180,90,255,0.8) 0%, rgba(140,70,200,0.6) 70%)',
+                  animation: 'random-path-4 18s ease-in-out infinite'
                 }}></div>
                 
-                {/* Center blob - Yellow/Orange */}
-                <div className="absolute top-[40%] left-[40%] w-[15%] h-[15%] rounded-full blur-sm" style={{
-                  background: 'radial-gradient(circle, rgba(255,175,75,0.5) 0%, rgba(255,140,0,0.3) 70%)',
-                  animation: 'moving-gradient 10s ease-in-out infinite, roaming-blob 15s ease-in-out infinite alternate'
-                }}></div>
-              </div>
-
-              {/* Perfect circles with better roaming animation */}
-              <div className="absolute top-0 left-0 w-full h-full overflow-hidden pointer-events-none">
-                {/* Top left circle - Pink */}
-                <div className="absolute top-[15%] left-[15%] w-[70px] h-[70px] rounded-full blur-sm" style={{
-                  background: 'radial-gradient(circle, rgba(255,105,180,0.7) 0%, rgba(255,20,147,0.5) 70%)',
-                  animation: 'circle-roam 18s ease-in-out infinite'
-                }}></div>
-                
-                {/* Top right circle - Blue */}
-                <div className="absolute top-[20%] right-[20%] w-[60px] h-[60px] rounded-full blur-sm" style={{
-                  background: 'radial-gradient(circle, rgba(70,130,255,0.7) 0%, rgba(50,100,235,0.5) 70%)',
-                  animation: 'circle-roam 22s ease-in-out infinite reverse'
-                }}></div>
-                
-                {/* Bottom left circle - Green */}
-                <div className="absolute bottom-[22%] left-[22%] w-[55px] h-[55px] rounded-full blur-sm" style={{
-                  background: 'radial-gradient(circle, rgba(50,220,150,0.7) 0%, rgba(30,180,120,0.5) 70%)',
-                  animation: 'circle-roam 20s ease-in-out infinite'
-                }}></div>
-                
-                {/* Bottom right circle - Purple */}
-                <div className="absolute bottom-[18%] right-[18%] w-[65px] h-[65px] rounded-full blur-sm" style={{
-                  background: 'radial-gradient(circle, rgba(180,90,255,0.7) 0%, rgba(140,70,200,0.5) 70%)',
-                  animation: 'circle-roam 24s ease-in-out infinite reverse'
-                }}></div>
-                
-                {/* Center circle - Yellow/Orange */}
-                <div className="absolute top-[40%] left-[40%] w-[50px] h-[50px] rounded-full blur-sm" style={{
-                  background: 'radial-gradient(circle, rgba(255,175,75,0.7) 0%, rgba(255,140,0,0.5) 70%)',
-                  animation: 'circle-roam 19s ease-in-out infinite'
+                {/* Yellow/Orange blob - random path 5 */}
+                <div className="absolute top-[45%] left-[45%] w-[280px] h-[280px] rounded-full blur-xl" style={{
+                  background: 'radial-gradient(circle, rgba(255,175,75,0.8) 0%, rgba(255,140,0,0.6) 70%)',
+                  animation: 'random-path-5 30s ease-in-out infinite'
                 }}></div>
               </div>
 

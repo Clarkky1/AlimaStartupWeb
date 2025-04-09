@@ -13,6 +13,90 @@ import { useNetworkStatus } from "@/app/context/network-status-context";
 import { PlaceholderImage } from "@/components/ui/placeholder-image";
 import { usePathname } from "next/navigation";
 
+// Client component for animations
+const AnimationStyles = () => {
+  useEffect(() => {
+    // Only run on client-side to avoid SSR issues
+    if (typeof window === 'undefined') return;
+    
+    // Add custom animation keyframes to the document
+    const style = document.createElement('style');
+    style.textContent = `
+      @keyframes float-slow {
+        0%, 100% { transform: translate(-50%, -50%); }
+        50% { transform: translate(-50%, -52%); }
+      }
+      @keyframes float-medium {
+        0%, 100% { transform: rotate(-8deg); }
+        50% { transform: rotate(-6deg) translateY(-4px); }
+      }
+      @keyframes float-slow-reverse {
+        0%, 100% { transform: rotate(8deg); }
+        50% { transform: rotate(10deg) translateY(4px); }
+      }
+      @keyframes subtle-zoom {
+        0%, 100% { transform: scale(1.05); }
+        50% { transform: scale(1.07); }
+      }
+      @keyframes subtle-zoom-reverse {
+        0%, 100% { transform: scale(1.05); }
+        50% { transform: scale(1.08); }
+      }
+      @keyframes subtle-rotate {
+        0%, 100% { transform: scale(1.05) rotate(0deg); }
+        50% { transform: scale(1.07) rotate(1deg); }
+      }
+      @keyframes pulse-very-slow {
+        0%, 100% { opacity: 0.5; }
+        50% { opacity: 0.6; }
+      }
+      @keyframes pulse-slow {
+        0%, 100% { opacity: 0.5; }
+        50% { opacity: 0.7; }
+      }
+      @keyframes pulse-medium {
+        0%, 100% { opacity: 0.5; }
+        50% { opacity: 0.65; }
+      }
+      
+      .animate-float-slow {
+        animation: float-slow 6s ease-in-out infinite;
+      }
+      .animate-float-medium {
+        animation: float-medium 5s ease-in-out infinite;
+      }
+      .animate-float-slow-reverse {
+        animation: float-slow-reverse 7s ease-in-out infinite;
+      }
+      .animate-subtle-zoom {
+        animation: subtle-zoom 10s ease-in-out infinite;
+      }
+      .animate-subtle-zoom-reverse {
+        animation: subtle-zoom-reverse 8s ease-in-out infinite;
+      }
+      .animate-subtle-rotate {
+        animation: subtle-rotate 12s ease-in-out infinite;
+      }
+      .animate-pulse-very-slow {
+        animation: pulse-very-slow 8s ease-in-out infinite;
+      }
+      .animate-pulse-slow {
+        animation: pulse-slow 6s ease-in-out infinite;
+      }
+      .animate-pulse-medium {
+        animation: pulse-medium 7s ease-in-out infinite;
+      }
+    `;
+    document.head.appendChild(style);
+    
+    return () => {
+      document.head.removeChild(style);
+    };
+  }, []);
+  
+  return null; // This component doesn't render anything
+};
+
 export default function Home() {
   const { isOnline } = useNetworkStatus();
   const placeholderImg = "/placeholder.jpg";
@@ -58,6 +142,8 @@ export default function Home() {
 
   // Add the cursor follower script
   useEffect(() => {
+    if (typeof window === 'undefined') return;
+    
     const cursorFollower = document.getElementById('cursor-follower');
     const targetElement = cursorFollower?.parentElement;
     
@@ -104,6 +190,9 @@ export default function Home() {
 
   return (
     <div className="flex min-h-screen flex-col bg-white text-black dark:bg-black dark:text-white relative overflow-hidden" key={loadKey}>
+      {/* Add animation styles */}
+      <AnimationStyles />
+      
       {/* Background elements */}
       <div className="absolute top-0 left-0 w-full h-full pointer-events-none overflow-hidden">
         {/* Flowing curved lines background */}
@@ -194,11 +283,11 @@ export default function Home() {
                       {/* Aesthetic image gallery with modern design */}
                       <div className="relative mx-auto w-full max-w-2xl">
                         {/* Center person in black - Main image */}
-                        <div className="absolute left-1/2 top-1/2 transform -translate-x-1/2 -translate-y-1/2 z-40 w-60 h-72 rounded-2xl overflow-hidden border-2 border-white/20 shadow-[0_20px_50px_rgba(8,_112,_184,_0.2)] hover:shadow-[0_15px_30px_rgba(8,_112,_184,_0.4)] transition-all duration-500 group">
-                          <div className="absolute inset-0 bg-gradient-to-b from-transparent via-transparent to-[#c4a7ff]/70 z-10 opacity-50 group-hover:opacity-70 transition-opacity duration-300"></div>
+                        <div className="absolute left-1/2 top-1/2 transform -translate-x-1/2 -translate-y-1/2 z-40 w-60 h-72 rounded-2xl overflow-hidden border-2 border-white/20 shadow-[0_20px_50px_rgba(8,_112,_184,_0.2)] hover:shadow-[0_15px_30px_rgba(8,_112,_184,_0.4)] transition-all duration-500 group animate-float-slow">
+                          <div className="absolute inset-0 bg-gradient-to-b from-transparent via-transparent to-[#c4a7ff]/70 z-10 opacity-50 group-hover:opacity-70 transition-opacity duration-300 animate-pulse-very-slow"></div>
                           <img 
                             alt="Person with glasses" 
-                            className="w-full h-full object-cover object-top scale-105 group-hover:scale-110 transition-transform duration-700"
+                            className="w-full h-full object-cover object-top scale-105 group-hover:scale-110 transition-transform duration-700 animate-subtle-zoom"
                             src="/person in black.png"
                             onError={(e) => {
                               if (!isOnline) {
@@ -213,11 +302,11 @@ export default function Home() {
                         </div>
                         
                         {/* Person in red - Angled position */}
-                        <div className="absolute top-5 -left-10 w-48 h-44 rounded-2xl overflow-hidden transform rotate-[-8deg] z-30 border-2 border-white/20 shadow-[0_10px_30px_rgba(249,_115,_22,_0.2)] hover:shadow-[0_15px_30px_rgba(249,_115,_22,_0.4)] transition-all duration-500 hover:rotate-[-4deg] hover:scale-105 group">
-                          <div className="absolute inset-0 bg-gradient-to-b from-transparent via-transparent to-[#ffd280]/70 z-10 opacity-50 group-hover:opacity-70 transition-opacity duration-300"></div>
+                        <div className="absolute top-5 -left-10 w-48 h-44 rounded-2xl overflow-hidden transform rotate-[-8deg] z-30 border-2 border-white/20 shadow-[0_10px_30px_rgba(249,_115,_22,_0.2)] hover:shadow-[0_15px_30px_rgba(249,_115,_22,_0.4)] transition-all duration-500 hover:rotate-[-4deg] hover:scale-105 group animate-float-medium">
+                          <div className="absolute inset-0 bg-gradient-to-b from-transparent via-transparent to-[#ffd280]/70 z-10 opacity-50 group-hover:opacity-70 transition-opacity duration-300 animate-pulse-slow"></div>
                           <img 
                             alt="Person in orange shirt" 
-                            className="w-full h-full object-cover object-top scale-105 group-hover:scale-110 transition-transform duration-700"
+                            className="w-full h-full object-cover object-top scale-105 group-hover:scale-110 transition-transform duration-700 animate-subtle-zoom-reverse"
                             src="/Person in red.png"
                             onError={(e) => {
                               if (!isOnline) {
@@ -232,11 +321,11 @@ export default function Home() {
                         </div>
                         
                         {/* Person in gray - Angled position */}
-                        <div className="absolute -bottom-5 -right-10 w-48 h-44 rounded-2xl overflow-hidden transform rotate-[8deg] z-30 border-2 border-white/20 shadow-[0_10px_30px_rgba(34,_197,_94,_0.2)] hover:shadow-[0_15px_30px_rgba(34,_197,_94,_0.4)] transition-all duration-500 hover:rotate-[4deg] hover:scale-105 group">
-                          <div className="absolute inset-0 bg-gradient-to-b from-transparent via-transparent to-[#b7e5a2]/70 z-10 opacity-50 group-hover:opacity-70 transition-opacity duration-300"></div>
+                        <div className="absolute -bottom-5 -right-10 w-48 h-44 rounded-2xl overflow-hidden transform rotate-[8deg] z-30 border-2 border-white/20 shadow-[0_10px_30px_rgba(34,_197,_94,_0.2)] hover:shadow-[0_15px_30px_rgba(34,_197,_94,_0.4)] transition-all duration-500 hover:rotate-[4deg] hover:scale-105 group animate-float-slow-reverse">
+                          <div className="absolute inset-0 bg-gradient-to-b from-transparent via-transparent to-[#b7e5a2]/70 z-10 opacity-50 group-hover:opacity-70 transition-opacity duration-300 animate-pulse-medium"></div>
                           <img 
                             alt="Person in pink" 
-                            className="w-full h-full object-cover object-top scale-105 group-hover:scale-110 transition-transform duration-700"
+                            className="w-full h-full object-cover object-top scale-105 group-hover:scale-110 transition-transform duration-700 animate-subtle-rotate"
                             src="/person in gray.png"
                             onError={(e) => {
                               if (!isOnline) {
@@ -825,36 +914,40 @@ export default function Home() {
         {/* 8. CALL TO ACTION with Contact Section */}
         <div id="contact" className="relative py-36 overflow-hidden bg-white/95 dark:bg-black/95 scroll-mt-40">
           <div className="container mx-auto px-4 relative z-10">
-            {/* Get In Touch Section with Apple-inspired aesthetics */}
+            {/* Get In Touch Section with modern design */}
             <div className="rounded-[32px] text-center mb-40 relative overflow-hidden shadow-2xl" 
-                style={{ 
-                  backgroundImage: "url('/Get in touch.svg')",
-                  backgroundSize: "cover",
-                  backgroundPosition: "center"
-                }} 
                 data-aos="fade-up" 
                 data-aos-delay="100">
-              <div className="backdrop-blur-[2px] bg-black/10">
-                <div className="relative z-10 py-24 px-12 md:py-32 md:px-20">
-                  <h2 className="mb-8 text-4xl font-semibold tracking-tight md:text-5xl text-white leading-tight">
+              <div className="absolute inset-0 bg-gradient-to-br from-emerald-500 to-blue-600 opacity-90"></div>
+              <div className="absolute inset-0 bg-[url('/patterns/dot-pattern.svg')] opacity-10"></div>
+              
+              {/* Decorative elements */}
+              <div className="absolute top-0 left-0 w-full h-full overflow-hidden pointer-events-none">
+                <div className="absolute -top-[10%] -left-[10%] w-[50%] h-[50%] bg-white/10 rounded-full blur-3xl"></div>
+                <div className="absolute -bottom-[10%] -right-[10%] w-[50%] h-[50%] bg-white/10 rounded-full blur-3xl"></div>
+              </div>
+              
+              <div className="relative z-10 py-20 px-6 md:py-28 md:px-20 backdrop-blur-[2px]">
+                <div className="max-w-2xl mx-auto">
+                  <h2 className="mb-6 text-4xl font-semibold tracking-tight md:text-5xl text-white leading-tight">
                     Get In Touch
                   </h2>
-                  <p className="mx-auto mb-12 max-w-2xl text-xl leading-relaxed text-white/90 font-light">
+                  <p className="mx-auto mb-10 max-w-xl text-xl leading-relaxed text-white/90 font-light">
                     Have questions about Alima or interested in joining our team? We'd love to hear from you!
                   </p>
-                  <div className="flex flex-wrap justify-center gap-6">
-                    <button className="inline-flex items-center justify-center rounded-full border-0 bg-white px-10 py-5 text-base font-medium text-primary shadow-lg hover:bg-white/95 focus:outline-none transition duration-200 ease-in-out transform hover:-translate-y-1">
-                      <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="mr-3 h-5 w-5">
+                  <div className="flex flex-wrap justify-center gap-4">
+                    <button className="inline-flex items-center justify-center rounded-full border-0 bg-white px-8 py-4 text-base font-medium text-primary shadow-lg hover:bg-white/95 focus:outline-none transition duration-200 ease-in-out transform hover:-translate-y-1">
+                      <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="mr-2 h-5 w-5">
                         <path d="M4 4h16c1.1 0 2 .9 2 2v12c0 1.1-.9 2-2 2H4c-1.1 0-2-.9-2-2V6c0-1.1.9-2 2-2z"></path>
                         <polyline points="22,6 12,13 2,6"></polyline>
                       </svg>
-                      Contact Us
+                      Contact us
                     </button>
-                    <button className="inline-flex items-center justify-center rounded-full border border-white/40 bg-white/10 backdrop-blur-sm px-10 py-5 text-base font-medium text-white hover:bg-white/20 focus:outline-none transition duration-200 ease-in-out transform hover:-translate-y-1">
-                      <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="mr-3 h-5 w-5">
+                    <button className="inline-flex items-center justify-center rounded-full border border-white/40 bg-white/10 backdrop-blur-sm px-8 py-4 text-base font-medium text-white hover:bg-white/20 focus:outline-none transition duration-200 ease-in-out transform hover:-translate-y-1">
+                      <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="mr-2 h-5 w-5">
                         <path d="M18 2h-3a5 5 0 0 0-5 5v3H7v4h3v8h4v-8h3l1-4h-4V7a1 1 0 0 1 1-1h3z"></path>
                       </svg>
-                      Follow Us
+                      Follow us
                     </button>
                   </div>
                 </div>

@@ -8,6 +8,72 @@ import { Suspense } from "react"
 import { useRouter } from "next/navigation"
 import { useState, useEffect } from "react"
 
+// Client component for animations
+const AnimationStyles = () => {
+  useEffect(() => {
+    // Only run on client-side to avoid SSR issues
+    if (typeof window === 'undefined') return;
+    
+    return () => {
+      // Cleanup if needed
+    };
+  }, []);
+  
+  // Use style jsx directly in the component rather than returning it
+  return (
+    <style jsx global>{`
+      @keyframes float-slow {
+        0% { transform: translate(0, 0); }
+        50% { transform: translate(20px, 20px); }
+        100% { transform: translate(0, 0); }
+      }
+      @keyframes float-medium {
+        0% { transform: translate(0, 0); }
+        50% { transform: translate(-20px, -20px); }
+        100% { transform: translate(0, 0); }
+      }
+      @keyframes float-fast {
+        0% { transform: translate(0, 0); }
+        50% { transform: translate(15px, -15px); }
+        100% { transform: translate(0, 0); }
+      }
+      @keyframes float-reverse {
+        0% { transform: translate(0, 0); }
+        50% { transform: translate(-15px, 10px); }
+        100% { transform: translate(0, 0); }
+      }
+      @keyframes float-slow-reverse {
+        0% { transform: translate(0, 0); }
+        50% { transform: translate(-20px, 15px); }
+        100% { transform: translate(0, 0); }
+      }
+      @keyframes float-medium-alt {
+        0% { transform: translate(0, 0); }
+        50% { transform: translate(15px, 10px); }
+        100% { transform: translate(0, 0); }
+      }
+      .animate-float-slow {
+        animation: float-slow 22s ease-in-out infinite;
+      }
+      .animate-float-medium {
+        animation: float-medium 20s ease-in-out infinite;
+      }
+      .animate-float-fast {
+        animation: float-fast 18s ease-in-out infinite;
+      }
+      .animate-float-reverse {
+        animation: float-reverse 19s ease-in-out infinite;
+      }
+      .animate-float-slow-reverse {
+        animation: float-slow-reverse 21s ease-in-out infinite;
+      }
+      .animate-float-medium-alt {
+        animation: float-medium-alt 23s ease-in-out infinite;
+      }
+    `}</style>
+  )
+}
+
 export default function PopularTodayPage() {
   const router = useRouter()
   const [pathname, setPathname] = useState("")
@@ -39,6 +105,9 @@ export default function PopularTodayPage() {
 
   return (
     <div className="flex min-h-screen flex-col bg-white text-black dark:bg-black dark:text-white">
+      {/* Add animation styles */}
+      <AnimationStyles />
+      
       {/* Minimal spacing for fixed navbar */}
       <div className="pt-4 md:pt-6"></div>
       
@@ -87,58 +156,6 @@ export default function PopularTodayPage() {
         {/* Bottom fade gradient */}
         <div className="absolute bottom-0 left-0 right-0 h-24 bg-gradient-to-t from-slate-50 dark:from-slate-900 to-transparent z-10 pointer-events-none"></div>
       </div>
-      
-      {/* Add animation keyframes at the top level */}
-      <style jsx global>{`
-        @keyframes float-slow {
-          0% { transform: translate(0, 0); }
-          50% { transform: translate(20px, 20px); }
-          100% { transform: translate(0, 0); }
-        }
-        @keyframes float-medium {
-          0% { transform: translate(0, 0); }
-          50% { transform: translate(-20px, -20px); }
-          100% { transform: translate(0, 0); }
-        }
-        @keyframes float-fast {
-          0% { transform: translate(0, 0); }
-          50% { transform: translate(15px, -15px); }
-          100% { transform: translate(0, 0); }
-        }
-        @keyframes float-reverse {
-          0% { transform: translate(0, 0); }
-          50% { transform: translate(-15px, 10px); }
-          100% { transform: translate(0, 0); }
-        }
-        @keyframes float-slow-reverse {
-          0% { transform: translate(0, 0); }
-          50% { transform: translate(-20px, 15px); }
-          100% { transform: translate(0, 0); }
-        }
-        @keyframes float-medium-alt {
-          0% { transform: translate(0, 0); }
-          50% { transform: translate(15px, 10px); }
-          100% { transform: translate(0, 0); }
-        }
-        .animate-float-slow {
-          animation: float-slow 22s ease-in-out infinite;
-        }
-        .animate-float-medium {
-          animation: float-medium 20s ease-in-out infinite;
-        }
-        .animate-float-fast {
-          animation: float-fast 18s ease-in-out infinite;
-        }
-        .animate-float-reverse {
-          animation: float-reverse 19s ease-in-out infinite;
-        }
-        .animate-float-slow-reverse {
-          animation: float-slow-reverse 21s ease-in-out infinite;
-        }
-        .animate-float-medium-alt {
-          animation: float-medium-alt 23s ease-in-out infinite;
-        }
-      `}</style>
       
       {/* Main content with premium styling */}
       <main className="flex-1 py-24 bg-gradient-to-b from-slate-50 to-white dark:from-slate-900 dark:to-slate-800">

@@ -492,67 +492,33 @@ const ConversationInfo = ({ userId, serviceId, isVisible, onClose }: {
   if (!isVisible) return null
   
   return (
-    <div className="border-l h-full overflow-auto">
-      <div className="p-4 border-b flex justify-between items-center">
-        <h3 className="font-medium">Profile Information</h3>
-        <Button variant="ghost" size="icon" onClick={onClose}>
-          <X className="h-4 w-4" />
+    <div className="p-4">
+      <div className="flex justify-between items-center mb-4">
+        <h2 className="font-semibold text-lg">
+          {user?.role === 'provider' ? 'About Provider' : 'About Client'}
+        </h2>
+        <Button variant="ghost" size="sm" onClick={onClose} className="md:hidden">
+          Back to Chat
         </Button>
       </div>
       
       {loading ? (
-        <div className="p-4 space-y-4">
-          <div className="flex flex-col items-center justify-center">
-            <Skeleton className="h-24 w-24 rounded-full" />
-            <Skeleton className="h-4 w-32 mt-4" />
-            <Skeleton className="h-3 w-24 mt-2" />
-          </div>
+        <div className="space-y-4">
           <Skeleton className="h-24 w-full" />
           <Skeleton className="h-16 w-full" />
         </div>
       ) : (
-        <div className="p-4 space-y-4">
+        <div className="h-full overflow-auto">
           {user && (
             <>
-              <div className="text-center">
-                <Avatar className="h-24 w-24 mx-auto">
-                  <AvatarImage
-                    src={user.avatar || user.profilePicture || "/person-male-1.svg?height=96&width=96"}
-                    alt={user.name || "User"}
-                  />
-                  <AvatarFallback>{user.name?.charAt(0) || "U"}</AvatarFallback>
-                </Avatar>
-                <h3 className="font-semibold mt-3">{user.name || user.displayName}</h3>
-                {user.title && <p className="text-sm text-muted-foreground">{user.title}</p>}
-                {user.role && (
-                  <Badge variant="outline" className="mt-2">
-                    {user.role === 'provider' ? 'Service Provider' : 'Client'}
-                  </Badge>
-                )}
-              </div>
-
-              {user.rating && (
-                <div className="flex items-center justify-center gap-1 text-sm my-2">
-                  <div className="flex items-center">
-                    {[1, 2, 3, 4, 5].map((star) => (
-                      <Star
-                        key={star}
-                        className={`h-4 w-4 ${star <= Math.round(user.rating) ? "text-yellow-400 fill-yellow-400" : "text-gray-300"}`}
-                      />
-                    ))}
-                  </div>
-                  <span className="ml-1">{user.rating.toFixed(1)}</span>
-                </div>
-              )}
-
               {user.bio && (
-                <div className="border-t pt-3">
+                <div className="pt-3">
                   <h4 className="text-sm font-semibold mb-1">Bio</h4>
                   <p className="text-sm text-muted-foreground">{user.bio}</p>
                 </div>
               )}
 
-              <div className="border-t pt-3">
+              <div className="pt-3">
                 <h4 className="text-sm font-semibold mb-2">Contact Info</h4>
                 <div className="space-y-2">
                   {user.email && (
@@ -577,7 +543,7 @@ const ConversationInfo = ({ userId, serviceId, isVisible, onClose }: {
               </div>
 
               {user.specialties && (
-                <div className="border-t pt-3">
+                <div className="pt-3">
                   <h4 className="text-sm font-semibold mb-2">Specialties</h4>
                   <div className="flex flex-wrap gap-1">
                     {user.specialties.map((specialty: string, index: number) => (
@@ -592,9 +558,9 @@ const ConversationInfo = ({ userId, serviceId, isVisible, onClose }: {
           )}
 
           {service && (
-            <div className="border-t pt-3">
+            <div className="pt-3">
               <h4 className="text-sm font-semibold mb-2">Service Information</h4>
-              <div className="rounded-md border overflow-hidden bg-muted/10">
+              <div className="rounded-md overflow-hidden bg-muted/10">
                 <div className="p-3 flex flex-col gap-3">
                   {service.image && (
                     <div>
@@ -613,9 +579,9 @@ const ConversationInfo = ({ userId, serviceId, isVisible, onClose }: {
                     <h3 className="font-medium">{service.title}</h3>
                     <p className="text-sm text-muted-foreground my-2">{service.description}</p>
                     <div className="flex justify-between items-center">
-                      <span className="text-sm font-bold">₱{service.price}</span>
+                      <span className="text-sm font-bold">₱{service.price?.toLocaleString() || "N/A"}</span>
                       {service.category && (
-                        <Badge variant="outline" className="text-xs">
+                        <Badge variant="outline">
                           {formatCategoryName(service.category)}
                         </Badge>
                       )}
@@ -1964,12 +1930,12 @@ export function MessageCenter() {
   };
 
   return (
-    <div className="h-[calc(100vh-12rem)] overflow-hidden border rounded-lg bg-background">
+    <div className="h-[calc(100vh-12rem)] overflow-hidden border rounded-xl bg-background/90 backdrop-blur-md shadow-sm">
       {/* Mobile Tab Navigation - Only visible on mobile */}
-      <div className="flex border-b md:hidden">
+      <div className="flex border-b md:hidden bg-white/80 backdrop-blur-sm">
         <Button 
           variant="ghost" 
-          className={`flex-1 rounded-none ${activeMobileTab === 'conversations' ? 'border-b-2 border-primary' : ''}`}
+          className={`flex-1 rounded-none ${activeMobileTab === 'conversations' ? 'border-b-2 border-primary font-medium' : 'text-gray-600'}`}
           onClick={() => {
             setActiveMobileTab('conversations');
             setShowConversationList(true);
@@ -1979,7 +1945,7 @@ export function MessageCenter() {
         </Button>
         <Button 
           variant="ghost" 
-          className={`flex-1 rounded-none ${activeMobileTab === 'chat' ? 'border-b-2 border-primary' : ''}`}
+          className={`flex-1 rounded-none ${activeMobileTab === 'chat' ? 'border-b-2 border-primary font-medium' : 'text-gray-600'}`}
           onClick={() => {
             setActiveMobileTab('chat');
             if (selectedConversation) {
@@ -1992,7 +1958,7 @@ export function MessageCenter() {
         </Button>
         <Button 
           variant="ghost" 
-          className={`flex-1 rounded-none ${activeMobileTab === 'info' ? 'border-b-2 border-primary' : ''}`}
+          className={`flex-1 rounded-none ${activeMobileTab === 'info' ? 'border-b-2 border-primary font-medium' : 'text-gray-600'}`}
           onClick={() => {
             setActiveMobileTab('info');
             setShowUserInfo(true);
@@ -2011,31 +1977,32 @@ export function MessageCenter() {
       )}>
         {/* Conversations List - Hide on mobile when not on conversations tab */}
         {(showConversationList || activeMobileTab === 'conversations') && (
-          <div className={`border-r flex flex-col h-full overflow-hidden ${(windowWidth < 768 && activeMobileTab !== 'conversations') ? 'hidden' : 'block'}`}>
-            <div className="p-3 border-b bg-background">
-              <h2 className="font-semibold">Your Conversations</h2>
+          <div className={`border-r flex flex-col h-full overflow-hidden bg-white/70 backdrop-blur-sm ${(windowWidth < 768 && activeMobileTab !== 'conversations') ? 'hidden' : 'block'}`}>
+            <div className="p-4 border-b bg-background/80 backdrop-blur-sm">
+              <h2 className="font-medium text-base tracking-tight">Your Conversations</h2>
             </div>
             <div className="overflow-y-auto flex-1 scrollbar-hide">
               <div className="p-2">
                 {loading ? (
-                  <div className="p-3 space-y-2">
+                  <div className="p-3 space-y-3">
                     {[1, 2, 3].map((i) => (
-                      <div key={i} className="flex items-center space-x-2 mb-1">
-                        <Skeleton className="h-8 w-8 rounded-full" />
-                        <div className="space-y-1">
-                          <Skeleton className="h-3 w-20" />
-                          <Skeleton className="h-2 w-24" />
+                      <div key={i} className="flex items-center space-x-3 mb-2 p-2">
+                        <Skeleton className="h-10 w-10 rounded-full" />
+                        <div className="space-y-1.5 flex-1">
+                          <Skeleton className="h-3.5 w-24" />
+                          <Skeleton className="h-2.5 w-32" />
                         </div>
                       </div>
                     ))}
                   </div>
                 ) : (
                   conversations.length === 0 ? (
-                    <div className="text-center py-4 text-muted-foreground text-sm">
-                      <p>No conversations yet</p>
+                    <div className="text-center py-6 px-4 text-muted-foreground text-sm">
+                      <MessageSquare className="h-12 w-12 mx-auto mb-3 text-gray-200" />
+                      <p className="text-gray-500">No conversations yet</p>
                     </div>
                   ) : (
-                    <div className="space-y-1">
+                    <div className="space-y-1 px-1 py-2">
                       {conversations.map((conversation) => {
                         const otherParticipantId = getOtherParticipantId(conversation)
                         const isSelected = selectedConversation?.id === conversation.id || 
@@ -2069,13 +2036,15 @@ export function MessageCenter() {
 
         {/* Messages Area - Show based on mobile tab or desktop mode */}
         {((!showConversationList || activeMobileTab === 'chat') && (windowWidth < 768 ? activeMobileTab === 'chat' : true)) && (
-          <div className="flex flex-col h-full overflow-hidden">
+          <div className="flex flex-col h-full overflow-hidden bg-white/60 backdrop-blur-sm">
             {!selectedConversation ? (
-              <div className="flex flex-col items-center justify-center h-full p-4 text-center">
-                <div className="max-w-md mx-auto">
-                  <MessageSquare className="h-20 w-20 mb-4 mx-auto text-primary/20" />
-                  <h3 className="text-xl font-medium mb-2">No conversation selected</h3>
-                  <p className="text-muted-foreground">Select a conversation from the list to start messaging</p>
+              <div className="flex flex-col items-center justify-center h-full p-4 text-center bg-gradient-to-b from-gray-50/80 to-white/60">
+                <div className="max-w-md mx-auto p-6">
+                  <div className="h-24 w-24 rounded-full bg-blue-50 flex items-center justify-center mx-auto mb-6">
+                    <MessageSquare className="h-12 w-12 text-blue-300" />
+                  </div>
+                  <h3 className="text-xl font-medium mb-3 text-gray-800 tracking-tight">No conversation selected</h3>
+                  <p className="text-gray-500">Select a conversation from the list to start messaging</p>
                 </div>
               </div>
             ) : (
@@ -2083,7 +2052,7 @@ export function MessageCenter() {
                 {messages.length === 0 ? (
                   <div className="flex flex-col h-full">
                     {/* Conversation Header */}
-                    <div className="p-3 border-b flex justify-between items-center bg-muted/10">
+                    <div className="p-4 border-b flex justify-between items-center bg-white/80 backdrop-blur-md">
                       <div className="flex items-center space-x-3">
                         {/* Back button for mobile */}
                         <Button 
@@ -2093,30 +2062,33 @@ export function MessageCenter() {
                             showConversationsList();
                             setActiveMobileTab('conversations');
                           }}
-                          className="md:hidden mr-1"
+                          className="md:hidden mr-1 rounded-full hover:bg-gray-100/80"
                         >
                           <ChevronLeft className="h-5 w-5" />
                         </Button>
-                        <div className="flex items-center gap-2">
-                          <Avatar className="h-8 w-8">
+                        <div className="flex items-center gap-3">
+                          <Avatar className="h-9 w-9 ring-2 ring-white/90 shadow-sm">
                             <AvatarImage 
                               src={selectedConversation.otherParticipantAvatar || 
                                   (selectedConversation.otherParticipantId && 
                                   selectedConversation.participantAvatars?.[selectedConversation.otherParticipantId]) || 
                                   "/person-male-1.svg?height=32&width=32"} 
                             />
-                            <AvatarFallback>
+                            <AvatarFallback className="bg-gradient-to-br from-blue-50 to-blue-100 text-blue-600">
                               {(selectedConversation.otherParticipantName?.[0] || 
                                 (selectedConversation.otherParticipantId && 
                                 selectedConversation.participantNames?.[selectedConversation.otherParticipantId]?.[0])) || "?"}
                             </AvatarFallback>
                           </Avatar>
                           <div className="flex-1 min-w-0">
-                            <p className="font-medium text-sm truncate">
+                            <p className="font-medium tracking-tight text-gray-900">
                               {selectedConversation.otherParticipantName || 
                                 (selectedConversation.otherParticipantId && 
                                 selectedConversation.participantNames?.[selectedConversation.otherParticipantId]) || 
                                 "Unknown User"}
+                            </p>
+                            <p className="text-xs text-gray-500">
+                              {selectedConversation.serviceTitle ? `About: ${selectedConversation.serviceTitle}` : ""}
                             </p>
                           </div>
                         </div>
@@ -2132,7 +2104,7 @@ export function MessageCenter() {
                               setActiveMobileTab('info');
                             }
                           }}
-                          className={showUserInfo ? "text-primary" : ""}
+                          className={cn("rounded-full", showUserInfo ? "bg-blue-50 text-blue-600" : "hover:bg-gray-100/80")}
                         >
                           <Info className="h-5 w-5" />
                         </Button>
@@ -2146,7 +2118,7 @@ export function MessageCenter() {
                               setShowUserInfo(true);
                               setActiveMobileTab('info');
                             }}
-                            className="md:hidden ml-1"
+                            className="md:hidden ml-1 rounded-full border-gray-200 hover:bg-gray-100/80 text-gray-700"
                           >
                             View Profile
                           </Button>
@@ -2155,24 +2127,26 @@ export function MessageCenter() {
                     </div>
 
                     {/* Empty Messages Display */}
-                    <div className="flex-1 flex items-center justify-center p-6">
+                    <div className="flex-1 flex items-center justify-center p-6 bg-gradient-to-b from-gray-50/80 to-white/60">
                       <div className="text-center w-full max-w-md mx-auto px-8">
-                        <MessageSquare className="h-24 w-24 mb-6 mx-auto text-muted-foreground/10" />
-                        <h3 className="text-xl font-medium mb-3 text-foreground">No messages yet</h3>
-                        <p className="text-sm text-muted-foreground max-w-xs mx-auto">
+                        <div className="w-24 h-24 rounded-full bg-blue-50 mx-auto mb-6 flex items-center justify-center">
+                          <MessageSquare className="h-12 w-12 text-blue-300" />
+                        </div>
+                        <h3 className="text-xl font-medium mb-3 text-gray-800 tracking-tight">No messages yet</h3>
+                        <p className="text-sm text-gray-500 max-w-xs mx-auto">
                           Send a message to start the conversation with {selectedConversation.otherParticipantName || 'this user'}
                         </p>
                       </div>
                     </div>
 
                     {/* Message Input */}
-                    <div className="p-3 border-t bg-background">
+                    <div className="p-4 border-t bg-white/80 backdrop-blur-md">
                       <form onSubmit={handleSendMessage} className="flex items-start space-x-2">
                         <Textarea
                           value={newMessage}
                           onChange={(e) => setNewMessage(e.target.value)}
                           placeholder="Type your message..."
-                          className="resize-none min-h-[50px] flex-1"
+                          className="resize-none min-h-[50px] flex-1 rounded-2xl border-gray-200 focus:ring-2 focus:ring-blue-500 focus:border-transparent"
                         />
                         <div className="flex flex-col gap-2">
                           {/* Add payment proof button */}
@@ -2218,7 +2192,7 @@ export function MessageCenter() {
                             type="submit" 
                             size="icon" 
                             disabled={!newMessage.trim()} 
-                            className="mt-1"
+                            className="rounded-full bg-gradient-to-r from-blue-500 to-blue-600 hover:from-blue-600 hover:to-blue-700 text-white shadow-sm transition-all"
                           >
                             <Send className="h-4 w-4" />
                           </Button>
@@ -2230,8 +2204,8 @@ export function MessageCenter() {
                   // Normal conversation with messages
                   <>
                     {/* Fixed Header */}
-                    <div className="border-b bg-background sticky top-0 z-10">
-                      <div className="p-3 flex justify-between items-center">
+                    <div className="border-b bg-white/90 backdrop-blur-md sticky top-0 z-10">
+                      <div className="p-4 flex justify-between items-center">
                         <div className="flex items-center space-x-3">
                           {/* Back button for mobile */}
                           <Button 
@@ -2241,30 +2215,33 @@ export function MessageCenter() {
                               showConversationsList();
                               setActiveMobileTab('conversations');
                             }}
-                            className="md:hidden mr-1"
+                            className="md:hidden mr-1 rounded-full hover:bg-gray-100/80"
                           >
                             <ChevronLeft className="h-5 w-5" />
                           </Button>
-                          <div className="flex items-center gap-2">
-                            <Avatar className="h-8 w-8">
+                          <div className="flex items-center gap-3">
+                            <Avatar className="h-9 w-9 ring-2 ring-white/90 shadow-sm">
                               <AvatarImage 
                                 src={selectedConversation.otherParticipantAvatar || 
                                     (selectedConversation.otherParticipantId && 
                                     selectedConversation.participantAvatars?.[selectedConversation.otherParticipantId]) || 
                                     "/person-male-1.svg?height=32&width=32"} 
                               />
-                              <AvatarFallback>
+                              <AvatarFallback className="bg-gradient-to-br from-blue-50 to-blue-100 text-blue-600">
                                 {(selectedConversation.otherParticipantName?.[0] || 
                                   (selectedConversation.otherParticipantId && 
                                   selectedConversation.participantNames?.[selectedConversation.otherParticipantId]?.[0])) || "?"}
                               </AvatarFallback>
                             </Avatar>
                             <div className="flex-1 min-w-0">
-                              <p className="font-medium text-sm truncate">
+                              <p className="font-medium tracking-tight text-gray-900">
                                 {selectedConversation.otherParticipantName || 
                                   (selectedConversation.otherParticipantId && 
                                   selectedConversation.participantNames?.[selectedConversation.otherParticipantId]) || 
                                   "Unknown User"}
+                              </p>
+                              <p className="text-xs text-gray-500">
+                                {selectedConversation.serviceTitle ? `About: ${selectedConversation.serviceTitle}` : ""}
                               </p>
                             </div>
                           </div>
@@ -2280,7 +2257,7 @@ export function MessageCenter() {
                                 setActiveMobileTab('info');
                               }
                             }}
-                            className={showUserInfo ? "text-primary" : ""}
+                            className={cn("rounded-full", showUserInfo ? "bg-blue-50 text-blue-600" : "hover:bg-gray-100/80")}
                           >
                             <Info className="h-5 w-5" />
                           </Button>
@@ -2294,7 +2271,7 @@ export function MessageCenter() {
                                 setShowUserInfo(true);
                                 setActiveMobileTab('info');
                               }}
-                              className="md:hidden ml-1"
+                              className="md:hidden ml-1 rounded-full border-gray-200 hover:bg-gray-100/80 text-gray-700"
                             >
                               View Profile
                             </Button>
@@ -2305,7 +2282,7 @@ export function MessageCenter() {
                     </div>
 
                     {/* Scrollable messages area - Improve message bubble layout */}
-                    <div className="flex-1 overflow-y-auto scrollbar-hide">
+                    <div className="flex-1 overflow-y-auto scrollbar-hide bg-gradient-to-b from-gray-50/50 to-white/80">
                       <div className="p-4 space-y-4">
                         {messages.length === 0 ? (
                           <div className="flex items-center justify-center h-full">
@@ -2331,47 +2308,51 @@ export function MessageCenter() {
                                 <div className={`flex ${isMe ? 'justify-end' : 'justify-start'}`}>
                                   <div className="flex items-start gap-2 max-w-[85%] sm:max-w-[70%]">
                                     {!isMe && (
-                                      <Avatar className="h-8 w-8 mt-1 flex-shrink-0">
+                                      <Avatar className="h-9 w-9 mt-1 flex-shrink-0 ring-2 ring-white/90 shadow-sm">
                                         <AvatarImage src={message.senderAvatar || "/person-male-1.svg?height=32&width=32"} />
-                                        <AvatarFallback>{message.senderName?.[0] || "?"}</AvatarFallback>
+                                        <AvatarFallback className="bg-gradient-to-br from-gray-100 to-white text-gray-600">{message.senderName?.[0] || "?"}</AvatarFallback>
                                       </Avatar>
                                     )}
                                     
                                     <div className={`space-y-1 ${isMe ? 'order-first mr-2' : ''}`}>
                                       {!isMe && (
-                                        <p className="text-xs text-muted-foreground">
+                                        <p className="text-xs text-gray-500 font-medium ml-1">
                                           {message.senderName}
                                         </p>
                                       )}
                                       
                                       <div 
                                         className={cn(
-                                          "rounded-lg px-3 py-2 text-sm break-words",
-                                          isMe ? "bg-primary text-primary-foreground" : "bg-muted"
+                                          "rounded-2xl px-4 py-3 text-sm break-words shadow-sm",
+                                          isMe 
+                                            ? "bg-gradient-to-r from-blue-500 to-blue-600 text-white" 
+                                            : "bg-white border border-gray-100"
                                         )}
                                       >
                                         {message.text}
                                         
                                         {message.paymentProof && (
-                                          <div className="mt-2">
+                                          <div className="mt-3">
                                             <div className="flex items-center justify-between mb-1">
-                                              <p className="text-xs font-semibold">Payment Proof:</p>
+                                              <p className={`text-xs font-semibold ${isMe ? 'text-blue-100' : 'text-gray-700'}`}>Payment Proof:</p>
                                               {message.paymentConfirmed && (
-                                                <Badge variant="success" className="text-xs">Confirmed</Badge>
+                                                <Badge variant="success" className="text-xs bg-green-500 text-white">Confirmed</Badge>
                                               )}
                                             </div>
                                             
                                             {/* Service and amount info - Enhanced display */}
-                                            <div className="mb-2 p-2 rounded-md bg-black/10">
+                                            <div className={`mb-2 p-2 rounded-md ${isMe ? 'bg-blue-400/20' : 'bg-gray-50'}`}>
                                               {message.serviceTitle && (
                                                 <div className="mb-1 text-xs">
-                                                  <span className="font-medium">Service:</span> {message.serviceTitle}
+                                                  <span className={`font-medium ${isMe ? 'text-blue-100' : 'text-gray-700'}`}>Service:</span> 
+                                                  <span className={isMe ? 'text-white' : 'text-gray-800'}> {message.serviceTitle}</span>
                                                 </div>
                                               )}
                                               
                                               {message.paymentAmount && (
                                                 <div className="text-xs font-semibold">
-                                                  <span className="font-medium">Amount:</span> <span className="text-green-600 dark:text-green-400">₱{typeof message.paymentAmount === 'number' 
+                                                  <span className={`font-medium ${isMe ? 'text-blue-100' : 'text-gray-700'}`}>Amount:</span> 
+                                                  <span className={isMe ? 'text-white' : 'text-green-600'}> ₱{typeof message.paymentAmount === 'number' 
                                                     ? message.paymentAmount.toLocaleString() 
                                                     : message.paymentAmount}</span>
                                                 </div>
@@ -2381,20 +2362,20 @@ export function MessageCenter() {
                                             <img 
                                               src={message.paymentProof} 
                                               alt="Payment Proof" 
-                                              className="max-h-40 w-full object-contain rounded-md cursor-pointer hover:opacity-90 transition-opacity" 
+                                              className="max-h-40 w-full object-contain rounded-lg cursor-pointer hover:opacity-90 transition-opacity shadow-sm border border-gray-200" 
                                               onClick={() => setPreviewImage(message.paymentProof)}
                                             />
                                             
                                             {/* Payment confirmation buttons for provider */}
                                             {isProvider && !message.paymentConfirmed && (
-                                              <div className="mt-2 flex gap-2">
+                                              <div className="mt-3 flex gap-2">
                                                 <Button 
                                                   size="sm" 
                                                   variant="default"
-                                                  className="flex-1 h-8"
+                                                  className="flex-1 h-9 rounded-full bg-gradient-to-r from-green-500 to-green-600 hover:from-green-600 hover:to-green-700 text-white shadow-sm transition-all"
                                                   onClick={() => handleConfirmPayment(message)}
                                                 >
-                                                  <CheckCircle className="mr-1 h-3 w-3" />
+                                                  <CheckCircle className="mr-1 h-3.5 w-3.5" />
                                                   Confirm Payment
                                                   <span className="ml-1 font-bold text-white">
                                                     (₱{typeof message.paymentAmount === 'number' 
@@ -2407,73 +2388,40 @@ export function MessageCenter() {
                                             
                                             {/* Payment confirmed indicator */}
                                             {message.paymentConfirmed && (
-                                              <div className="mt-2 flex items-center text-xs bg-green-100 dark:bg-green-900/30 text-green-700 dark:text-green-400 p-2 rounded-md">
-                                                <CheckCircle className="mr-1 h-3 w-3" />
-                                                <span>Payment Confirmed</span>
-                                                <span className="ml-1 font-bold">
-                                                  (₱{typeof message.paymentAmount === 'number' 
-                                                    ? message.paymentAmount.toLocaleString() 
-                                                    : message.paymentAmount})
-                                                </span>
+                                              <div className={`mt-2 flex items-center gap-1 text-xs ${isMe ? 'text-blue-100' : 'text-green-600'}`}>
+                                                <CheckCircle className="h-3.5 w-3.5" />
+                                                <span>{isMe ? 'Your payment was confirmed!' : 'Payment confirmed'}</span>
                                               </div>
                                             )}
                                           </div>
                                         )}
                                       </div>
                                       
-                                      <div className={`flex text-xs text-muted-foreground ${isMe ? 'justify-end' : ''}`}>
-                                        {message.timestamp && (
-                                          <span>
-                                            {new Date(message.timestamp.toDate()).toLocaleTimeString([], {
-                                              hour: '2-digit',
-                                              minute: '2-digit'
-                                            })}
-                                          </span>
-                                        )}
-                                        {isMe && (
-                                          <span className="ml-2">
-                                            {message.read ? "Read" : "Sent"}
-                                          </span>
-                                        )}
+                                      <div className={`text-xs text-gray-400 ${isMe ? 'text-right mr-1' : 'ml-1'}`}>
+                                        {message.time}
                                       </div>
                                     </div>
-                                    
-                                    {isMe && (
-                                      <Avatar className="h-8 w-8 mt-1 flex-shrink-0">
-                                        <AvatarImage src={message.senderAvatar || "/person-male-1.svg?height=32&width=32"} />
-                                        <AvatarFallback>{message.senderName?.[0] || "?"}</AvatarFallback>
-                                      </Avatar>
-                                    )}
                                   </div>
                                 </div>
                               </React.Fragment>
-                            )
+                            );
                           })
                         )}
                         <div ref={messagesEndRef} />
                       </div>
                     </div>
 
-                    {/* Message Input */}
-                    <div className="border-t bg-background p-3 sticky bottom-0">
+                    {/* Message Input Area */}
+                    <div className="p-4 border-t bg-white/90 backdrop-blur-md">
                       <form onSubmit={handleSendMessage} className="flex items-start space-x-2">
                         <Textarea
                           value={newMessage}
                           onChange={(e) => setNewMessage(e.target.value)}
                           placeholder="Type your message..."
-                          className="resize-none min-h-[50px] flex-1"
+                          className="resize-none min-h-[50px] flex-1 rounded-2xl border-gray-200 focus:ring-2 focus:ring-blue-500 focus:border-transparent"
                         />
-                        <div className="flex items-center gap-2">
-                          {/* Send button */}
-                          <Button 
-                            type="submit" 
-                            size="icon" 
-                            disabled={!newMessage.trim()} 
-                          >
-                            <Send className="h-4 w-4" />
-                          </Button>
-                          
-                          {/* Add payment proof button - Now positioned side-by-side */}
+                        <div className="flex flex-col gap-2">
+                          {/* Add payment proof button */}
                           {selectedConversation && (
                             <UploadPaymentProofDialog
                               onUpload={(imageUrl, serviceId, amount) => {
@@ -2511,6 +2459,15 @@ export function MessageCenter() {
                               }
                             />
                           )}
+                          
+                          <Button 
+                            type="submit" 
+                            size="icon" 
+                            disabled={!newMessage.trim()} 
+                            className="rounded-full bg-gradient-to-r from-blue-500 to-blue-600 hover:from-blue-600 hover:to-blue-700 text-white shadow-sm transition-all"
+                          >
+                            <Send className="h-4 w-4" />
+                          </Button>
                         </div>
                       </form>
                     </div>

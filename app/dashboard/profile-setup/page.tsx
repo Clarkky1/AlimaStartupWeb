@@ -14,6 +14,15 @@ import { useToast } from "@/components/ui/use-toast"
 import { useAuth } from "@/app/context/auth-context"
 import { doc, setDoc, getDoc, updateDoc } from "firebase/firestore"
 import { initializeFirebase } from "@/app/lib/firebase"
+import { CheckCircle } from "lucide-react"
+import {
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogFooter,
+  DialogHeader,
+  DialogTitle,
+} from "@/components/ui/dialog"
 
 const localCategoryOptions = [
   { label: "Academic & Tutorial", value: "academic-tutorial" },
@@ -69,6 +78,7 @@ export default function ProfileSetupPage() {
   const [loading, setLoading] = useState(true)
   const [saving, setSaving] = useState(false)
   const [isProfileComplete, setIsProfileComplete] = useState(false)
+  const [showSuccessDialog, setShowSuccessDialog] = useState(false)
   
   const [profileData, setProfileData] = useState<ProviderProfile>({
     displayName: "",
@@ -180,13 +190,17 @@ export default function ProfileSetupPage() {
       })
 
       setIsProfileComplete(true)
+      
+      // Show success dialog
+      setShowSuccessDialog(true)
+      
       toast({
         title: "Success",
         description: "Profile information saved successfully",
       })
       
       // Reload the page to reflect changes
-      router.refresh()
+      // router.refresh()
     } catch (error) {
       console.error("Error saving provider profile:", error)
       toast({
@@ -485,6 +499,31 @@ export default function ProfileSetupPage() {
           </div>
         </form>
       </div>
+      
+      {/* Success Dialog */}
+      <Dialog open={showSuccessDialog} onOpenChange={setShowSuccessDialog}>
+        <DialogContent>
+          <DialogHeader>
+            <DialogTitle className="flex items-center gap-2">
+              <CheckCircle className="text-green-500 h-5 w-5" />
+              Profile {isProfileComplete ? "Updated" : "Completed"} Successfully
+            </DialogTitle>
+            <DialogDescription>
+              Your provider profile has been {isProfileComplete ? "updated" : "completed"} successfully. Clients can now find you based on your profile information.
+            </DialogDescription>
+          </DialogHeader>
+          <DialogFooter>
+            <Button 
+              onClick={() => {
+                setShowSuccessDialog(false);
+                router.refresh();
+              }}
+            >
+              Continue
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
     </DashboardLayout>
   )
 }

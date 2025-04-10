@@ -1,7 +1,8 @@
+"use client"
+
 import React from 'react';
 import { Poppins, Work_Sans } from 'next/font/google';
 import './globals.css';
-import { Metadata } from 'next';
 import { cn } from "@/lib/utils";
 import 'aos/dist/aos.css'; // Import AOS styles
 import { ThemeProvider } from "@/components/theme-provider";
@@ -35,23 +36,7 @@ const workSans = Work_Sans({
   preload: false, // Reduces initial blocking time
 });
 
-export const metadata: Metadata = {
-  title: 'Alima - Find and Offer Services',
-  description: 'Connect with service providers and clients in your area',
-  icons: {
-    icon: [
-      { url: '/AlimaLOGO.svg', type: 'image/svg+xml' },
-      { url: '/AlimaLOGO.svg', sizes: '16x16', type: 'image/svg+xml' },
-      { url: '/AlimaLOGO.svg', sizes: '32x32', type: 'image/svg+xml' },
-    ],
-    apple: [
-      { url: '/AlimaLOGO.svg', sizes: '180x180', type: 'image/svg+xml' },
-    ],
-  },
-  manifest: '/site.webmanifest',
-};
-
-// Server Component
+// Client Component
 export default function RootLayout({
   children,
 }: {
@@ -60,6 +45,13 @@ export default function RootLayout({
   return (
     <html lang="en" suppressHydrationWarning className="scroll-smooth" style={{ scrollBehavior: 'smooth' }}>
       <head>
+        {/* SEO metadata */}
+        <title>Alima - Find and Offer Services</title>
+        <meta name="description" content="Connect with service providers and clients in your area" />
+        <link rel="icon" href="/AlimaLOGO.svg" sizes="any" type="image/svg+xml" />
+        <link rel="apple-touch-icon" href="/AlimaLOGO.svg" type="image/svg+xml" />
+        <link rel="manifest" href="/site.webmanifest" />
+        
         {/* Add preload hint for critical JavaScript */}
         <link 
           rel="preload" 

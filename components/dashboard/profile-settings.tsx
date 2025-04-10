@@ -12,8 +12,16 @@ import { initializeFirebase } from "@/app/lib/firebase"
 import { ImageUpload } from "@/components/ui/image-upload"
 import { Separator } from "@/components/ui/separator"
 import { Badge } from "@/components/ui/badge"
-import { Check, UserRound } from "lucide-react"
+import { Check, CheckCircle, UserRound } from "lucide-react"
 import { getDefaultAvatar, createImageErrorHandler } from "@/app/lib/avatar-utils"
+import {
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogFooter,
+  DialogHeader,
+  DialogTitle,
+} from "@/components/ui/dialog"
 
 export function ProfileSettings() {
   const { user, setUser, refreshUserData } = useAuth()
@@ -24,6 +32,7 @@ export function ProfileSettings() {
   const [phone, setPhone] = useState("")
   const [location, setLocation] = useState("")
   const [avatar, setAvatar] = useState("")
+  const [showSuccessDialog, setShowSuccessDialog] = useState(false)
 
   const defaultAvatar = user?.uid ? getDefaultAvatar(user.uid) : "/illustrations/person-default.svg"
   const handleImageError = user?.uid ? createImageErrorHandler(user.uid) : undefined
@@ -218,6 +227,9 @@ export function ProfileSettings() {
         await refreshUserData();
       }
 
+      // Show success dialog
+      setShowSuccessDialog(true)
+
       toast({
         title: "Profile updated",
         description: "Your profile has been updated successfully",
@@ -372,6 +384,26 @@ export function ProfileSettings() {
           </form>
         </CardContent>
       </Card>
+
+      {/* Success Dialog */}
+      <Dialog open={showSuccessDialog} onOpenChange={setShowSuccessDialog}>
+        <DialogContent>
+          <DialogHeader>
+            <DialogTitle className="flex items-center gap-2">
+              <CheckCircle className="text-green-500 h-5 w-5" />
+              Profile Updated Successfully
+            </DialogTitle>
+            <DialogDescription>
+              Your profile information has been successfully updated.
+            </DialogDescription>
+          </DialogHeader>
+          <DialogFooter>
+            <Button onClick={() => setShowSuccessDialog(false)}>
+              Close
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
     </div>
   )
 }

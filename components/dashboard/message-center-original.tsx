@@ -1139,7 +1139,7 @@ export function MessageCenter() {
         // Find recent unread payment confirmation notifications
         const notificationsQuery = query(
           collection(db, "notifications"),
-          where("userId", "==", user.uid),
+          where("userId", "==", user?.uid),
           where("type", "==", "payment_confirmed_rating"),
           where("read", "==", false),
           limit(1)

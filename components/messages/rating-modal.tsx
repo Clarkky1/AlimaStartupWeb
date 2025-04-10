@@ -144,7 +144,10 @@ export function RatingModal({
         data: {
           reviewId: reviewRef.id,
           serviceId,
-          rating
+          rating,
+          senderId: user.uid,
+          senderName: user.displayName || user.name || "Anonymous",
+          senderAvatar: user.photoURL || user.avatar || null
         }
       }
 

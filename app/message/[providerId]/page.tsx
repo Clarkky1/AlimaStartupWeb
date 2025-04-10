@@ -270,6 +270,16 @@ export default function MessagePage({ params }: { params: { providerId: string }
   const [messageType, setMessageType] = useState<"text" | "payment">("text");
   const [showWelcomeMessage, setShowWelcomeMessage] = useState(true);
 
+  // Add state for the rating dialog
+  const [ratingDialogOpen, setRatingDialogOpen] = useState(false);
+  const [ratingService, setRatingService] = useState<{
+    serviceId: string;
+    serviceTitle: string;
+    providerId: string;
+    providerName: string;
+    transactionId: string;
+  } | null>(null);
+
   const messagesEndRef = useRef<HTMLDivElement>(null)
 
   // Add state for mobile navigation
@@ -833,6 +843,96 @@ export default function MessagePage({ params }: { params: { providerId: string }
   // Add state for dialog visibility
   const [paymentProofOpen, setPaymentProofOpen] = useState(false);
 
+  // Add this effect to check for rating notifications
+  useEffectState(() => {
+    if (!user) return;
+    
+    async function checkForRatingNotifications() {
+      console.log("Checking for rating notifications...");
+      try {
+        const { db } = await initializeFirebase();
+        if (!db) {
+          console.log("Firebase DB not initialized");
+          return;
+        }
+        
+        const { collection, query, where, getDocs, limit } = await import("firebase/firestore");
+        
+        // Find unread payment confirmation notifications
+        const notificationsQuery = query(
+          collection(db, "notifications"),
+          where("userId", "==", user?.uid),
+          where("type", "==", "payment_confirmed_rating"),
+          where("read", "==", false),
+          limit(1)
+        );
+        
+        console.log("Looking for notifications for user:", user?.uid);
+        const snapshot = await getDocs(notificationsQuery);
+        
+        console.log("Found notifications:", snapshot.size);
+        
+        if (!snapshot.empty) {
+          const notification = snapshot.docs[0];
+          const data = notification.data();
+          console.log("Notification data:", JSON.stringify(data, null, 2));
+          
+          // Check if the data structure is as expected
+          console.log("Has data property:", data.hasOwnProperty('data'));
+          
+          if (data.data) {
+            console.log("Data property contents:", JSON.stringify(data.data, null, 2));
+            console.log("Has requiresRating:", data.data.hasOwnProperty('requiresRating'));
+          }
+          
+          // Show rating dialog
+          if (data.data && data.data.requiresRating) {
+            console.log("Found rating notification, showing dialog...");
+            // Try using more direct approach first
+            const serviceInfo = {
+              serviceId: data.data.serviceId || "",
+              serviceTitle: data.data.serviceTitle || "Service",
+              providerId: data.data.providerId || "",
+              providerName: data.data.providerName || "Provider",
+              transactionId: data.data.transactionId || ""
+            };
+            
+            console.log("Setting rating service with:", serviceInfo);
+            setRatingService(serviceInfo);
+            console.log("Opening rating dialog");
+            setRatingDialogOpen(true);
+            
+            // Mark the notification as read
+            const { updateDoc, doc } = await import("firebase/firestore");
+            await updateDoc(doc(db, "notifications", notification.id), {
+              read: true
+            });
+            console.log("Marked notification as read");
+          } else {
+            console.log("Notification missing required rating data");
+          }
+        } else {
+          console.log("No unread rating notifications found");
+        }
+      } catch (error) {
+        console.error("Error checking for rating notifications:", error);
+      }
+    }
+    
+    // Check when component loads
+    console.log("Initial check for rating notifications");
+    checkForRatingNotifications();
+    
+    // Set up interval to periodically check (every 15 seconds instead of 30)
+    console.log("Setting up notification check interval");
+    const intervalId = setInterval(checkForRatingNotifications, 15000);
+    
+    return () => {
+      console.log("Clearing notification check interval");
+      clearInterval(intervalId);
+    };
+  }, [user]);
+
   if (loading || authLoading) {
     return <Loading />
   }
@@ -1345,6 +1445,105 @@ export default function MessagePage({ params }: { params: { providerId: string }
           </Card>
         </div>
       </div>
+
+      {/* Add a debug button (only in development) */}
+      {process.env.NODE_ENV === "development" && (
+        <div className="fixed bottom-4 right-4 z-50">
+          <Button
+            size="sm"
+            variant="outline"
+            onClick={() => {
+              console.log("Manual trigger of rating dialog");
+              setRatingService({
+                serviceId: providerId || "",
+                serviceTitle: "Test Service",
+                providerId: providerId,
+                providerName: provider?.name || "Provider",
+                transactionId: "test-transaction"
+              });
+              setRatingDialogOpen(true);
+            }}
+          >
+            Test Rating Dialog
+          </Button>
+        </div>
+      )}
+
+      {/* Inline dialog component for rating */}
+      <Dialog 
+        open={ratingDialogOpen} 
+        onOpenChange={(open) => {
+          console.log("Dialog onOpenChange:", open);
+          if (!open) {
+            setRatingDialogOpen(false);
+            setRatingService(null);
+          }
+        }}
+      >
+        <DialogContent className="sm:max-w-md">
+          <DialogHeader>
+            <DialogTitle>Rate this service</DialogTitle>
+            <DialogDescription>
+              {ratingService && `How was your experience with ${ratingService.serviceTitle}?`}
+            </DialogDescription>
+          </DialogHeader>
+          
+          {ratingService && (
+            <div className="space-y-4">
+              <div className="flex justify-center py-2">
+                <div className="flex items-center gap-1">
+                  {[1, 2, 3, 4, 5].map((star) => (
+                    <Star
+                      key={star}
+                      className={`h-8 w-8 cursor-pointer ${
+                        star <= 5 
+                          ? "text-yellow-400 fill-yellow-400" 
+                          : "text-gray-300"
+                      }`}
+                      onClick={() => console.log("Star clicked:", star)}
+                    />
+                  ))}
+                </div>
+              </div>
+              
+              <div className="space-y-2">
+                <Label htmlFor="feedback">Your feedback (optional)</Label>
+                <Textarea
+                  id="feedback"
+                  placeholder="Share your experience with this service..."
+                  rows={4}
+                />
+              </div>
+              
+              <div className="flex justify-end gap-2">
+                <Button 
+                  type="button" 
+                  variant="outline" 
+                  onClick={() => {
+                    setRatingDialogOpen(false);
+                    setRatingService(null);
+                  }}
+                >
+                  Cancel
+                </Button>
+                <Button 
+                  onClick={() => {
+                    console.log("Submit clicked");
+                    setRatingDialogOpen(false);
+                    setRatingService(null);
+                    toast({
+                      title: "Review submitted",
+                      description: "Thank you for your feedback!",
+                    });
+                  }}
+                >
+                  Submit Review
+                </Button>
+              </div>
+            </div>
+          )}
+        </DialogContent>
+      </Dialog>
     </div>
   )
 }

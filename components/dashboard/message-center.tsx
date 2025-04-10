@@ -1224,6 +1224,10 @@ export function MessageCenter() {
         const providerData = providerDoc.data() || {};
         const providerName = providerData.displayName || providerData.name || user.displayName || "Service Provider";
         
+        // Log debug info
+        console.log("Creating rating notification for:", message.senderId);
+        console.log("Service info:", { serviceId, serviceTitle, transactionId });
+        
         // Create notification for the user to rate the service
         const notificationData = {
           userId: message.senderId,
@@ -1245,7 +1249,11 @@ export function MessageCenter() {
           }
         };
         
-        await addDoc(collection(db, "notifications"), notificationData);
+        console.log("Notification data prepared:", notificationData);
+        
+        // Add the notification to Firestore
+        const notificationRef = await addDoc(collection(db, "notifications"), notificationData);
+        console.log("Rating notification created with ID:", notificationRef.id);
       } catch (notificationError) {
         console.error("Error creating notification (non-critical):", notificationError);
         // Continue execution - notification is not critical

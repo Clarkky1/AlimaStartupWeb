@@ -150,6 +150,31 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     setAuth(authInstance);
     setDb(dbInstance);
 
+    // Set persistence to LOCAL by default to support "Remember me" functionality
+    const setPersistenceOnce = async () => {
+      try {
+        // Only import and set persistence if we're in a browser environment
+        if (typeof window !== "undefined") {
+          const { setPersistence, browserLocalPersistence } = await import("firebase/auth");
+          
+          // Check for stored persistence preference
+          const deviceId = localStorage.getItem('alima_device_id');
+          const rememberMe = deviceId ? localStorage.getItem(`rememberMe_${deviceId}`) : null;
+          
+          // Only set LOCAL persistence if user chose "Remember me"
+          if (rememberMe === 'true') {
+            await setPersistence(authInstance, browserLocalPersistence);
+            console.log("Firebase persistence set to LOCAL");
+          }
+        }
+      } catch (error) {
+        console.error("Error setting auth persistence:", error);
+      }
+    };
+
+    // Set persistence before listening for auth state changes
+    setPersistenceOnce();
+
     const unsubscribe = onAuthStateChanged(authInstance, async (firebaseUser) => {
       if (!firebaseUser) {
         setUser(null);
@@ -158,6 +183,9 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       }
 
       try {
+        // Log auth state for debugging
+        console.log("Auth state detected, user:", firebaseUser.uid);
+        
         const userRef = doc(dbInstance, "users", firebaseUser.uid);
         const userDoc = await getDoc(userRef);
         
@@ -198,7 +226,21 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         }
 
         setUser(userData);
-        await setDoc(userRef, userData, { merge: true });
+        
+        // Instead of always updating Firestore immediately, only update the lastLogin field periodically
+        // This prevents excessive writes for users who visit frequently
+        const lastLoginUpdate = localStorage.getItem(`lastLoginUpdate_${userData.uid}`);
+        const shouldUpdateLogin = !lastLoginUpdate || (Date.now() - Number(lastLoginUpdate)) > 3600000; // Update once per hour max
+        
+        if (shouldUpdateLogin) {
+          await setDoc(userRef, { lastLogin: now }, { merge: true });
+          localStorage.setItem(`lastLoginUpdate_${userData.uid}`, Date.now().toString());
+        } else {
+          // Only do a full update if we haven't seen this user before
+          if (!userDoc.exists()) {
+            await setDoc(userRef, userData, { merge: true });
+          }
+        }
       } catch (error) {
         console.error("Error fetching user data:", error);
       }

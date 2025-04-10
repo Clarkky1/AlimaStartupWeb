@@ -28,6 +28,47 @@ export default function LoginPage() {
   const returnUrl = searchParams.get('returnUrl')
   const { setUser } = useAuth()
 
+  // Function to generate a unique device ID or retrieve existing one
+  const getDeviceId = () => {
+    if (typeof window === 'undefined') return null;
+    
+    let deviceId = localStorage.getItem('alima_device_id');
+    if (!deviceId) {
+      // Generate a unique device ID using timestamp + random string
+      deviceId = `${Date.now()}-${Math.random().toString(36).substring(2, 15)}`;
+      localStorage.setItem('alima_device_id', deviceId);
+    }
+    return deviceId;
+  };
+  
+  // Initialize rememberMe from localStorage when component mounts
+  useEffect(() => {
+    // Check if we're in a browser environment
+    if (typeof window !== 'undefined') {
+      const deviceId = getDeviceId();
+      const storedRememberMe = localStorage.getItem(`rememberMe_${deviceId}`);
+      if (storedRememberMe !== null) {
+        setRememberMe(storedRememberMe === 'true');
+      }
+      
+      // Attempt to retrieve saved email if rememberMe was true
+      if (storedRememberMe === 'true') {
+        const savedEmail = localStorage.getItem(`userEmail_${deviceId}`);
+        if (savedEmail) {
+          setEmail(savedEmail);
+        }
+      }
+    }
+  }, []);
+  
+  // Update localStorage when rememberMe changes
+  useEffect(() => {
+    if (typeof window !== 'undefined') {
+      const deviceId = getDeviceId();
+      localStorage.setItem(`rememberMe_${deviceId}`, rememberMe.toString());
+    }
+  }, [rememberMe]);
+
   const handleLogin = async (e: React.FormEvent) => {
     e.preventDefault()
     setLoading(true)
@@ -54,6 +95,30 @@ export default function LoginPage() {
       const userCredential = await signInWithEmailAndPassword(auth, email, password)
       const userDoc = await getDoc(doc(db, "users", userCredential.user.uid))
       const userData = userDoc.data()
+
+      // Save email to device-specific localStorage entry if rememberMe is checked
+      if (rememberMe) {
+        const deviceId = getDeviceId();
+        localStorage.setItem(`userEmail_${deviceId}`, email);
+        
+        // Track this device in user's Firestore document for security (optional)
+        try {
+          const { updateDoc, arrayUnion, Timestamp } = await import("firebase/firestore");
+          await updateDoc(doc(db, "users", userCredential.user.uid), {
+            rememberedDevices: arrayUnion({
+              deviceId: deviceId,
+              lastLogin: Timestamp.now(),
+              deviceInfo: `${window.navigator.userAgent}`
+            })
+          });
+        } catch (error) {
+          console.log("Non-critical error saving device info:", error);
+        }
+      } else {
+        // Clear remembered data if user unchecks remember me
+        const deviceId = getDeviceId();
+        localStorage.removeItem(`userEmail_${deviceId}`);
+      }
 
       setUser({
         uid: userCredential.user.uid,
@@ -164,6 +229,20 @@ export default function LoginPage() {
     }
   }
 
+  // Clear remembered device
+  const clearSavedCredentials = () => {
+    if (typeof window !== 'undefined') {
+      const deviceId = getDeviceId();
+      localStorage.removeItem(`userEmail_${deviceId}`);
+      localStorage.removeItem(`rememberMe_${deviceId}`);
+      setRememberMe(false);
+      toast({
+        title: "Cleared saved login",
+        description: "Your login information has been removed from this device",
+      });
+    }
+  };
+
   return (
     <div
       className="flex min-h-screen items-center justify-center bg-cover bg-center relative px-4 py-6"
@@ -239,18 +318,23 @@ export default function LoginPage() {
                         {/* Move the Forgot password and Remember me on the same line */}
                         <div className="flex items-center justify-between mt-1">
                           {/* Remember me on the left */}
-                          <div className="flex items-center space-x-2">
-                            <Checkbox 
-                              id="remember" 
-                              checked={rememberMe}
-                              onCheckedChange={(checked) => setRememberMe(checked === true)}
-                            />
-                            <label
-                              htmlFor="remember"
-                              className="text-sm font-medium leading-none text-white peer-disabled:cursor-not-allowed peer-disabled:opacity-70"
-                            >
-                              Remember me
-                            </label>
+                          <div className="flex flex-col">
+                            <div className="flex items-center space-x-2">
+                              <Checkbox 
+                                id="remember" 
+                                checked={rememberMe}
+                                onCheckedChange={(checked) => setRememberMe(checked === true)}
+                              />
+                              <label
+                                htmlFor="remember"
+                                className="text-sm font-medium leading-none text-white peer-disabled:cursor-not-allowed peer-disabled:opacity-70"
+                              >
+                                Remember me on this device
+                              </label>
+                            </div>
+                            {rememberMe && (
+                              <p className="text-xs text-gray-300 mt-1 ml-6">Your login will be remembered only on this device</p>
+                            )}
                           </div>
                           
                           {/* Forgot password on the right */}

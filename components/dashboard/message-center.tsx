@@ -199,47 +199,60 @@ const mockMessages: Record<string, Message[]> = {
   ],
 }
 
+// Fix UploadPaymentProofDialog component
 const UploadPaymentProofDialog = ({ 
-  onUpload, 
-  providerId, 
-  services = [] 
+  onUpload,
+  providerId
 }: { 
-  onUpload: (imageUrl: string, serviceId?: string, amount?: number) => void; 
+  onUpload: (imageUrl: string, serviceId?: string, amount?: number) => void;
   providerId?: string;
-  services?: Array<{id: string, title: string, price?: number | string}>
 }) => {
-  const [isUploading, setIsUploading] = useState(false)
-  const [selectedService, setSelectedService] = useState<string | null>(null)
-  const [paymentAmount, setPaymentAmount] = useState<string>("")
-  const [selectedServiceDetails, setSelectedServiceDetails] = useState<{title: string, price?: number | string} | null>(null)
-  const [selectedFile, setSelectedFile] = useState<File | null>(null)
-  const { toast } = useToast()
-
-  // Select first service by default if available
+  const [selectedService, setSelectedService] = useState<string | null>(null);
+  const [paymentAmount, setPaymentAmount] = useState<string>('');
+  const [selectedFile, setSelectedFile] = useState<File | null>(null);
+  const [isUploading, setIsUploading] = useState(false);
+  const [open, setOpen] = useState(false);
+  
+  const { toast } = useToast();
+  const { user } = useAuth();
+  
+  // Get the provider's services for the dropdown
+  const [providerServices, setProviderServices] = useState<Array<{id: string, title: string, price?: number | string}>>([]);
+  
   useEffect(() => {
-    if (services && services.length > 0 && !selectedService) {
-      setSelectedService(services[0].id)
-      setSelectedServiceDetails(services[0])
+    async function fetchServices() {
+      if (!providerId) return;
       
-      // Set default price if available
-      const defaultPrice = services[0].price
-      if (defaultPrice) {
-        setPaymentAmount(typeof defaultPrice === 'number' ? defaultPrice.toString() : defaultPrice)
+      try {
+        const { db } = await initializeFirebase();
+        if (!db) return;
+        
+        const { collection, query, where, getDocs } = await import("firebase/firestore");
+        
+        const q = query(
+          collection(db, "services"),
+          where("providerId", "==", providerId)
+        );
+        
+        const snapshot = await getDocs(q);
+        const servicesData = snapshot.docs.map(doc => ({
+          id: doc.id,
+          ...doc.data() as {title: string, price?: number | string}
+        }));
+        
+        setProviderServices(servicesData);
+        
+        // Set first service as default
+        if (servicesData.length > 0) {
+          setSelectedService(servicesData[0].id);
+        }
+      } catch (error) {
+        console.error("Error fetching provider services:", error);
       }
     }
-  }, [services, selectedService])
-
-  // Update selected service details when service changes
-  const handleServiceChange = (value: string) => {
-    setSelectedService(value)
-    const service = services.find(s => s.id === value)
-    if (service) {
-      setSelectedServiceDetails(service)
-      if (service.price) {
-        setPaymentAmount(typeof service.price === 'number' ? service.price.toString() : service.price)
-      }
-    }
-  }
+    
+    fetchServices();
+  }, [providerId]);
 
   const handleUpload = async (file: File) => {
     // File validation
@@ -296,6 +309,9 @@ const UploadPaymentProofDialog = ({
         title: "Success",
         description: "Payment proof uploaded successfully",
       });
+      
+      // Close dialog after successful upload
+      setOpen(false);
     } catch (error) {
       console.error("Error uploading payment proof:", error);
       toast({
@@ -310,13 +326,16 @@ const UploadPaymentProofDialog = ({
         selectedService || undefined, 
         paymentAmount ? parseFloat(paymentAmount) : undefined
       );
+      
+      // Close dialog after upload (even with fallback)
+      setOpen(false);
     } finally {
       setIsUploading(false);
     }
   }
 
   return (
-    <Dialog>
+    <Dialog open={open} onOpenChange={setOpen}>
       <DialogTrigger asChild>
         <Button variant="outline" size="icon" title="Upload Payment Proof">
           <Upload className="w-4 h-4" />
@@ -329,45 +348,41 @@ const UploadPaymentProofDialog = ({
             Upload a screenshot of your payment receipt
           </DialogDescription>
         </DialogHeader>
-        
         <div className="space-y-4">
           {/* Service selection */}
-          {services.length > 0 && (
-            <div className="space-y-2">
-              <Label htmlFor="service-select">Service</Label>
-              <Select 
-                value={selectedService || ""} 
-                onValueChange={handleServiceChange}
-              >
-                <SelectTrigger id="service-select">
-                  <SelectValue placeholder="Select service" />
-                </SelectTrigger>
-                <SelectContent>
-                  {services.map(service => (
+          <div className="space-y-2">
+            <Label htmlFor="service-select">Service</Label>
+            <Select value={selectedService || ''} onValueChange={setSelectedService}>
+              <SelectTrigger id="service-select">
+                {selectedService ? 
+                  providerServices.find(s => s.id === selectedService)?.title + 
+                  " - ₱" + 
+                  providerServices.find(s => s.id === selectedService)?.price 
+                  : "Select a service"}
+              </SelectTrigger>
+              <SelectContent>
+                {providerServices.length === 0 ? (
+                  <SelectItem value="" disabled>No services available</SelectItem>
+                ) : (
+                  providerServices.map((service) => (
                     <SelectItem key={service.id} value={service.id}>
-                      {service.title} {service.price ? `- ₱${service.price}` : ''}
+                      {service.title} - ₱{service.price}
                     </SelectItem>
-                  ))}
-                </SelectContent>
-              </Select>
-              
-              {/* Display selected service details */}
-              {selectedServiceDetails && (
-                <div className="mt-2 p-3 rounded-md border bg-muted/10">
-                  <h4 className="text-sm font-medium mb-1">{selectedServiceDetails.title}</h4>
-                  {selectedServiceDetails.price && (
-                    <div className="text-sm font-semibold text-primary">
-                      ₱{typeof selectedServiceDetails.price === 'number' 
-                        ? selectedServiceDetails.price.toLocaleString() 
-                        : selectedServiceDetails.price}
-                    </div>
-                  )}
-                </div>
-              )}
-            </div>
-          )}
+                  ))
+                )}
+              </SelectContent>
+            </Select>
+            
+            {/* Show selected service details */}
+            {selectedService && (
+              <div className="mt-2 p-3 rounded-md border bg-muted/10">
+                <h4 className="text-sm font-medium mb-1">{providerServices.find(s => s.id === selectedService)?.title}</h4>
+                <div className="text-sm font-semibold text-primary">₱{providerServices.find(s => s.id === selectedService)?.price}</div>
+              </div>
+            )}
+          </div>
           
-          {/* Payment amount input */}
+          {/* Payment amount */}
           <div className="space-y-2">
             <Label htmlFor="payment-amount">Payment Amount (₱)</Label>
             <Input
@@ -1571,13 +1586,10 @@ export function MessageCenter() {
   const handleSendMessage = async (e: React.FormEvent) => {
     e.preventDefault()
     if (!newMessage.trim() || !selectedConversation || !user) return
-
-    // Scroll immediately when sending
-    scrollToBottom()
     
     const otherParticipantId = getOtherParticipantId(selectedConversation)
     if (!otherParticipantId) return
-
+    
     try {
       const { db } = await initializeFirebase()
       if (!db) return
@@ -1608,14 +1620,14 @@ export function MessageCenter() {
       }
       
       // Determine which conversation to use
-      let targetConversationId = selectedConversation.id
-      let serviceId = selectedConversation.serviceId
-      let serviceTitle = selectedConversation.serviceTitle
+      let targetConversationId = selectedConversation?.id
+      let serviceId = selectedConversation?.serviceId
+      let serviceTitle = selectedConversation?.serviceTitle
       
       // If user has selected a different service, use that conversation instead
-      if (activeService && activeService !== selectedConversation.serviceId) {
+      if (activeService && activeService !== selectedConversation?.serviceId) {
         // Find the related conversation with this service
-        const relatedConversation = selectedConversation.relatedConversations?.find(
+        const relatedConversation = selectedConversation?.relatedConversations?.find(
           (conv: any) => conv.serviceId === activeService
         )
         
@@ -1755,14 +1767,14 @@ export function MessageCenter() {
       const userAvatar = userData?.profilePicture || userData?.avatar || user.photoURL || null;
       
       // Determine which conversation to use
-      let targetConversationId = selectedConversation.id;
-      let serviceId = paymentInfo.serviceId || selectedConversation.serviceId;
-      let serviceTitle = paymentInfo.serviceTitle || selectedConversation.serviceTitle;
+      let targetConversationId = selectedConversation?.id;
+      let serviceId = paymentInfo.serviceId || selectedConversation?.serviceId;
+      let serviceTitle = paymentInfo.serviceTitle || selectedConversation?.serviceTitle;
       
       // If user has selected a different service, use that conversation instead
-      if (activeService && activeService !== selectedConversation.serviceId) {
+      if (activeService && activeService !== selectedConversation?.serviceId) {
         // Find the related conversation with this service
-        const relatedConversation = selectedConversation.relatedConversations?.find(
+        const relatedConversation = selectedConversation?.relatedConversations?.find(
           (conv: any) => conv.serviceId === activeService
         );
         
@@ -1942,12 +1954,12 @@ export function MessageCenter() {
     // Create a list of all services from main and related conversations
     const allServices = [
       { 
-        id: selectedConversation.serviceId,
-        title: selectedConversation.serviceTitle,
-        price: selectedConversation.servicePrice,
-        conversationId: selectedConversation.id
+        id: selectedConversation?.serviceId,
+        title: selectedConversation?.serviceTitle,
+        price: selectedConversation?.servicePrice,
+        conversationId: selectedConversation?.id
       },
-      ...(selectedConversation.relatedConversations?.map((conv) => ({
+      ...(selectedConversation?.relatedConversations?.map((conv) => ({
         id: conv.serviceId,
         title: conv.serviceTitle,
         conversationId: conv.id,
@@ -2111,54 +2123,6 @@ export function MessageCenter() {
               <>
                 {messages.length === 0 ? (
                   <div className="flex flex-col h-full">
-                    {/* Conversation Header */}
-                    <div className="p-4 border-b flex justify-between items-center bg-white/80 backdrop-blur-md md:sticky md:top-0 static z-5 mt-[40px] md:mt-0">
-                      <div className="flex items-center space-x-3">
-                        <div className="flex items-center gap-3">
-                          <Avatar className="h-9 w-9 ring-2 ring-white/90 shadow-sm">
-                            <AvatarImage 
-                              src={selectedConversation.otherParticipantAvatar || 
-                                  (selectedConversation.otherParticipantId && 
-                                  selectedConversation.participantAvatars?.[selectedConversation.otherParticipantId]) || 
-                                  "/person-male-1.svg?height=32&width=32"} 
-                            />
-                            <AvatarFallback className="bg-gradient-to-br from-blue-50 to-blue-100 text-blue-600">
-                              {(selectedConversation.otherParticipantName?.[0] || 
-                                (selectedConversation.otherParticipantId && 
-                                selectedConversation.participantNames?.[selectedConversation.otherParticipantId]?.[0])) || "?"}
-                            </AvatarFallback>
-                          </Avatar>
-                          <div className="flex-1 min-w-0">
-                            <p className="font-medium tracking-tight text-gray-900">
-                              {selectedConversation.otherParticipantName || 
-                                (selectedConversation.otherParticipantId && 
-                                selectedConversation.participantNames?.[selectedConversation.otherParticipantId]) || 
-                                "Unknown User"}
-                            </p>
-                            <p className="text-xs text-gray-500">
-                              {selectedConversation.serviceTitle ? `About: ${selectedConversation.serviceTitle}` : ""}
-                            </p>
-                          </div>
-                        </div>
-                      </div>
-                      <div className="flex items-center gap-1">
-                        {/* Show user info button - hidden on mobile */}
-                        <Button 
-                          variant="ghost" 
-                          size="icon" 
-                          onClick={() => {
-                            setShowUserInfo(!showUserInfo);
-                            if (windowWidth < 768) {
-                              setActiveMobileTab('info');
-                            }
-                          }}
-                          className={cn("rounded-full md:flex hidden", showUserInfo ? "bg-blue-50 text-blue-600" : "hover:bg-gray-100/80")}
-                        >
-                          <Info className="h-5 w-5" />
-                        </Button>
-                      </div>
-                    </div>
-
                     {/* Empty Messages Display */}
                     <div className="flex-1 flex items-center justify-center p-6 bg-gradient-to-b from-gray-50/80 to-white/60">
                       <div className="text-center w-full max-w-md mx-auto px-8">
@@ -2167,7 +2131,7 @@ export function MessageCenter() {
                         </div>
                         <h3 className="text-xl font-medium mb-3 text-gray-800 tracking-tight">No messages yet</h3>
                         <p className="text-sm text-gray-500 max-w-xs mx-auto">
-                          Send a message to start the conversation with {selectedConversation.otherParticipantName || 'this user'}
+                          Send a message to start the conversation with {selectedConversation?.otherParticipantName || 'this user'}
                         </p>
                       </div>
                     </div>
@@ -2183,8 +2147,8 @@ export function MessageCenter() {
                               const paymentMessage = {
                                 text: "I've sent the payment.",
                                 paymentProof: imageUrl,
-                                serviceId: serviceId || selectedConversation.serviceId || activeService || undefined,
-                                serviceTitle: selectedConversation.serviceTitle || "Service",
+                                serviceId: serviceId || selectedConversation?.serviceId || activeService || undefined,
+                                serviceTitle: selectedConversation?.serviceTitle || "Service",
                                 paymentAmount: amount || 0
                               };
                               
@@ -2192,25 +2156,6 @@ export function MessageCenter() {
                               handleSendPaymentProof(paymentMessage);
                             }}
                             providerId={getOtherParticipantId(selectedConversation) || undefined}
-                            services={
-                              // Create services array for the dialog
-                              [
-                                // Add the main service
-                                selectedConversation.serviceId && selectedConversation.serviceTitle ? {
-                                  id: selectedConversation.serviceId,
-                                  title: selectedConversation.serviceTitle,
-                                  price: selectedConversation.servicePrice
-                                } : null,
-                                // Add related services
-                                ...(selectedConversation.relatedConversations?.map(conv => 
-                                  conv.serviceId && conv.serviceTitle ? {
-                                    id: conv.serviceId,
-                                    title: conv.serviceTitle,
-                                    price: conv.price
-                                  } : null
-                                ) || [])
-                              ].filter(Boolean) as Array<{id: string, title: string, price?: number | string}>
-                            }
                           />
                         )}
                         <Textarea
@@ -2234,53 +2179,7 @@ export function MessageCenter() {
                   // Normal conversation with messages
                   <>
                     {/* Fixed Header */}
-                    <div className="border-b bg-white/90 backdrop-blur-md md:sticky md:top-0 static z-5 mt-[40px] md:mt-0">
-                      <div className="p-4 flex justify-between items-center">
-                        <div className="flex items-center space-x-3">
-                          <div className="flex items-center gap-3">
-                            <Avatar className="h-9 w-9 ring-2 ring-white/90 shadow-sm">
-                              <AvatarImage 
-                                src={selectedConversation.otherParticipantAvatar || 
-                                    (selectedConversation.otherParticipantId && 
-                                    selectedConversation.participantAvatars?.[selectedConversation.otherParticipantId]) || 
-                                    "/person-male-1.svg?height=32&width=32"} 
-                              />
-                              <AvatarFallback className="bg-gradient-to-br from-blue-50 to-blue-100 text-blue-600">
-                                {(selectedConversation.otherParticipantName?.[0] || 
-                                  (selectedConversation.otherParticipantId && 
-                                  selectedConversation.participantNames?.[selectedConversation.otherParticipantId]?.[0])) || "?"}
-                              </AvatarFallback>
-                            </Avatar>
-                            <div className="flex-1 min-w-0">
-                              <p className="font-medium tracking-tight text-gray-900">
-                                {selectedConversation.otherParticipantName || 
-                                  (selectedConversation.otherParticipantId && 
-                                  selectedConversation.participantNames?.[selectedConversation.otherParticipantId]) || 
-                                  "Unknown User"}
-                              </p>
-                              <p className="text-xs text-gray-500">
-                                {selectedConversation.serviceTitle ? `About: ${selectedConversation.serviceTitle}` : ""}
-                              </p>
-                            </div>
-                          </div>
-                        </div>
-                        <div className="flex items-center gap-1">
-                          {/* Show user info button - hidden on mobile */}
-                          <Button 
-                            variant="ghost" 
-                            size="icon" 
-                            onClick={() => {
-                              setShowUserInfo(!showUserInfo);
-                              if (windowWidth < 768) {
-                                setActiveMobileTab('info');
-                              }
-                            }}
-                            className={cn("rounded-full md:flex hidden", showUserInfo ? "bg-blue-50 text-blue-600" : "hover:bg-gray-100/80")}
-                          >
-                            <Info className="h-5 w-5" />
-                          </Button>
-                        </div>
-                      </div>
+                    <div className="border-b bg-white/90 backdrop-blur-md md:sticky md:top-0 static z-5">
                       {activeService && <ServiceSelector />}
                     </div>
 
@@ -2370,7 +2269,7 @@ export function MessageCenter() {
                                             />
                                             
                                             {/* Payment confirmation buttons for provider */}
-                                            {isProvider && !message.paymentConfirmed && (
+                                            {isProvider && !message.paymentConfirmed && message.senderId !== user.uid && (
                                               <div className="mt-3 flex gap-2">
                                                 <Button 
                                                   size="sm" 
@@ -2381,9 +2280,7 @@ export function MessageCenter() {
                                                   <CheckCircle className="mr-1 h-3.5 w-3.5" />
                                                   Confirm Payment
                                                   <span className="ml-1 font-bold text-white">
-                                                    (₱{typeof message.paymentAmount === 'number' 
-                                                      ? message.paymentAmount.toLocaleString() 
-                                                      : message.paymentAmount})
+                                                    (₱{typeof message.paymentAmount === 'number' ? message.paymentAmount.toLocaleString() : message.paymentAmount})
                                                   </span>
                                                 </Button>
                                               </div>
@@ -2425,8 +2322,8 @@ export function MessageCenter() {
                               const paymentMessage = {
                                 text: "I've sent the payment.",
                                 paymentProof: imageUrl,
-                                serviceId: serviceId || selectedConversation.serviceId || activeService || undefined,
-                                serviceTitle: selectedConversation.serviceTitle || "Service",
+                                serviceId: serviceId || selectedConversation?.serviceId || activeService || undefined,
+                                serviceTitle: selectedConversation?.serviceTitle || "Service",
                                 paymentAmount: amount || 0
                               };
                               
@@ -2434,25 +2331,6 @@ export function MessageCenter() {
                               handleSendPaymentProof(paymentMessage);
                             }}
                             providerId={getOtherParticipantId(selectedConversation) || undefined}
-                            services={
-                              // Create services array for the dialog
-                              [
-                                // Add the main service
-                                selectedConversation.serviceId && selectedConversation.serviceTitle ? {
-                                  id: selectedConversation.serviceId,
-                                  title: selectedConversation.serviceTitle,
-                                  price: selectedConversation.servicePrice
-                                } : null,
-                                // Add related services
-                                ...(selectedConversation.relatedConversations?.map(conv => 
-                                  conv.serviceId && conv.serviceTitle ? {
-                                    id: conv.serviceId,
-                                    title: conv.serviceTitle,
-                                    price: conv.price
-                                  } : null
-                                ) || [])
-                              ].filter(Boolean) as Array<{id: string, title: string, price?: number | string}>
-                            }
                           />
                         )}
                         <Textarea
@@ -2489,22 +2367,22 @@ export function MessageCenter() {
                 <div className="text-center mb-6">
                   <Avatar className="h-20 w-20 mx-auto">
                     <AvatarImage
-                      src={selectedConversation.otherParticipantAvatar || 
-                          (selectedConversation.otherParticipantId && 
-                          selectedConversation.participantAvatars?.[selectedConversation.otherParticipantId]) || 
+                      src={selectedConversation?.otherParticipantAvatar || 
+                          (selectedConversation?.otherParticipantId && 
+                          selectedConversation?.participantAvatars?.[selectedConversation?.otherParticipantId]) || 
                           "/person-male-1.svg?height=64&width=64"}
-                      alt={selectedConversation.otherParticipantName || "User"}
+                      alt={selectedConversation?.otherParticipantName || "User"}
                     />
                     <AvatarFallback>
-                      {(selectedConversation.otherParticipantName?.[0] || 
-                        (selectedConversation.otherParticipantId && 
-                        selectedConversation.participantNames?.[selectedConversation.otherParticipantId]?.[0])) || "?"}
+                      {(selectedConversation?.otherParticipantName?.[0] || 
+                        (selectedConversation?.otherParticipantId && 
+                        selectedConversation?.participantNames?.[selectedConversation?.otherParticipantId]?.[0])) || "?"}
                     </AvatarFallback>
                   </Avatar>
                   <h3 className="font-semibold text-lg mt-3">
-                    {selectedConversation.otherParticipantName || 
-                      (selectedConversation.otherParticipantId && 
-                      selectedConversation.participantNames?.[selectedConversation.otherParticipantId]) || 
+                    {selectedConversation?.otherParticipantName || 
+                      (selectedConversation?.otherParticipantId && 
+                      selectedConversation?.participantNames?.[selectedConversation?.otherParticipantId]) || 
                       "Unknown User"}
                   </h3>
                   

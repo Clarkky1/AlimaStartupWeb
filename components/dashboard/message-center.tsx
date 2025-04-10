@@ -1974,27 +1974,43 @@ export function MessageCenter() {
 
     return (
       <div className="px-4 py-1 border-b bg-muted/10">
-        {allServices.length > 1 && (
-          <>
-            <div className="text-xs text-muted-foreground mb-1">Switch Service:</div>
-            <div className="flex flex-wrap gap-1">
-              {allServices.map(service => (
-                <Badge
-                  key={service.id}
-                  variant={service.id === activeService ? "default" : "outline"}
-                  className="cursor-pointer text-xs hover:bg-muted"
-                  onClick={() => {
-                    if (service.id) {
-                      setActiveService(service.id);
-                    }
-                  }}
-                >
-                  {service.title}
-                </Badge>
-              ))}
-            </div>
-          </>
-        )}
+        <div className="flex items-center justify-between">
+          <div className="flex-1">
+            {allServices.length > 1 && (
+              <>
+                <div className="text-xs text-muted-foreground mb-1">Switch Service:</div>
+                <div className="flex flex-wrap gap-1">
+                  {allServices.map(service => (
+                    <Badge
+                      key={service.id}
+                      variant={service.id === activeService ? "default" : "outline"}
+                      className="cursor-pointer text-xs hover:bg-muted"
+                      onClick={() => {
+                        if (service.id) {
+                          setActiveService(service.id);
+                        }
+                      }}
+                    >
+                      {service.title}
+                    </Badge>
+                  ))}
+                </div>
+              </>
+            )}
+          </div>
+          
+          {/* About/Info button - only visible in desktop view */}
+          <Button 
+            variant="ghost" 
+            size="icon" 
+            onClick={() => {
+              setShowUserInfo(!showUserInfo);
+            }}
+            className="rounded-full hidden md:flex bg-blue-50 text-blue-600 hover:bg-blue-100"
+          >
+            <Info className="h-5 w-5" />
+          </Button>
+        </div>
       </div>
     );
   };
@@ -2201,7 +2217,8 @@ export function MessageCenter() {
                   <>
                     {/* Fixed Header */}
                     <div className="border-b bg-white/90 backdrop-blur-md md:sticky md:top-0 static z-5">
-                      {activeService && <ServiceSelector />}
+                      {/* Always show service selector for structure consistency, but it might be empty */}
+                      <ServiceSelector />
                     </div>
 
                     {/* Scrollable messages area - Improve message bubble layout */}

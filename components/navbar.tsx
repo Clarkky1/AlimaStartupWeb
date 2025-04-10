@@ -207,7 +207,7 @@ export function Navbar() {
                 alt="Alima Logo" 
                 className="h-8 w-auto object-contain drop-shadow-[0_0_3px_rgba(59,130,246,0.3)]"
               />
-              <span className="ml-2 text-xl font-bold text-foreground/90">Alima</span>
+              <span className="hidden md:block ml-2 text-xl font-bold text-foreground/90">Alima</span>
         </Link>
           </div>
 

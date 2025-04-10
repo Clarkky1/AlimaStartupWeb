@@ -487,10 +487,10 @@ export default function Home() {
                     Connect with skilled professionals for all your business requirements. From software development to marketing and design, we've got you covered.
                   </p>
                   <div className="flex flex-wrap gap-4">
-                    <Button asChild size="lg" className="rounded-full px-8">
+                    <Button asChild size="lg" className="rounded-full px-8 w-full sm:w-auto min-w-[180px]">
                       <Link href="/popular-today">Browse Services</Link>
                     </Button>
-                    <Button asChild size="lg" variant="outline" className="rounded-full px-8">
+                    <Button asChild size="lg" variant="outline" className="rounded-full px-8 w-full sm:w-auto min-w-[180px]">
                       <a 
                         href="#how-it-works"
                         onClick={(e) => {

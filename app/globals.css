@@ -5,12 +5,17 @@
 /* Enhanced smooth scrolling behavior */
 html {
   scroll-behavior: smooth !important;
+  height: -webkit-fill-available;
 }
 
 html,
 body {
   -webkit-font-smoothing: antialiased;
   -moz-osx-font-smoothing: grayscale;
+  min-height: 100vh;
+  min-height: -webkit-fill-available;
+  overflow-x: hidden;
+  -webkit-overflow-scrolling: touch; /* Momentum scrolling for iOS */
 }
 
 body {
@@ -163,4 +168,26 @@ h1, h2, h3, h4, h5, h6 {
 }
 [data-aos].aos-animate {
   pointer-events: auto;
+}
+
+/* Add additional mobile scroll optimizations */
+@media (max-width: 768px) {
+  /* Improve scroll performance on mobile */
+  body {
+    touch-action: manipulation;
+    -webkit-text-size-adjust: 100%;
+  }
+  
+  /* Remove highlight on tap for iOS */
+  * {
+    -webkit-tap-highlight-color: transparent;
+  }
+  
+  /* Fix position sticky on mobile */
+  .sticky {
+    position: -webkit-sticky;
+    position: sticky;
+    -webkit-transform: translateZ(0);
+    transform: translateZ(0);
+  }
 }

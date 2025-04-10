@@ -105,6 +105,8 @@ export default function RootLayout({
                 
                 // Keep track of whether we're clicking on the avatar dropdown
                 let isAvatarClick = false;
+                let isTouchScrolling = false;
+                let lastTouchY = 0;
                 
                 // Add a listener to capture avatar dropdown clicks
                 document.addEventListener('mousedown', function(e) {
@@ -117,6 +119,21 @@ export default function RootLayout({
                     setTimeout(() => { isAvatarClick = false }, 300);
                   }
                 }, true);
+                
+                // Handle touch events for mobile devices
+                document.addEventListener('touchstart', function(e) {
+                  lastTouchY = e.touches[0].clientY;
+                  isTouchScrolling = false;
+                }, { passive: true });
+                
+                document.addEventListener('touchmove', function(e) {
+                  const touchY = e.touches[0].clientY;
+                  const touchDiff = Math.abs(touchY - lastTouchY);
+                  // If touch movement is significant, mark as scrolling
+                  if (touchDiff > 10) {
+                    isTouchScrolling = true;
+                  }
+                }, { passive: true });
                 
                 // Check if we navigated back to home from another page
                 if (window.location.pathname === '/' && 
@@ -134,11 +151,22 @@ export default function RootLayout({
                     if (path !== '/') return;
                     
                     // Only scroll to top if on home page AND not clicking avatar
-                    if (!isAvatarClick) {
+                    if (!isAvatarClick && !isTouchScrolling) {
                       e.preventDefault();
-                      window.scrollTo(0, 0);
-                      document.body.scrollTop = 0;
-                      document.documentElement.scrollTop = 0;
+                      
+                      // Use smooth scrolling for better mobile experience
+                      try {
+                        window.scrollTo({
+                          top: 0,
+                          left: 0,
+                          behavior: 'smooth'
+                        });
+                      } catch (error) {
+                        // Fallback for older browsers
+                        window.scrollTo(0, 0);
+                        document.body.scrollTop = 0;
+                        document.documentElement.scrollTop = 0;
+                      }
                       
                       // Reload the page if needed to ensure content displays
                       if (!document.querySelector('#home')) {
@@ -147,6 +175,17 @@ export default function RootLayout({
                     }
                   });
                 });
+                
+                // Fix for iOS momentum scrolling issues
+                if (/iPhone|iPad|iPod/.test(navigator.userAgent)) {
+                  document.body.style.webkitOverflowScrolling = 'touch';
+                }
+                
+                // Improve scroll performance on mobile
+                const viewportMeta = document.querySelector('meta[name="viewport"]');
+                if (viewportMeta) {
+                  viewportMeta.content = 'width=device-width, initial-scale=1, maximum-scale=1';
+                }
               });
             `
           }}

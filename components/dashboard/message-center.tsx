@@ -911,6 +911,46 @@ export function MessageCenter() {
     providerName: string;
     transactionId: string;
   } | null>(null);
+  // Add a new hook for checking participants' roles after the existing hooks
+  const [otherParticipantRole, setOtherParticipantRole] = useState<string | null>(null);
+
+  // Define getOtherParticipantId function before it's used in useEffect
+  const getOtherParticipantId = (conversation: ConversationData) => {
+    if (!conversation || !conversation.participants || !user) return null;
+    return conversation.participants.find(id => id !== user.uid) || null;
+  };
+
+  // Add a function to check the other participant's role
+  const checkOtherParticipantRole = useCallback(async (participantId: string | null | undefined) => {
+    if (!participantId) return null;
+    
+    try {
+      const { db } = await initializeFirebase();
+      if (!db) return null;
+      
+      const { doc, getDoc } = await import("firebase/firestore");
+      const userDoc = await getDoc(doc(db, "users", participantId));
+      
+      if (userDoc.exists()) {
+        const userData = userDoc.data();
+        setOtherParticipantRole(userData.role || null);
+        return userData.role || null;
+      }
+      
+      return null;
+    } catch (error) {
+      console.error("Error checking participant role:", error);
+      return null;
+    }
+  }, []);
+
+  // Add an effect to check the other participant's role when conversation changes
+  useEffect(() => {
+    if (selectedConversation) {
+      const otherParticipantId = getOtherParticipantId(selectedConversation);
+      checkOtherParticipantRole(otherParticipantId);
+    }
+  }, [selectedConversation, checkOtherParticipantRole, getOtherParticipantId]);
 
   // Check if user is a provider
   useEffect(() => {
@@ -1507,11 +1547,6 @@ export function MessageCenter() {
     markMessagesAsRead()
   }, [selectedConversation, user, messages])
 
-  const getOtherParticipantId = (conversation: ConversationData) => {
-    if (!user) return null;
-    return conversation.participants.find(id => id !== user.uid) || null;
-  }
-
   // Handle sending a message
   const handleSendMessage = async (e: React.FormEvent) => {
     e.preventDefault()
@@ -2020,7 +2055,7 @@ export function MessageCenter() {
                               }
                             }}
                             user={user}
-                            getOtherParticipantId={getOtherParticipantId}
+                            getOtherParticipantId={(conv) => getOtherParticipantId(conv)}
                             getConversationDisplayInfo={getConversationDisplayInfo}
                             updateConversationInfo={updateConversationInfo}
                           />
@@ -2149,8 +2184,8 @@ export function MessageCenter() {
                           className="resize-none min-h-[50px] flex-1 rounded-2xl border-gray-200 focus:ring-2 focus:ring-blue-500 focus:border-transparent"
                         />
                         <div className="flex flex-col gap-2">
-                          {/* Add payment proof button */}
-                          {selectedConversation && (
+                          {/* Add payment proof button - only show if both users are providers */}
+                          {selectedConversation && user?.role === 'provider' && otherParticipantRole === 'provider' && (
                             <UploadPaymentProofDialog
                               onUpload={(imageUrl, serviceId, amount) => {
                                 // Create a message with payment proof
@@ -2421,8 +2456,8 @@ export function MessageCenter() {
                           className="resize-none min-h-[50px] flex-1 rounded-2xl border-gray-200 focus:ring-2 focus:ring-blue-500 focus:border-transparent"
                         />
                         <div className="flex flex-col gap-2">
-                          {/* Add payment proof button */}
-                          {selectedConversation && (
+                          {/* Add payment proof button - only show if both users are providers */}
+                          {selectedConversation && user?.role === 'provider' && otherParticipantRole === 'provider' && (
                             <UploadPaymentProofDialog
                               onUpload={(imageUrl, serviceId, amount) => {
                                 // Create a message with payment proof
@@ -2486,7 +2521,9 @@ export function MessageCenter() {
                 {/* Mobile-only back button */}
                 {windowWidth < 768 && (
                   <div className="flex justify-between items-center mb-4">
-                    <h2 className="font-semibold text-lg">{roleText.title}</h2>
+                    <h2 className="font-semibold text-lg">
+                      {otherParticipantRole === 'provider' ? 'About Provider' : 'About Client'}
+                    </h2>
                     <Button 
                       variant="ghost" 
                       size="sm" 
@@ -2525,7 +2562,7 @@ export function MessageCenter() {
                   
                   {/* Display role badge */}
                   <Badge variant="outline" className="mt-2">
-                    {roleText.roleLabel}
+                    {otherParticipantRole === 'provider' ? 'Service Provider' : 'Client'}
                   </Badge>
                 </div>
 

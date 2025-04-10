@@ -212,6 +212,7 @@ const UploadPaymentProofDialog = ({
   const [selectedService, setSelectedService] = useState<string | null>(null)
   const [paymentAmount, setPaymentAmount] = useState<string>("")
   const [selectedServiceDetails, setSelectedServiceDetails] = useState<{title: string, price?: number | string} | null>(null)
+  const [selectedFile, setSelectedFile] = useState<File | null>(null)
   const { toast } = useToast()
 
   // Select first service by default if available
@@ -393,12 +394,38 @@ const UploadPaymentProofDialog = ({
               onChange={(e) => {
                 const file = e.target.files?.[0]
                 if (file) {
-                  handleUpload(file)
+                  setSelectedFile(file)
                 }
               }}
               disabled={isUploading}
               required
             />
+          </div>
+          
+          {/* Send button */}
+          <div className="flex justify-end mt-4">
+            <Button 
+              type="button" 
+              disabled={isUploading || !selectedFile}
+              onClick={() => {
+                if (selectedFile) {
+                  handleUpload(selectedFile)
+                }
+              }}
+              className="w-full bg-blue-500 hover:bg-blue-600 text-white"
+            >
+              {isUploading ? (
+                <div className="flex items-center justify-center">
+                  <span className="mr-2">Uploading...</span>
+                  <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-white"></div>
+                </div>
+              ) : (
+                <div className="flex items-center justify-center">
+                  <Send className="h-4 w-4 mr-2" />
+                  Send Payment Proof
+                </div>
+              )}
+            </Button>
           </div>
         </div>
       </DialogContent>
@@ -2089,18 +2116,6 @@ export function MessageCenter() {
                     {/* Conversation Header */}
                     <div className="p-4 border-b flex justify-between items-center bg-white/80 backdrop-blur-md">
                       <div className="flex items-center space-x-3">
-                        {/* Back button for mobile - hidden on mobile */}
-                        <Button 
-                          variant="ghost" 
-                          size="icon" 
-                          onClick={() => {
-                            showConversationsList();
-                            setActiveMobileTab('conversations');
-                          }}
-                          className="hidden mr-1 rounded-full hover:bg-gray-100/80"
-                        >
-                          <ChevronLeft className="h-5 w-5" />
-                        </Button>
                         <div className="flex items-center gap-3">
                           <Avatar className="h-9 w-9 ring-2 ring-white/90 shadow-sm">
                             <AvatarImage 
@@ -2224,18 +2239,6 @@ export function MessageCenter() {
                     <div className="border-b bg-white/90 backdrop-blur-md sticky top-0 z-10">
                       <div className="p-4 flex justify-between items-center">
                         <div className="flex items-center space-x-3">
-                          {/* Back button for mobile - hidden on mobile */}
-                          <Button 
-                            variant="ghost" 
-                            size="icon" 
-                            onClick={() => {
-                              showConversationsList();
-                              setActiveMobileTab('conversations');
-                            }}
-                            className="hidden mr-1 rounded-full hover:bg-gray-100/80"
-                          >
-                            <ChevronLeft className="h-5 w-5" />
-                          </Button>
                           <div className="flex items-center gap-3">
                             <Avatar className="h-9 w-9 ring-2 ring-white/90 shadow-sm">
                               <AvatarImage 

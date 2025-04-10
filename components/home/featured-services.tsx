@@ -15,7 +15,6 @@ interface ServiceProvider {
   avatar: string;
   location: string;
   rating: number;
-  hasRating: boolean;
 }
 
 interface Service {
@@ -53,11 +52,10 @@ const mockGlobalServices: Service[] = [
     image: "https://images.unsplash.com/photo-1498050108023-c5249f4df085?q=80&w=2072&auto=format&fit=crop",
     provider: {
       id: "p1",
-      name: "Kin Clark Perez Perez",
+      name: "Kin Clark Perez",
       avatar: "/person-male-1.svg?height=50&width=50",
       location: "Quezon City",
       rating: 4.9,
-      hasRating: true,
     },
   },
   {
@@ -73,7 +71,6 @@ const mockGlobalServices: Service[] = [
       avatar: "/person-male-1.svg?height=50&width=50",
       location: "Makati City",
       rating: 4.8,
-      hasRating: true,
     },
   },
   {
@@ -89,7 +86,6 @@ const mockGlobalServices: Service[] = [
       avatar: "/person-male-1.svg?height=50&width=50",
       location: "Pasig City",
       rating: 4.6,
-      hasRating: true,
     },
   },
   {
@@ -105,7 +101,6 @@ const mockGlobalServices: Service[] = [
       avatar: "/person-male-1.svg?height=50&width=50",
       location: "Manila",
       rating: 4.7,
-      hasRating: true,
     },
   },
 ]
@@ -189,17 +184,16 @@ export function GlobalServices({ category = 'recent', expandable = false }: Glob
         const servicesData: Service[] = []
         
         if (querySnapshot.empty) {
-          // If no services found in Firestore, don't use mock data
-          // Just set an empty array to show "No services found" message
-          setServices([])
+          // If no services found in Firestore, use mock data
+          setServices(mockGlobalServices)
         } else {
           for (const docSnap of querySnapshot.docs) {
             const data = docSnap.data()
             let providerData: any = {}
             
             try {
-              // Get provider details from users collection
-              const providerRef = doc(db, "users", data.providerId)
+              // Get provider details
+              const providerRef = doc(db, "providers", data.providerId)
               const providerDoc = await getDoc(providerRef)
               if (providerDoc.exists()) {
                 providerData = providerDoc.data()
@@ -217,27 +211,29 @@ export function GlobalServices({ category = 'recent', expandable = false }: Glob
               image: data.image || "https://images.unsplash.com/photo-1498050108023-c5249f4df085?q=80&w=2072&auto=format&fit=crop",
               provider: {
                 id: data.providerId || "unknown",
-                name: providerData?.displayName || providerData?.name || "Service Provider",
-                avatar: providerData?.photoURL || providerData?.profilePicture || "/person-male-1.svg?height=50&width=50",
-                location: providerData?.location || "Philippines",
-                rating: data.rating || 0,
-                hasRating: data.rating > 0
+                name: providerData?.profile?.displayName || "Service Provider",
+                avatar: providerData?.profile?.profilePicture || "/person-male-1.svg?height=50&width=50",
+                location: providerData?.profile?.location || "Philippines",
+                rating: data.rating || 4.0,
               },
             })
           }
           
-          // Only use real services from the database
-          setServices(servicesData)
+          if (servicesData.length > 0) {
+            setServices(servicesData)
+          } else {
+            setServices(mockGlobalServices)
+          }
         }
       } catch (error) {
         console.error("Error fetching global services:", error)
         toast({
           title: "Error",
-          description: "Failed to load services. Displaying no services.",
+          description: "Failed to load services. Using sample data instead.",
           variant: "destructive",
         })
-        // Don't use mock data on error, just show no services
-        setServices([])
+        // Fallback to mock data on error
+        setServices(mockGlobalServices)
       } finally {
         setLoading(false)
       }
@@ -258,59 +254,63 @@ export function GlobalServices({ category = 'recent', expandable = false }: Glob
 
   // Modify display logic to handle expansion
   const displayServices = filteredServices.length > 0 ? filteredServices : services;
-  // Per user request: subtract 1 from the number of services displayed, but don't go below 0
-  const limitedCount = Math.max(0, displayServices.length - 1);
-  const limitedServices = isExpanded ? displayServices : displayServices.slice(0, limitedCount);
+  const limitedServices = isExpanded ? displayServices : displayServices.slice(0, 4);
 
   return (
-    <div className="flex flex-col w-full justify-center items-center gap-20 md:px-10">
-      <div className="w-full max-w-[1400px] mx-auto text-center">
-        <h2 className="text-4xl md:text-5xl font-bold mb-5 text-gray-900 dark:text-white">Featured Services</h2>
-        <p className="text-xl text-gray-600 dark:text-gray-400 mb-12 max-w-3xl mx-auto">Discover curated services that meet the highest standards of quality and reliability.</p>
-
-        {loading ? (
-          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-5">
-            {[...Array(4)].map((_, index) => (
-              <Skeleton key={index} className="h-[320px] w-full rounded-xl" />
+    <div className="space-y-6">
+      {loading ? (
+        // Skeleton loading state
+        <div className="grid grid-cols-1 gap-6 sm:grid-cols-2 lg:grid-cols-4">
+          {Array(4)
+            .fill(0)
+            .map((_, i) => (
+              <div key={i} className="space-y-3">
+                <Skeleton className="h-48 w-full rounded-lg" />
+                <div className="space-y-2">
+                  <Skeleton className="h-5 w-3/4" />
+                  <Skeleton className="h-4 w-full" />
+                  <div className="flex items-center gap-2 pt-2">
+                    <Skeleton className="h-8 w-8 rounded-full" />
+                    <Skeleton className="h-4 w-24" />
+                  </div>
+                </div>
+              </div>
             ))}
-          </div>
-        ) : (
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-5">
+        </div>
+      ) : limitedServices.length > 0 ? (
+        <>
+          <div className="grid grid-cols-1 gap-6 sm:grid-cols-2 lg:grid-cols-4">
             {limitedServices.map((service) => (
-              <div key={service.id} className="transition-transform hover:scale-105 p-1">
-                <ServiceCard
-                  id={service.id}
+              <div key={service.id}>
+                <ServiceCard 
+                  id={service.id} 
                   title={service.title}
                   description={service.description}
                   price={service.price}
                   category={service.category}
                   image={service.image}
-                  provider={{
-                    name: service.provider.name,
-                    avatar: service.provider.avatar || "/person-male-1.svg",
-                    rating: service.provider.rating,
-                    ratingCount: service.provider.ratingCount,
-                    location: service.provider.location,
-                    id: service.provider.id
-                  }}
-                  showRating={true}
+                  provider={service.provider}
                 />
               </div>
             ))}
           </div>
-        )}
-      </div>
-      {expandable && displayServices.length > 4 && (
-        <div className="flex justify-center mt-4">
-          <Button
-            variant="outline"
-            onClick={() => setIsExpanded(!isExpanded)}
-            className="px-5 py-1.5"
-          >
-            {isExpanded ? "Show Less" : "Show More"}
-          </Button>
+
+          {expandable && displayServices.length > 4 && (
+            <div className="flex justify-center mt-8">
+              <Button
+                variant="outline"
+                onClick={() => setIsExpanded(!isExpanded)}
+              >
+                {isExpanded ? 'Show Less' : 'View All'}
+              </Button>
+            </div>
+          )}
+        </>
+      ) : (
+        <div className="flex h-48 items-center justify-center rounded-lg border">
+          <p className="text-muted-foreground">No services available</p>
         </div>
       )}
     </div>
-  );
+  )
 }

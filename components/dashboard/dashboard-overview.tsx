@@ -1144,9 +1144,7 @@ export function DashboardOverview() {
                 (parseFloat(stats.clientSpending || "0") > 0 ? "Finance" : "Revenue") : 
                 "Spending"}
             </CardTitle>
-            <div className="h-10 w-10 rounded-xl bg-gradient-to-br from-emerald-500 to-teal-500 flex items-center justify-center z-10 shadow-md shadow-emerald-500/20">
-              <MessageSquare className="h-5 w-5 text-white" />
-            </div>
+            <div className="jsx-755b0c614062adcf h-10 w-10 rounded-xl bg-gradient-to-br from-emerald-500 to-teal-500 flex items-center justify-center z-10 shadow-md shadow-emerald-500/20"><span className="jsx-755b0c614062adcf text-white text-sm font-medium">₱</span></div>
           </CardHeader>
           <CardContent className="relative">
             <div className="flex flex-col gap-2">
@@ -1211,15 +1209,6 @@ export function DashboardOverview() {
             {/* Enhanced revenue visualization */}
             <div className="mt-5 flex h-12 items-center relative">
               <div className="absolute inset-0 bg-gradient-to-t from-emerald-100 to-transparent dark:from-emerald-900/20 dark:to-transparent rounded-md opacity-50"></div>
-              <div className="h-12 w-12 rounded-xl bg-gradient-to-br from-emerald-500 to-teal-500 flex items-center justify-center shadow-lg shadow-emerald-500/20 relative z-10">
-                <span className="text-white text-sm font-medium">₱</span>
-              </div>
-              <div className="flex-1 ml-3 h-2.5 bg-gray-100 dark:bg-gray-800 rounded-full overflow-hidden backdrop-blur-sm z-10">
-                <div 
-                  className="h-full bg-gradient-to-r from-emerald-500 to-teal-500 rounded-full" 
-                  style={{ width: `${Math.min(Math.abs(stats.revenueChange) + 30, 100)}%` }}
-                />
-              </div>
             </div>
             
             {/* Show help message when revenue is zero */}

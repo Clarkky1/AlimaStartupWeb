@@ -1,12 +1,15 @@
 "use client";
 
 import { useEffect } from 'react';
+import { useRouter, usePathname } from 'next/navigation';
 
 interface NavigationHandlerProps {
   children: React.ReactNode;
 }
 
 export function NavigationHandler({ children }: NavigationHandlerProps) {
+  const pathname = usePathname();
+  
   useEffect(() => {
     // Store the current path when the component mounts
     const currentPath = window.location.pathname;
@@ -35,6 +38,18 @@ export function NavigationHandler({ children }: NavigationHandlerProps) {
       sessionStorage.setItem('lastPath', window.location.pathname);
     };
     
+    // Function to handle hash changes
+    const handleHashChange = () => {
+      // Check if we're on the home page
+      if (window.location.pathname === '/') {
+        // If there's no home section visible, it might indicate a rendering issue
+        if (!document.querySelector('#home')) {
+          console.log('Home section not found, refreshing...');
+          window.location.reload();
+        }
+      }
+    };
+    
     // Initialize the lastPath in sessionStorage
     if (typeof window !== 'undefined') {
       if (!sessionStorage.getItem('lastPath')) {
@@ -44,12 +59,27 @@ export function NavigationHandler({ children }: NavigationHandlerProps) {
       // Listen for popstate events (browser back/forward)
       window.addEventListener('popstate', handleNavigationEvent);
       
+      // Listen for hashchange events
+      window.addEventListener('hashchange', handleHashChange);
+      
+      // If we're on the home page and the page doesn't have content
+      if (pathname === '/' && document.readyState === 'complete') {
+        // Check if we need to reload
+        setTimeout(() => {
+          if (!document.querySelector('#home')) {
+            console.log('Home section not found after navigation, refreshing...');
+            window.location.reload();
+          }
+        }, 500);
+      }
+      
       // Clean up
       return () => {
         window.removeEventListener('popstate', handleNavigationEvent);
+        window.removeEventListener('hashchange', handleHashChange);
       };
     }
-  }, []);
+  }, [pathname]);
 
   return <>{children}</>;
 } 

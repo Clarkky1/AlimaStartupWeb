@@ -98,7 +98,7 @@ export default function RootLayout({
           strategy="afterInteractive"
           dangerouslySetInnerHTML={{
             __html: `
-              // Fix to ensure navbar links can scroll to top
+              // Fix to ensure navbar links can scroll to top and home page displays correctly
               document.addEventListener('DOMContentLoaded', function() {
                 // Save a reference to any link that points to the homepage
                 const homeLinks = document.querySelectorAll('a[href="/"]');
@@ -118,15 +118,32 @@ export default function RootLayout({
                   }
                 }, true);
                 
+                // Check if we navigated back to home from another page
+                if (window.location.pathname === '/' && 
+                    document.referrer && 
+                    !document.referrer.includes(window.location.origin + '/')) {
+                  // Force reload to ensure all content renders properly
+                  window.location.reload();
+                }
+                
+                // Also handle navigation via navbar links
                 homeLinks.forEach(link => {
                   link.addEventListener('click', function(e) {
                     const path = window.location.pathname;
+                    // If we're not already on the home page, let the browser navigate normally
+                    if (path !== '/') return;
+                    
                     // Only scroll to top if on home page AND not clicking avatar
-                    if (path === '/' && !isAvatarClick) {
+                    if (!isAvatarClick) {
                       e.preventDefault();
                       window.scrollTo(0, 0);
                       document.body.scrollTop = 0;
                       document.documentElement.scrollTop = 0;
+                      
+                      // Reload the page if needed to ensure content displays
+                      if (!document.querySelector('#home')) {
+                        window.location.reload();
+                      }
                     }
                   });
                 });

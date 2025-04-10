@@ -24,51 +24,51 @@ const AnimationStyles = () => {
     <style jsx global>{`
       @keyframes float-slow {
         0% { transform: translate(0, 0); }
-        50% { transform: translate(20px, 20px); }
+        50% { transform: translate(30px, 30px); }
         100% { transform: translate(0, 0); }
       }
       @keyframes float-medium {
         0% { transform: translate(0, 0); }
-        50% { transform: translate(-20px, -20px); }
+        50% { transform: translate(-30px, -30px); }
         100% { transform: translate(0, 0); }
       }
       @keyframes float-fast {
         0% { transform: translate(0, 0); }
-        50% { transform: translate(15px, -15px); }
+        50% { transform: translate(25px, -25px); }
         100% { transform: translate(0, 0); }
       }
       @keyframes float-reverse {
         0% { transform: translate(0, 0); }
-        50% { transform: translate(-15px, 10px); }
+        50% { transform: translate(-25px, 15px); }
         100% { transform: translate(0, 0); }
       }
       @keyframes float-slow-reverse {
         0% { transform: translate(0, 0); }
-        50% { transform: translate(-20px, 15px); }
+        50% { transform: translate(-30px, 20px); }
         100% { transform: translate(0, 0); }
       }
       @keyframes float-medium-alt {
         0% { transform: translate(0, 0); }
-        50% { transform: translate(15px, 10px); }
+        50% { transform: translate(25px, 15px); }
         100% { transform: translate(0, 0); }
       }
       .animate-float-slow {
-        animation: float-slow 22s ease-in-out infinite;
+        animation: float-slow 18s cubic-bezier(0.45, 0.05, 0.55, 0.95) infinite;
       }
       .animate-float-medium {
-        animation: float-medium 20s ease-in-out infinite;
+        animation: float-medium 16s cubic-bezier(0.45, 0.05, 0.55, 0.95) infinite;
       }
       .animate-float-fast {
-        animation: float-fast 18s ease-in-out infinite;
+        animation: float-fast 14s cubic-bezier(0.45, 0.05, 0.55, 0.95) infinite;
       }
       .animate-float-reverse {
-        animation: float-reverse 19s ease-in-out infinite;
+        animation: float-reverse 15s cubic-bezier(0.45, 0.05, 0.55, 0.95) infinite;
       }
       .animate-float-slow-reverse {
-        animation: float-slow-reverse 21s ease-in-out infinite;
+        animation: float-slow-reverse 17s cubic-bezier(0.45, 0.05, 0.55, 0.95) infinite;
       }
       .animate-float-medium-alt {
-        animation: float-medium-alt 23s ease-in-out infinite;
+        animation: float-medium-alt 19s cubic-bezier(0.45, 0.05, 0.55, 0.95) infinite;
       }
     `}</style>
   )
@@ -125,33 +125,38 @@ export default function PopularTodayPage() {
         <div className="absolute inset-0 bg-gradient-to-br from-blue-50/70 via-white/80 to-teal-50/70 dark:from-slate-900/90 dark:via-slate-800/80 dark:to-blue-900/90"></div>
         
         {/* Animated background gradient circles - Apple-style blue and green */}
-        <div className="absolute -top-[20%] -left-[10%] w-[70%] h-[70%] bg-gradient-to-r from-blue-400/20 to-blue-300/10 rounded-full blur-3xl animate-float-slow"></div>
-        <div className="absolute -bottom-[20%] -right-[10%] w-[70%] h-[70%] bg-gradient-to-r from-teal-400/20 to-green-300/10 rounded-full blur-3xl animate-float-medium"></div>
-        <div className="absolute top-[30%] right-[10%] w-[50%] h-[50%] bg-gradient-to-r from-sky-400/15 to-cyan-300/5 rounded-full blur-2xl animate-float-fast"></div>
+        <div className="absolute -top-[20%] -left-[10%] w-[80%] h-[80%] bg-gradient-to-r from-blue-400/50 to-blue-300/40 rounded-full blur-3xl animate-float-slow"></div>
+        <div className="absolute -bottom-[20%] -right-[10%] w-[80%] h-[80%] bg-gradient-to-r from-teal-400/50 to-green-300/40 rounded-full blur-3xl animate-float-medium"></div>
+        <div className="absolute top-[30%] right-[10%] w-[60%] h-[60%] bg-gradient-to-r from-sky-400/45 to-cyan-300/35 rounded-full blur-2xl animate-float-fast"></div>
         
         {/* Additional accent gradients */}
-        <div className="absolute bottom-[20%] left-[25%] w-[40%] h-[40%] bg-gradient-to-tr from-green-300/10 to-cyan-400/5 rounded-full blur-2xl animate-float-slow-reverse"></div>
-        <div className="absolute top-[20%] left-[10%] w-[30%] h-[30%] bg-gradient-to-br from-indigo-300/10 to-blue-400/5 rounded-full blur-xl animate-float-medium-alt"></div>
+        <div className="absolute bottom-[20%] left-[25%] w-[50%] h-[50%] bg-gradient-to-tr from-green-300/40 to-cyan-400/30 rounded-full blur-2xl animate-float-slow-reverse"></div>
+        <div className="absolute top-[20%] left-[10%] w-[40%] h-[40%] bg-gradient-to-br from-indigo-300/40 to-blue-400/30 rounded-full blur-xl animate-float-medium-alt"></div>
         
         {/* Premium glassmorphism overlay */}
-        <div className="absolute inset-0 backdrop-blur-[6px] bg-white/30 dark:bg-black/20 z-0"></div>
+        <div className="absolute inset-0 backdrop-blur-[2px] bg-white/10 dark:bg-black/5 z-0"></div>
         
         {/* Content with premium styling */}
         <div className="container relative mx-auto px-6 z-10 text-center">
           <div className="max-w-3xl mx-auto space-y-6">
             <h1 className="mb-6 text-6xl font-semibold tracking-tight text-slate-800 dark:text-white md:text-7xl bg-clip-text"
-                style={{ textShadow: '0 2px 10px rgba(0,0,0,0.04)' }}>
-              Popular Today
+                style={{ 
+                  textShadow: '0 2px 10px rgba(0,0,0,0.04), 0 0 30px rgba(59, 130, 246, 0.3)',
+                  WebkitTextStroke: '1px rgba(59, 130, 246, 0.2)'
+                }}>
+              Discover Services Near & Far
             </h1>
             <p className="mx-auto text-xl md:text-2xl leading-relaxed text-slate-600 dark:text-slate-200 max-w-2xl font-light"
                style={{ textShadow: '0 1px 3px rgba(0,0,0,0.02)' }}>
-              Discover trending services and top providers that our users love.
+              From skilled local handymen to top digital professionals — find the perfect talent for any job.
             </p>
           </div>
         </div>
         
         {/* Glowing accent at bottom */}
-        <div className="absolute -bottom-24 left-1/2 h-64 w-64 -translate-x-1/2 rounded-full bg-gradient-to-r from-blue-400/10 to-green-400/10 blur-3xl"></div>
+        <div className="absolute -bottom-24 left-1/2 h-64 w-64 -translate-x-1/2 rounded-full bg-gradient-to-r from-blue-400/40 to-green-400/40 blur-3xl"></div>
+        <div className="absolute -bottom-12 left-1/4 h-48 w-48 rounded-full bg-gradient-to-r from-orange-400/30 to-yellow-400/30 blur-3xl"></div>
+        <div className="absolute -bottom-16 right-1/4 h-48 w-48 rounded-full bg-gradient-to-r from-purple-400/30 to-pink-400/30 blur-3xl"></div>
         
         {/* Bottom fade gradient */}
         <div className="absolute bottom-0 left-0 right-0 h-24 bg-gradient-to-t from-slate-50 dark:from-slate-900 to-transparent z-10 pointer-events-none"></div>

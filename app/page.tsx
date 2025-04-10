@@ -481,10 +481,10 @@ export default function Home() {
               <div className="grid grid-cols-1 gap-10 lg:grid-cols-2 lg:gap-20 items-center">
                 <div className="order-2 lg:order-1" data-aos="fade-right" data-aos-delay="200">
                   <h1 className="text-3xl font-bold tracking-tight sm:text-4xl md:text-5xl mb-8">
-                    Find the perfect service for your business needs
+                    Connect with local and global talent for any service you need
                   </h1>
                   <p className="mb-10 max-w-lg text-base sm:text-lg text-gray-600 dark:text-gray-300">
-                    Connect with skilled professionals for all your business requirements. From software development to marketing and design, we've got you covered.
+                    Find skilled professionals for both digital and physical services. Whether you need a web developer or a local handyman, Alima connects you with the right talent.
                   </p>
                   <div className="flex flex-wrap gap-4">
                     <Button asChild size="lg" className="rounded-full px-8 w-full sm:w-auto min-w-[180px]">
@@ -669,7 +669,7 @@ export default function Home() {
                 <div className="order-2 lg:order-1" data-aos="fade-right">
                   <h2 className="text-3xl font-semibold md:text-4xl mb-6 bg-clip-text text-transparent bg-gradient-to-r from-gray-900 to-gray-600 dark:from-white dark:to-gray-300">The Problem We Solve</h2>
                   <p className="text-gray-600 dark:text-gray-300 text-lg mb-8">
-                    Finding reliable service providers should be simple and transparent, yet the process is often filled with uncertainty and risk.
+                    Finding reliable service providers locally and globally can be challenging. Alima bridges this gap by connecting you with verified professionals for any job.
                   </p>
 
                   <div className="space-y-6">
@@ -739,7 +739,7 @@ export default function Home() {
             <div className="text-center mb-16 max-w-3xl mx-auto" data-aos="fade-up">
               <h2 className="text-3xl font-semibold tracking-tight md:text-4xl lg:text-5xl mb-6 bg-clip-text text-transparent bg-gradient-to-r from-gray-900 to-gray-700 dark:from-white dark:to-gray-300">How Alima Works</h2>
               <p className="text-gray-600 dark:text-gray-300 text-lg">
-                Our platform makes it easy to connect with skilled professionals and get the services you need
+                Our platform makes it easy to connect with talented professionals for both digital services and local physical work
               </p>
             </div>
             

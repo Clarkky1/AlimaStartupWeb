@@ -43,9 +43,10 @@ interface Notification {
 
 interface NotificationCenterProps {
   userOnly?: boolean
+  onNotificationRead?: () => void
 }
 
-export function NotificationCenter({ userOnly = false }: NotificationCenterProps) {
+export function NotificationCenter({ userOnly = false, onNotificationRead }: NotificationCenterProps) {
   const { user } = useAuth()
   const { toast } = useToast()
   const router = useRouter()
@@ -219,6 +220,10 @@ export function NotificationCenter({ userOnly = false }: NotificationCenterProps
         title: "Success",
         description: "All notifications marked as read",
       })
+
+      if (onNotificationRead) {
+        onNotificationRead()
+      }
     } catch (error) {
       console.error("Error marking notifications as read:", error)
       toast({
@@ -246,6 +251,11 @@ export function NotificationCenter({ userOnly = false }: NotificationCenterProps
             n.id === notification.id ? { ...n, read: true } : n
           )
         )
+        
+        // Call the callback if provided
+        if (onNotificationRead) {
+          onNotificationRead();
+        }
       }
 
       // Handle navigation based on notification type

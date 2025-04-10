@@ -22,6 +22,8 @@ interface RatingModalProps {
   providerId: string
   providerName: string
   serviceId: string
+  serviceTitle?: string
+  transactionId?: string
 }
 
 export function RatingModal({
@@ -29,7 +31,9 @@ export function RatingModal({
   onOpenChange,
   providerId,
   providerName,
-  serviceId
+  serviceId,
+  serviceTitle,
+  transactionId
 }: RatingModalProps) {
   const [rating, setRating] = useState(0)
   const [feedback, setFeedback] = useState("")
@@ -110,9 +114,23 @@ export function RatingModal({
         }
       }
       
-      // Try to update related transaction status to completed
-      // Find transactions between this user and provider for this service
-      if (user) {
+      // Update transaction if transactionId is provided
+      if (transactionId) {
+        const transactionRef = doc(db, "transactions", transactionId)
+        const transactionDoc = await getDoc(transactionRef)
+        
+        if (transactionDoc.exists()) {
+          await updateDoc(transactionRef, {
+            status: "completed",
+            rating: rating,
+            feedback: feedback || "",
+            updatedAt: new Date().toISOString()
+          })
+        }
+      } 
+      // Otherwise try to update related transaction status to completed
+      else if (user) {
+        // Find transactions between this user and provider for this service
         const transactionsQuery = query(
           collection(db, "transactions"),
           where("userId", "==", user.uid),
@@ -198,7 +216,7 @@ export function RatingModal({
         <DialogHeader>
           <DialogTitle>Rate Your Experience</DialogTitle>
           <DialogDescription>
-            How was your experience with {providerName}? Your feedback helps others make informed decisions.
+            How was your experience with {serviceTitle ? `${serviceTitle} by ${providerName}` : providerName}? Your feedback helps others make informed decisions.
           </DialogDescription>
         </DialogHeader>
 

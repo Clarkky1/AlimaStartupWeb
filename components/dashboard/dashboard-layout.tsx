@@ -16,7 +16,7 @@ import {
 } from "@/components/ui/dropdown-menu"
 import { Sheet, SheetContent, SheetTrigger } from "@/components/ui/sheet"
 import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog"
-import { Home, Settings, MessageSquare, Bell, Wallet, Menu, LogOut, User, LayoutDashboard, ListIcon } from "lucide-react"
+import { Home, Settings, MessageSquare, Bell, Wallet, Menu, LogOut, User, LayoutDashboard, ListIcon, X } from "lucide-react"
 import { useAuth } from "@/app/context/auth-context"
 import { cn } from "@/lib/utils"
 import { ScrollArea } from "@/components/ui/scroll-area"
@@ -170,7 +170,7 @@ export function DashboardLayout({ children }: DashboardLayoutProps) {
           <Sheet open={isMobileSidebarOpen} onOpenChange={setIsMobileSidebarOpen}>
             <SheetTrigger asChild>
               <Button variant="ghost" size="icon" className="md:hidden rounded-full hover:bg-black/5 dark:hover:bg-white/10 transition-colors">
-                <Menu className="h-5 w-5" />
+                {isMobileSidebarOpen ? <X className="h-5 w-5" /> : <Menu className="h-5 w-5" />}
                 <span className="sr-only">Toggle Menu</span>
               </Button>
             </SheetTrigger>

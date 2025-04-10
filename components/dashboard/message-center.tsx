@@ -201,10 +201,10 @@ const mockMessages: Record<string, Message[]> = {
 
 // Fix UploadPaymentProofDialog component
 const UploadPaymentProofDialog = ({ 
-  onUpload,
+  onUpload, 
   providerId
 }: { 
-  onUpload: (imageUrl: string, serviceId?: string, amount?: number) => void;
+  onUpload: (imageUrl: string, serviceId?: string, amount?: number) => void; 
   providerId?: string;
 }) => {
   const [selectedService, setSelectedService] = useState<string | null>(null);
@@ -350,17 +350,17 @@ const UploadPaymentProofDialog = ({
         </DialogHeader>
         <div className="space-y-4">
           {/* Service selection */}
-          <div className="space-y-2">
-            <Label htmlFor="service-select">Service</Label>
+            <div className="space-y-2">
+              <Label htmlFor="service-select">Service</Label>
             <Select value={selectedService || ''} onValueChange={setSelectedService}>
-              <SelectTrigger id="service-select">
+                <SelectTrigger id="service-select">
                 {selectedService ? 
                   providerServices.find(s => s.id === selectedService)?.title + 
                   " - ₱" + 
                   providerServices.find(s => s.id === selectedService)?.price 
                   : "Select a service"}
-              </SelectTrigger>
-              <SelectContent>
+                </SelectTrigger>
+                <SelectContent>
                 {providerServices.length === 0 ? (
                   <SelectItem value="" disabled>No services available</SelectItem>
                 ) : (
@@ -370,17 +370,17 @@ const UploadPaymentProofDialog = ({
                     </SelectItem>
                   ))
                 )}
-              </SelectContent>
-            </Select>
-            
+                </SelectContent>
+              </Select>
+              
             {/* Show selected service details */}
             {selectedService && (
-              <div className="mt-2 p-3 rounded-md border bg-muted/10">
+                <div className="mt-2 p-3 rounded-md border bg-muted/10">
                 <h4 className="text-sm font-medium mb-1">{providerServices.find(s => s.id === selectedService)?.title}</h4>
                 <div className="text-sm font-semibold text-primary">₱{providerServices.find(s => s.id === selectedService)?.price}</div>
-              </div>
-            )}
-          </div>
+                    </div>
+                  )}
+                </div>
           
           {/* Payment amount */}
           <div className="space-y-2">
@@ -1589,7 +1589,7 @@ export function MessageCenter() {
     
     const otherParticipantId = getOtherParticipantId(selectedConversation)
     if (!otherParticipantId) return
-    
+
     try {
       const { db } = await initializeFirebase()
       if (!db) return
@@ -2007,17 +2007,24 @@ export function MessageCenter() {
       <div className="flex border-b md:hidden bg-white/80 backdrop-blur-sm sticky top-0 z-50">
         <Button 
           variant="ghost" 
-          className={`flex-1 rounded-none ${activeMobileTab === 'conversations' ? 'border-b-2 border-primary font-medium' : 'text-gray-600'}`}
+          className={`flex-1 rounded-none ${activeMobileTab === 'conversations' ? 'border-b-2 border-primary font-medium bg-primary/5' : 'text-gray-600'}`}
           onClick={() => {
             setActiveMobileTab('conversations');
             setShowConversationList(true);
           }}
         >
-          Conversations
+          {activeMobileTab === 'conversations' ? (
+            <div className="flex items-center">
+              <span className="mr-1.5">Conversations</span>
+              <X className="h-4 w-4" />
+            </div>
+          ) : (
+            "Conversations"
+          )}
         </Button>
         <Button 
           variant="ghost" 
-          className={`flex-1 rounded-none ${activeMobileTab === 'chat' ? 'border-b-2 border-primary font-medium' : 'text-gray-600'}`}
+          className={`flex-1 rounded-none ${activeMobileTab === 'chat' ? 'border-b-2 border-primary font-medium bg-primary/5' : 'text-gray-600'}`}
           onClick={() => {
             setActiveMobileTab('chat');
             if (selectedConversation) {
@@ -2026,18 +2033,32 @@ export function MessageCenter() {
           }}
           disabled={!selectedConversation}
         >
-          Chat
+          {activeMobileTab === 'chat' && selectedConversation ? (
+            <div className="flex items-center">
+              <span className="mr-1.5">Chat</span>
+              <X className="h-4 w-4" />
+            </div>
+          ) : (
+            "Chat"
+          )}
         </Button>
         <Button 
           variant="ghost" 
-          className={`flex-1 rounded-none ${activeMobileTab === 'info' ? 'border-b-2 border-primary font-medium' : 'text-gray-600'}`}
+          className={`flex-1 rounded-none ${activeMobileTab === 'info' ? 'border-b-2 border-primary font-medium bg-primary/5' : 'text-gray-600'}`}
           onClick={() => {
             setActiveMobileTab('info');
             setShowUserInfo(true);
           }}
           disabled={!selectedConversation}
         >
-          Info
+          {activeMobileTab === 'info' && selectedConversation ? (
+            <div className="flex items-center">
+              <span className="mr-1.5">Info</span>
+              <X className="h-4 w-4" />
+            </div>
+          ) : (
+            "Info"
+          )}
         </Button>
       </div>
 
@@ -2393,17 +2414,17 @@ export function MessageCenter() {
                 </div>
 
                 <div className="md:pt-0">
-                  <ConversationInfo 
-                    userId={getOtherParticipantId(selectedConversation) || ""}
-                    serviceId={activeService || selectedConversation?.serviceId}
-                    isVisible={true}
-                    onClose={() => {
-                      setShowUserInfo(false);
-                      if (windowWidth < 768) {
-                        setActiveMobileTab('chat');
-                      }
-                    }}
-                  />
+                <ConversationInfo 
+                  userId={getOtherParticipantId(selectedConversation) || ""}
+                  serviceId={activeService || selectedConversation?.serviceId}
+                  isVisible={true}
+                  onClose={() => {
+                    setShowUserInfo(false);
+                    if (windowWidth < 768) {
+                      setActiveMobileTab('chat');
+                    }
+                  }}
+                />
                 </div>
               </div>
             </div>

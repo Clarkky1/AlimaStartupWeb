@@ -414,6 +414,13 @@ export default function Home() {
     };
   }, []);
 
+  // Force scroll to top when home page loads
+  useEffect(() => {
+    window.scrollTo(0, 0);
+    document.body.scrollTop = 0;
+    document.documentElement.scrollTop = 0;
+  }, []);
+
   return (
     <div className="flex min-h-screen flex-col bg-white text-black dark:bg-black dark:text-white relative overflow-hidden" key={loadKey}>
       {/* Add animation styles */}

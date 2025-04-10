@@ -1,9 +1,9 @@
 "use client"
 
-import { useState, useEffect } from "react"
+import { useState, useEffect, useRef } from "react"
 import Link from "next/link"
 import { useRouter, usePathname } from "next/navigation"
-import { Menu, Bell, LogOut } from "lucide-react"
+import { Menu, Bell, LogOut, X } from "lucide-react"
 import { Button } from "@/components/ui/button"
 import { useAuth } from "@/app/context/auth-context"
 import { 
@@ -29,6 +29,24 @@ import {
   DialogFooter,
 } from "@/components/ui/dialog"
 
+// Add a global scrollToTop function to ensure it's accessible from anywhere
+export function scrollToTopOfPage() {
+  // Use both document and window methods for maximum compatibility
+  window.scrollTo(0, 0);
+  window.scrollTo({top: 0, behavior: 'auto'});
+  document.body.scrollTop = 0;
+  document.documentElement.scrollTop = 0;
+}
+
+// Global function for scroll prevention, accessible to any component
+export function preventScrollEvent(e: React.MouseEvent | React.KeyboardEvent | MouseEvent) {
+  if (e) {
+    e.stopPropagation();
+    if ('preventDefault' in e) e.preventDefault();
+  }
+  return false;
+}
+
 export function Navbar() {
   const [isMenuOpen, setIsMenuOpen] = useState(false)
   const [showLogoutConfirm, setShowLogoutConfirm] = useState(false)
@@ -37,6 +55,24 @@ export function Navbar() {
   const pathname = usePathname()
   const { toast } = useToast()
   const { messageCounts, notificationCounts } = useUnreadCounts(user?.uid)
+  
+  // Function to handle navigation to the home page
+  const navigateToHome = (e: React.MouseEvent) => {
+    e.preventDefault();
+    
+    if (pathname === "/") {
+      // If already on home page, just scroll to top without navigation
+      // Use direct DOM manipulation for most reliability
+      scrollToTopOfPage();
+      
+      // Also try with timeouts as fallback
+      setTimeout(scrollToTopOfPage, 10);
+      setTimeout(scrollToTopOfPage, 100);
+    } else {
+      // If on another page, navigate to home
+      window.location.href = "/";
+    }
+  };
   
   const handleLogout = async () => {
     await logout()
@@ -137,13 +173,35 @@ export function Navbar() {
     setShowLogoutConfirm(true)
   }
 
+  // Dedicated handler for dropdown menu to prevent scrolling
+  const handleDropdownClick = (e: React.MouseEvent) => {
+    e.stopPropagation();
+    e.preventDefault();
+    // Make sure any scroll event doesn't propagate
+    const root = document.documentElement;
+    const scrollY = root.scrollTop;
+    
+    // Temporarily disable scroll
+    document.body.style.position = 'fixed';
+    document.body.style.top = `-${scrollY}px`;
+    
+    // Re-enable scroll after dropdown action completes
+    setTimeout(() => {
+      document.body.style.position = '';
+      document.body.style.top = '';
+      root.scrollTop = scrollY;
+    }, 10);
+    
+    return false;
+  };
+
   return (
     <div className="sticky top-0 z-50 w-full py-6">
       <header className="mx-auto max-w-3xl md:max-w-4xl lg:max-w-5xl rounded-2xl bg-white/5 dark:bg-black/5 backdrop-blur-md border border-white/10 dark:border-white/5 text-foreground shadow-[0_0_15px_rgba(59,130,246,0.2)] dark:shadow-[0_0_25px_rgba(59,130,246,0.25)] transition-all hover:shadow-[0_0_20px_rgba(59,130,246,0.3)] dark:hover:shadow-[0_0_30px_rgba(59,130,246,0.35)]">
         <div className="flex h-14 items-center justify-between px-6">
         {/* Logo */}
           <div className="flex-shrink-0">
-        <Link href="/" className="flex items-center">
+        <Link href="/" className="flex items-center" onClick={navigateToHome}>
               <img 
                 src="/AlimaLOGO.svg" 
                 alt="Alima Logo" 
@@ -165,7 +223,13 @@ export function Navbar() {
                         ? "text-primary drop-shadow-[0_0_3px_rgba(59,130,246,0.3)]" 
                         : "text-foreground/70 hover:text-foreground/90"
                     }`}
-                    onClick={(e) => handleAnchorClick(e, item.href)}
+                    onClick={(e) => {
+                      if (item.href === "/") {
+                        navigateToHome(e);
+                        return;
+                      }
+                      handleAnchorClick(e, item.href);
+                    }}
                   >
                     {item.name}
                     {isActive(item.href) && (
@@ -182,8 +246,16 @@ export function Navbar() {
             {user ? (
               <DropdownMenu>
                 <DropdownMenuTrigger asChild>
-                  <div className="relative">
-                    <Button variant="ghost" className="h-10 w-10 rounded-full p-0 overflow-hidden">
+                  <div 
+                    className="relative dropdown-trigger" 
+                    onClick={handleDropdownClick}
+                    onMouseDown={preventScrollEvent}
+                  >
+                    <Button 
+                      variant="ghost" 
+                      className="h-10 w-10 rounded-full p-0 overflow-hidden"
+                      onClick={preventScrollEvent}
+                    >
                       <Avatar className="h-10 w-10 border border-white/10 shadow-[0_0_10px_rgba(59,130,246,0.1)]">
                         <AvatarImage
                           src={user.avatar || user.profilePicture || user.photoURL || '/default-avatar.png'}
@@ -204,7 +276,12 @@ export function Navbar() {
                     )}
                   </div>
                 </DropdownMenuTrigger>
-                <DropdownMenuContent align="end" className="mt-1 bg-background/80 backdrop-blur-md border border-white/10">
+                <DropdownMenuContent 
+                  align="end" 
+                  className="mt-1 bg-background/80 backdrop-blur-md border border-white/10"
+                  onClick={preventScrollEvent} 
+                  onMouseDown={preventScrollEvent}
+                >
                   <DropdownMenuLabel>
                     <div className="flex flex-col">
                       <span>{user.name || user.displayName}</span>
@@ -278,7 +355,7 @@ export function Navbar() {
               className="md:hidden hover:bg-white/10"
               onClick={() => setIsMenuOpen(!isMenuOpen)}
             >
-              <Menu className="h-6 w-6" />
+              {isMenuOpen ? <X className="h-6 w-6" /> : <Menu className="h-6 w-6" />}
             </Button>
           </div>
         </div>
@@ -300,6 +377,11 @@ export function Navbar() {
                         : "text-foreground/90 hover:bg-white/10 hover:text-foreground"
                       }`}
                       onClick={(e) => {
+                        if (item.href === "/") {
+                          navigateToHome(e);
+                          setIsMenuOpen(false);
+                          return;
+                        }
                         handleAnchorClick(e, item.href);
                         if (!item.href.startsWith('/#')) {
                           setIsMenuOpen(false);

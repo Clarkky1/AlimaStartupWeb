@@ -4,20 +4,22 @@ export function Footer() {
   return (
     <footer className="border-t bg-background">
       <div className="container mx-auto px-4 py-8">
-        <div className="grid grid-cols-2 gap-6 sm:grid-cols-2 md:grid-cols-4">
-          <div className="col-span-2 sm:col-span-1 mb-2 sm:mb-0">
-            <Link href="/" className="flex items-center">
-              <img src="/AlimaLOGO.svg?height=32&width=32" alt="Logo" className="h-8 w-8" />
-              <span className="ml-2 text-xl font-bold text-blue">Alima</span>
-            </Link>
-            <p className="mt-4 text-sm text-muted-foreground">
-              Connecting skilled professionals with those who need their services.
-            </p>
-          </div>
+        {/* First row - Logo and Tagline (full width on mobile) */}
+        <div className="mb-6 border-b pb-4">
+          <Link href="/" className="flex items-center justify-center sm:justify-start">
+            <img src="/AlimaLOGO.svg?height=32&width=32" alt="Logo" className="h-8 w-8" />
+            <span className="ml-2 text-xl font-bold text-blue">Alima</span>
+          </Link>
+          <p className="mt-4 text-center sm:text-left text-sm text-muted-foreground">
+            Connecting skilled professionals with those who need their services.
+          </p>
+        </div>
 
+        {/* Second row - Navigation Links */}
+        <div className="grid grid-cols-1 sm:grid-cols-3 gap-8">
           <div>
-            <h3 className="mb-3 text-sm font-semibold">Services</h3>
-            <ul className="space-y-2 text-sm">
+            <h3 className="mb-3 text-sm font-semibold text-center sm:text-left">Services</h3>
+            <ul className="space-y-2 text-sm text-center sm:text-left">
               <li>
                 <Link href="/popular-today" className="text-muted-foreground hover:text-primary">
                   Popular Services
@@ -42,8 +44,8 @@ export function Footer() {
           </div>
 
           <div>
-            <h3 className="mb-3 text-sm font-semibold">Company</h3>
-            <ul className="space-y-2 text-sm">
+            <h3 className="mb-3 text-sm font-semibold text-center sm:text-left">Company</h3>
+            <ul className="space-y-2 text-sm text-center sm:text-left">
               <li>
                 <Link href="/about" className="text-muted-foreground hover:text-primary">
                   About Us
@@ -68,8 +70,8 @@ export function Footer() {
           </div>
 
           <div>
-            <h3 className="mb-3 text-sm font-semibold">Legal</h3>
-            <ul className="space-y-2 text-sm">
+            <h3 className="mb-3 text-sm font-semibold text-center sm:text-left">Legal</h3>
+            <ul className="space-y-2 text-sm text-center sm:text-left">
               <li>
                 <Link href="/terms" className="text-muted-foreground hover:text-primary">
                   Terms of Service

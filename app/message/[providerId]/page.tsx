@@ -270,6 +270,8 @@ export default function MessagePage({ params }: { params: { providerId: string }
   const [contacts, setContacts] = useState<any[]>([])
   const [messageType, setMessageType] = useState<"text" | "payment">("text");
   const [showWelcomeMessage, setShowWelcomeMessage] = useState(true);
+  // Add state for messages loading
+  const [messagesLoading, setMessagesLoading] = useState(true)
 
   // Add state for the rating dialog
   const [ratingDialogOpen, setRatingDialogOpen] = useState(false);
@@ -318,15 +320,33 @@ export default function MessagePage({ params }: { params: { providerId: string }
   const roleText = getRoleBasedText(isChatUserProvider);
 
   const scrollToBottom = () => {
-    setTimeout(() => {
-      messagesEndRef.current?.scrollIntoView({ behavior: "smooth" })
-    }, 100) // Add small delay to ensure content is rendered
+    // More aggressive scrolling with multiple attempts to ensure it works
+    const scrollAction = () => {
+      if (messagesEndRef.current) {
+        messagesEndRef.current.scrollIntoView({ behavior: "smooth" });
+      }
+    };
+    
+    // Immediate attempt
+    scrollAction();
+    
+    // Multiple delayed attempts to ensure scrolling works after rendering/image loading
+    setTimeout(scrollAction, 100);
+    setTimeout(scrollAction, 300);
+    setTimeout(scrollAction, 500);
   }
 
   // Add this useEffect for auto-scrolling
   useEffect(() => {
-    scrollToBottom()
-  }, [messages])
+    if (messages.length > 0 && !messagesLoading) {
+      scrollToBottom();
+    }
+  }, [messages, messagesLoading]);
+  
+  // Add handler for image loading to ensure scroll after images load
+  const handleImageLoaded = () => {
+    scrollToBottom();
+  };
 
   useEffectState(() => {
     async function fetchProviderData() {
@@ -414,6 +434,7 @@ export default function MessagePage({ params }: { params: { providerId: string }
       }
 
       try {
+        setMessagesLoading(true); // Start loading messages
         const { db } = await initializeFirebase();
         if (!db) throw new Error("Failed to initialize Firebase");
         
@@ -453,12 +474,19 @@ export default function MessagePage({ params }: { params: { providerId: string }
             });
           }
           setMessages(messagesList);
+          setMessagesLoading(false); // End loading messages
           scrollToBottom();
         });
 
         return () => unsubscribe();
       } catch (error) {
         console.error("Error fetching messages:", error);
+        setMessagesLoading(false); // End loading on error
+        toast({
+          title: "Error",
+          description: "Failed to load messages. Please try again.",
+          variant: "destructive",
+        });
       }
     }
 
@@ -534,6 +562,16 @@ export default function MessagePage({ params }: { params: { providerId: string }
     }
 
     try {
+      // Collect the message data before sending to use for optimistic UI update
+      const newMessageText = message.trim();
+      
+      // Clear the message input immediately for better UX
+      setMessage("");
+      setPaymentProofUrl(null);
+      
+      // Scroll to bottom after sending a message
+      scrollToBottom();
+      
       const { db } = await initializeFirebase()
       if (!db) {
         toast({
@@ -633,10 +671,6 @@ export default function MessagePage({ params }: { params: { providerId: string }
         description: "Your message has been sent successfully",
       })
 
-      // Clear the message and payment proof after sending
-      setMessage("")
-      setPaymentProofUrl(null)
-      
       // Remove the router.push to stay on the current page
       // router.push("/dashboard/messages") // This line should be removed
     } catch (error) {
@@ -1132,7 +1166,15 @@ export default function MessagePage({ params }: { params: { providerId: string }
                 </div>
               )}
               <div className="mb-0 h-[calc(100vh-380px)] max-h-[calc(100vh-380px)] overflow-y-auto border rounded-md p-4">
-                {messages.map((msg) => (
+                {messagesLoading ? (
+                  // Loading state for messages
+                  <div className="flex items-center justify-center h-[calc(100vh-410px)]">
+                    <div className="flex flex-col items-center">
+                      <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary mb-2"></div>
+                      <p className="text-sm text-muted-foreground">Loading messages...</p>
+                    </div>
+                  </div>
+                ) : messages.map((msg) => (
                   <div
                     key={msg.id}
                     className={`mb-4 flex ${msg.senderId === user?.uid ? 'justify-end' : 'justify-start'}`}
@@ -1185,6 +1227,7 @@ export default function MessagePage({ params }: { params: { providerId: string }
                             src={msg.paymentProof} 
                             alt="Payment Proof" 
                             className="mt-2 max-h-40 w-full object-contain rounded-md border border-white/20 bg-white/10"
+                            onLoad={handleImageLoaded}
                           />
                           
                           {msg.paymentConfirmed && (

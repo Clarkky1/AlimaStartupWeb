@@ -28,28 +28,35 @@ export function ClientLayout({ children }: { children: React.ReactNode }) {
 
   // Initialize AOS with custom settings
   useEffect(() => {
-    AOS.init({
-      duration: 800,
-      easing: 'ease-out-cubic',
-      once: false,
-      mirror: true,
-      offset: 50,
-      delay: 100,
-      debounceDelay: 50,
-      throttleDelay: 99,
-      anchorPlacement: 'top-bottom',
-      disable: 'mobile',
-    });
-
-    // Refresh AOS when the window is resized for responsiveness
-    window.addEventListener('resize', () => {
-      AOS.refresh();
-    });
-
-    // Refresh AOS on route change
-    window.addEventListener('load', () => {
-      AOS.refresh();
-    });
+    // Only run on client-side
+    if (typeof window === 'undefined') return;
+    
+    // Wait a bit for hydration to complete
+    setTimeout(() => {
+      AOS.init({
+        duration: 800,
+        easing: 'ease-out-cubic',
+        once: false,
+        mirror: true,
+        offset: 50,
+        delay: 100,
+        debounceDelay: 50,
+        throttleDelay: 99,
+        anchorPlacement: 'top-bottom',
+        disable: 'mobile',
+        startEvent: 'DOMContentLoaded'
+      });
+  
+      // Refresh AOS when the window is resized for responsiveness
+      window.addEventListener('resize', () => {
+        AOS.refresh();
+      });
+  
+      // Refresh AOS on route change
+      window.addEventListener('load', () => {
+        AOS.refresh();
+      });
+    }, 100); // Short delay to ensure hydration completes
 
     return () => {
       window.removeEventListener('resize', () => {

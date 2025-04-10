@@ -186,6 +186,9 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         // Log auth state for debugging
         console.log("Auth state detected, user:", firebaseUser.uid);
         
+        // Check if this is a new login by comparing with previous state
+        const isNewLogin = !user || user.uid !== firebaseUser.uid;
+        
         const userRef = doc(dbInstance, "users", firebaseUser.uid);
         const userDoc = await getDoc(userRef);
         
@@ -223,6 +226,9 @@ export function AuthProvider({ children }: { children: ReactNode }) {
           if (userData.name || userData.displayName) {
             localStorage.setItem(`name_${userData.uid}`, userData.name || userData.displayName);
           }
+          
+          // Store login state to detect new logins
+          localStorage.setItem('currentLoggedInUser', userData.uid);
         }
 
         setUser(userData);
@@ -239,6 +245,18 @@ export function AuthProvider({ children }: { children: ReactNode }) {
           // Only do a full update if we haven't seen this user before
           if (!userDoc.exists()) {
             await setDoc(userRef, userData, { merge: true });
+          }
+        }
+        
+        // Force page refresh on new login to ensure all components properly rerender
+        // Check if this is a login event (not just a page refresh with existing auth)
+        if (isNewLogin && typeof window !== 'undefined') {
+          const currentPath = window.location.pathname;
+          
+          // Only refresh if we're on the homepage or dashboard to avoid disrupting other flows
+          if (currentPath === '/' || currentPath.includes('/dashboard') || currentPath === '/popular-today') {
+            console.log("New login detected, refreshing page to update UI state");
+            window.location.reload();
           }
         }
       } catch (error) {

@@ -28,13 +28,23 @@ export function HydrationFix() {
       'autocomplete',
       'data-new-gr-c-s-check-loaded', // Specific attribute from error message
       'data-gr-ext-installed',        // Specific attribute from error message
+      'data-aos',                     // AOS animation attribute causing hydration mismatch
+      'data-aos-delay'                // AOS delay attribute
     ];
 
-    // Function to clean problematic attributes from an element
+    // Function to clean problematic attributes from an element and handle AOS specially
     const cleanElement = (element: Element) => {
       problematicAttributes.forEach(attr => {
         if (element.hasAttribute(attr)) {
-          element.removeAttribute(attr);
+          // Special handling for AOS attributes during SSR/hydration
+          if (attr === 'data-aos' || attr === 'data-aos-delay') {
+            // Set null value on server or store the client value
+            if (typeof window === 'undefined') {
+              element.setAttribute(attr, 'null');
+            }
+          } else {
+            element.removeAttribute(attr);
+          }
         }
       });
 

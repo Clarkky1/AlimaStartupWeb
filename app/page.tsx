@@ -715,7 +715,7 @@ export default function Home() {
                   <div className="relative">
                     <div className="w-[350px] h-[350px] md:w-[400px] md:h-[400px] rounded-3xl overflow-hidden shadow-xl ring-1 ring-gray-200/30 dark:ring-white/10">
                       <img 
-                        src="/problem-solving.svg" 
+                        src="/problem we solve.png" 
                         alt="The problem we solve" 
                         className="w-full h-full object-cover"
                       />

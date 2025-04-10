@@ -897,7 +897,8 @@ export function DashboardOverview() {
     <div className="space-y-6">
       {/* Personalized greeting and time selector */}
       <div className="mb-8 flex flex-col space-y-2">
-        <h1 className="text-3xl font-bold tracking-tight">Good {getTimeOfDay()}, {user.displayName || 'there'}!</h1>
+        <h1 className="text-3xl font-bold tracking-tight">Good {getTimeOfDay()}!</h1>
+        <h1 className="text-3xl font-bold tracking-tight">{user.displayName || 'there'}</h1>
         <p className="text-muted-foreground">
           Alima notifies you have {stats.contacts} contacts waiting for your service. You also have {stats.transactions} completed transactions.
         </p>

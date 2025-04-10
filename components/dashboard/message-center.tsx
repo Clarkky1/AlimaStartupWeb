@@ -1724,6 +1724,9 @@ export function MessageCenter() {
       setActiveMobileTab('chat');
       setShowConversationList(false);
     }
+    
+    // Scroll to the latest messages after a short delay to ensure messages are loaded
+    setTimeout(() => scrollToBottom(), 300);
   };
 
   // Handle sending a payment proof

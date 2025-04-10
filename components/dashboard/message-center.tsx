@@ -520,14 +520,7 @@ const ConversationInfo = ({ userId, serviceId, isVisible, onClose }: {
   
   return (
     <div className="p-4">
-      <div className="flex justify-between items-center mb-4">
-        <h2 className="font-semibold text-lg">
-          {user?.role === 'provider' ? 'About Provider' : 'About Client'}
-        </h2>
-        <Button variant="ghost" size="sm" onClick={onClose} className="md:hidden">
-          Back to Chat
-        </Button>
-      </div>
+      {/* User info content - no section heading */}
       
       {loading ? (
         <div className="space-y-4">
@@ -535,7 +528,7 @@ const ConversationInfo = ({ userId, serviceId, isVisible, onClose }: {
           <Skeleton className="h-16 w-full" />
         </div>
       ) : (
-        <div className="h-full overflow-auto">
+        <div className="max-h-[calc(100vh-300px)] overflow-y-auto pb-6">
           {user && (
             <>
               {user.bio && (
@@ -1992,11 +1985,11 @@ export function MessageCenter() {
   };
 
   return (
-    <div className="h-[calc(100vh-12rem)] overflow-hidden border rounded-xl bg-background/90 backdrop-blur-md shadow-sm">
+    <div className="h-[calc(100vh-8rem)] overflow-hidden border rounded-xl bg-background/90 backdrop-blur-md shadow-sm">
       {/* Top navigation bar - removed completely for mobile */}
       
       {/* Mobile Tab Navigation - Always visible on mobile */}
-      <div className="flex border-b md:hidden bg-white/80 backdrop-blur-sm sticky top-0 z-40">
+      <div className="flex border-b md:hidden bg-white/80 backdrop-blur-sm sticky top-0 z-50">
         <Button 
           variant="ghost" 
           className={`flex-1 rounded-none ${activeMobileTab === 'conversations' ? 'border-b-2 border-primary font-medium' : 'text-gray-600'}`}
@@ -2045,7 +2038,7 @@ export function MessageCenter() {
             <div className="p-4 border-b bg-background/80 backdrop-blur-sm hidden md:block">
               <h2 className="font-medium text-base tracking-tight">Your Conversations</h2>
             </div>
-            <div className="overflow-y-auto flex-1 scrollbar-hide">
+            <div className={`overflow-y-auto flex-1 scrollbar-hide ${windowWidth < 768 && selectedConversation ? 'mt-[40px]' : ''}`}>
               <div className="p-2">
                 {loading ? (
                   <div className="p-3 space-y-3">
@@ -2484,31 +2477,14 @@ export function MessageCenter() {
         
         {/* User Info Panel - Shown based on mobile tab or desktop mode */}
         {showUserInfo && selectedConversation && (windowWidth < 768 ? activeMobileTab === 'info' : true) && (
-          <div className={`border-l flex-col h-full overflow-hidden ${windowWidth < 768 ? 'block' : 'hidden sm:flex'}`}>
-            <div className="overflow-y-auto flex-1 scrollbar-hide">
+          <div className={`border-l flex-col h-full overflow-hidden ${windowWidth < 768 ? 'block mt-[40px]' : 'hidden sm:flex'}`}>
+            <div className="overflow-y-auto h-full flex-1 scrollbar-hide">
               <div className="p-4">
-                {/* Mobile-only back button */}
-                {windowWidth < 768 && (
-                  <div className="flex justify-between items-center mb-4">
-                    <h2 className="font-semibold text-lg">
-                      {otherParticipantRole === 'provider' ? 'About Provider' : 'About Client'}
-                    </h2>
-                    <Button 
-                      variant="ghost" 
-                      size="sm" 
-                      onClick={() => {
-                        setActiveMobileTab('chat');
-                      }}
-                      className="md:hidden"
-                    >
-                      Back to Chat
-                    </Button>
-                  </div>
-                )}
+                {/* Section title - Remove duplicate heading */}
                 
                 {/* User profile section */}
-                <div className="text-center mb-4">
-                  <Avatar className="h-16 w-16 mx-auto">
+                <div className="text-center mb-6">
+                  <Avatar className="h-20 w-20 mx-auto">
                     <AvatarImage
                       src={selectedConversation.otherParticipantAvatar || 
                           (selectedConversation.otherParticipantId && 
@@ -2522,7 +2498,7 @@ export function MessageCenter() {
                         selectedConversation.participantNames?.[selectedConversation.otherParticipantId]?.[0])) || "?"}
                     </AvatarFallback>
                   </Avatar>
-                  <h3 className="font-semibold mt-3">
+                  <h3 className="font-semibold text-lg mt-3">
                     {selectedConversation.otherParticipantName || 
                       (selectedConversation.otherParticipantId && 
                       selectedConversation.participantNames?.[selectedConversation.otherParticipantId]) || 
@@ -2535,17 +2511,19 @@ export function MessageCenter() {
                   </Badge>
                 </div>
 
-                <ConversationInfo 
-                  userId={getOtherParticipantId(selectedConversation) || ""}
-                  serviceId={activeService || selectedConversation?.serviceId}
-                  isVisible={true}
-                  onClose={() => {
-                    setShowUserInfo(false);
-                    if (windowWidth < 768) {
-                      setActiveMobileTab('chat');
-                    }
-                  }}
-                />
+                <div className="md:pt-0">
+                  <ConversationInfo 
+                    userId={getOtherParticipantId(selectedConversation) || ""}
+                    serviceId={activeService || selectedConversation?.serviceId}
+                    isVisible={true}
+                    onClose={() => {
+                      setShowUserInfo(false);
+                      if (windowWidth < 768) {
+                        setActiveMobileTab('chat');
+                      }
+                    }}
+                  />
+                </div>
               </div>
             </div>
           </div>

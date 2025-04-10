@@ -1027,7 +1027,7 @@ export default function MessagePage({ params }: { params: { providerId: string }
   return (
     <div className="container mx-auto px-4 sm:px-6 py-4 sm:py-6 max-h-screen flex flex-col">
       <div className="flex justify-start mb-3 mt-0 sm:mt-2 -ml-2">
-        <Button variant="ghost" className="h-8 px-2 flex items-center" onClick={() => router.push("/popular-today")}>
+        <Button variant="ghost" className="h-8 px-2 flex items-center" onClick={() => router.back()}>
           <ArrowLeft className="mr-1 h-4 w-4" />
           Back
         </Button>

@@ -86,8 +86,8 @@ export default function PopularTodayPage() {
       window.scrollTo(0, 0)
     }
     
-    // Force a refresh when the component mounts
-    router.refresh()
+    // Don't force a refresh when the component mounts
+    // router.refresh()
   }, [router])
   
   // Update pathname when needed
@@ -95,7 +95,7 @@ export default function PopularTodayPage() {
     if (typeof window !== 'undefined') {
       const handleRouteChange = () => {
         setPathname(window.location.pathname)
-        router.refresh()
+        // Don't call router.refresh() here
       }
       
       window.addEventListener('popstate', handleRouteChange)
@@ -194,7 +194,7 @@ export default function PopularTodayPage() {
                     </div>
                   </div>
                 }>
-                  <PopularServices key={pathname} />
+                  <PopularServices />
                 </Suspense>
               </section>
             </div>

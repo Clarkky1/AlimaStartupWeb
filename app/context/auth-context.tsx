@@ -51,6 +51,33 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   const [auth, setAuth] = useState<Auth | null>(null);
   const { isOnline } = useNetworkStatus();
 
+  // Initialize page load counter on component mount
+  useEffect(() => {
+    if (typeof window !== 'undefined') {
+      // Check if this is a manual refresh (F5/browser refresh)
+      const isManualRefresh = performance?.navigation?.type === 1 || 
+                             (window.performance && 
+                              window.performance.getEntriesByType && 
+                              window.performance.getEntriesByType("navigation").length > 0 &&
+                              window.performance.getEntriesByType("navigation")[0] &&
+                              (window.performance.getEntriesByType("navigation")[0] as any).type === "reload");
+      
+      // Store this information for the auth state handler
+      if (isManualRefresh) {
+        sessionStorage.setItem('manual_refresh', 'true');
+      } else {
+        sessionStorage.setItem('manual_refresh', 'false');
+      }
+
+      // Initialize or increment the page load counter
+      const pageLoadCount = sessionStorage.getItem('page_load_count') || '0';
+      const newCount = parseInt(pageLoadCount) + 1;
+      sessionStorage.setItem('page_load_count', newCount.toString());
+      
+      console.log("Page initialized. Load count:", newCount, "Manual refresh:", isManualRefresh);
+    }
+  }, []);
+
   // Function to fetch and refresh user data from Firestore
   const refreshUserData = async () => {
     if (!user?.uid || !db || !isOnline) return;
@@ -186,8 +213,21 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         // Log auth state for debugging
         console.log("Auth state detected, user:", firebaseUser.uid);
         
-        // Check if this is a new login by comparing with previous state
-        const isNewLogin = !user || user.uid !== firebaseUser.uid;
+        // Get the stored user ID to compare
+        const storedUserId = localStorage.getItem('currentLoggedInUser');
+        
+        // Get session info to determine if this is actually a new login
+        // or just a page refresh with the same user
+        const sessionPageLoads = sessionStorage.getItem('page_load_count') || '0';
+        const isFirstLoadInSession = parseInt(sessionPageLoads) === 0;
+        
+        // Only consider it a new login if:
+        // 1. We have no user in state OR 
+        // 2. The user ID changed OR
+        // 3. This is the first load in the session AND we have no stored user ID
+        const isNewLogin = !user || 
+                          (user.uid !== firebaseUser.uid) || 
+                          (isFirstLoadInSession && !storedUserId && firebaseUser.uid);
         
         const userRef = doc(dbInstance, "users", firebaseUser.uid);
         const userDoc = await getDoc(userRef);
@@ -251,12 +291,55 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         // Force page refresh on new login to ensure all components properly rerender
         // Check if this is a login event (not just a page refresh with existing auth)
         if (isNewLogin && typeof window !== 'undefined') {
+          // Check if this was a manual refresh
+          const wasManualRefresh = sessionStorage.getItem('manual_refresh') === 'true';
+          
+          // Get the page load count (already initialized in the component mount effect)
+          const pageLoadCount = sessionStorage.getItem('page_load_count') || '1';
+          const currentPageLoadCount = parseInt(pageLoadCount);
+          
+          // Debug info
+          console.log("Login state check: ", {
+            isNewLogin,
+            storedUserId,
+            currentUserId: firebaseUser.uid,
+            pageLoadCount: currentPageLoadCount,
+            wasManualRefresh
+          });
+          
+          // Only allow refresh on the first load or specific conditions
+          // This prevents double refreshes
           const currentPath = window.location.pathname;
           
-          // Only refresh if we're on the homepage or dashboard to avoid disrupting other flows
-          if (currentPath === '/' || currentPath.includes('/dashboard') || currentPath === '/popular-today') {
-            console.log("New login detected, refreshing page to update UI state");
-            window.location.reload();
+          // Get the last refresh timestamp to prevent refresh loops
+          const lastRefreshTime = localStorage.getItem('last_login_refresh');
+          const currentTime = Date.now();
+          const pageInitialLoad = currentPageLoadCount <= 1;
+          
+          // Never refresh if this was a manual refresh
+          // Only refresh if:
+          // 1. This was NOT a manual refresh AND
+          // 2. More than 5 seconds since last refresh AND 
+          // 3. Either it's the initial page load OR the user ID has actually changed
+          const shouldRefresh = !wasManualRefresh && 
+                               (!lastRefreshTime || (currentTime - parseInt(lastRefreshTime)) > 5000) && 
+                               (pageInitialLoad || (storedUserId !== firebaseUser.uid));
+          
+          if (shouldRefresh) {
+            // Store the login timestamp to avoid refreshing on navigation
+            localStorage.setItem('last_login_refresh', currentTime.toString());
+            
+            // Only refresh if we're on the homepage or dashboard to avoid disrupting other flows
+            if (currentPath === '/' || currentPath.includes('/dashboard') || currentPath === '/popular-today') {
+              console.log("New login detected, refreshing page to update UI state");
+              window.location.reload();
+            }
+          } else {
+            console.log("Prevented refresh: " + (wasManualRefresh ? "was manual refresh" : "already refreshed or not needed"), {
+              timeSinceLastRefresh: lastRefreshTime ? (currentTime - parseInt(lastRefreshTime)) : 'never refreshed',
+              pageLoadCount: currentPageLoadCount,
+              wasManualRefresh
+            });
           }
         }
       } catch (error) {

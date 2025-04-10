@@ -8,12 +8,250 @@ import { Button } from "@/components/ui/button"
 import { Textarea } from "@/components/ui/textarea"
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from "@/components/ui/card"
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar"
-import { Send, ArrowLeft, Upload, X, Phone, Mail, MapPin, Star } from "lucide-react"
+import { Send, ArrowLeft, Upload, X, Phone, Mail, MapPin, Star, Info, SendHorizontal } from "lucide-react"
 import { useToast } from "@/components/ui/use-toast"
 import { initializeFirebase } from "@/app/lib/firebase"
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription, DialogTrigger } from "@/components/ui/dialog"
 import { Badge } from "@/components/ui/badge"
 import { Loading } from "@/components/loading"
+import { Label } from "@/components/ui/label"
+import { Input } from "@/components/ui/input"
+
+// Add a new UploadPaymentProofDialog component
+const UploadPaymentProofDialog = ({ 
+  onUpload, 
+  providerId,
+  open,
+  onOpenChange
+}: { 
+  onUpload: (imageUrl: string, serviceId?: string, amount?: number) => void; 
+  providerId: string;
+  open: boolean;
+  onOpenChange: (open: boolean) => void;
+}) => {
+  const [selectedService, setSelectedService] = useState<string | null>(null);
+  const [paymentAmount, setPaymentAmount] = useState<string>('');
+  const [selectedFile, setSelectedFile] = useState<File | null>(null);
+  const [isUploading, setIsUploading] = useState(false);
+  
+  const { toast } = useToast();
+  const { user } = useAuth();
+  
+  // Get the provider's services for the dropdown
+  const [providerServices, setProviderServices] = useState<Array<{id: string, title: string, price?: number | string}>>([]);
+  
+  useEffectState(() => {
+    async function fetchServices() {
+      if (!providerId) return;
+      
+      try {
+        const { db } = await initializeFirebase();
+        if (!db) return;
+        
+        const { collection, query, where, getDocs } = await import("firebase/firestore");
+        
+        const q = query(
+          collection(db, "services"),
+          where("providerId", "==", providerId)
+        );
+        
+        const snapshot = await getDocs(q);
+        const servicesData = snapshot.docs.map(doc => ({
+          id: doc.id,
+          ...doc.data() as {title: string, price?: number | string}
+        }));
+        
+        setProviderServices(servicesData);
+        
+        // Set first service as default
+        if (servicesData.length > 0) {
+          setSelectedService(servicesData[0].id);
+          if (servicesData[0].price) {
+            setPaymentAmount(String(servicesData[0].price));
+          }
+        }
+      } catch (error) {
+        console.error("Error fetching provider services:", error);
+      }
+    }
+    
+    fetchServices();
+  }, [providerId]);
+
+  const handleUpload = async (file: File) => {
+    // File validation
+    if (file.size > 5 * 1024 * 1024) {
+      toast({
+        title: "File too large",
+        description: "Maximum file size is 5MB",
+        variant: "destructive",
+      });
+      return;
+    }
+
+    const allowedTypes = ['image/jpeg', 'image/png', 'image/jpg', 'image/gif', 'image/webp'];
+    if (!allowedTypes.includes(file.type)) {
+      toast({
+        title: "Invalid file type",
+        description: "Please upload an image (JPEG, PNG, GIF or WebP)",
+        variant: "destructive",
+      });
+      return;
+    }
+
+    try {
+      setIsUploading(true);
+      const formData = new FormData();
+      formData.append('file', file);
+      formData.append('folder', `payment-proofs/${user?.uid || "unknown"}`);
+      
+      // Add provider ID for consistent fallback avatars
+      if (providerId) {
+        formData.append('providerId', providerId);
+      }
+
+      // Use the API route for more consistent uploads
+      const response = await fetch('/api/upload', {
+        method: 'POST',
+        body: formData
+      });
+
+      if (!response.ok) {
+        throw new Error('Failed to upload payment proof');
+      }
+
+      const data = await response.json();
+      
+      // Call onUpload with service info and payment amount
+      onUpload(
+        data.secure_url, 
+        selectedService || undefined, 
+        paymentAmount ? parseFloat(paymentAmount) : undefined
+      );
+      
+      toast({
+        title: "Success",
+        description: "Payment proof uploaded successfully",
+      });
+      
+      // Close dialog after successful upload
+      onOpenChange(false);
+    } catch (error) {
+      console.error("Error uploading payment proof:", error);
+      toast({
+        title: "Error",
+        description: "Failed to upload payment proof",
+        variant: "destructive",
+      });
+    } finally {
+      setIsUploading(false);
+    }
+  };
+
+  return (
+    <Dialog open={open} onOpenChange={onOpenChange}>
+      <DialogContent className="sm:max-w-md">
+        <DialogHeader>
+          <DialogTitle>Upload Payment Proof</DialogTitle>
+          <DialogDescription>
+            Upload proof of payment and specify the service and amount.
+          </DialogDescription>
+        </DialogHeader>
+        
+        <div className="space-y-4">
+          {providerServices.length > 0 && (
+            <div className="space-y-2">
+              <Label htmlFor="service">Service</Label>
+              <select
+                id="service"
+                value={selectedService || ''}
+                onChange={(e) => {
+                  setSelectedService(e.target.value);
+                  // Auto-fill amount based on selected service
+                  const service = providerServices.find(s => s.id === e.target.value);
+                  if (service?.price) {
+                    setPaymentAmount(String(service.price));
+                  }
+                }}
+                className="flex h-10 w-full rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background file:border-0 file:bg-transparent file:text-sm file:font-medium placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50"
+              >
+                {providerServices.map((service) => (
+                  <option key={service.id} value={service.id}>
+                    {service.title} {service.price ? `- ₱${service.price}` : ''}
+                  </option>
+                ))}
+              </select>
+            </div>
+          )}
+          
+          <div className="space-y-2">
+            <Label htmlFor="amount">Payment Amount</Label>
+            <div className="relative">
+              <span className="absolute left-3 top-1/2 -translate-y-1/2">₱</span>
+              <Input
+                id="amount"
+                type="number"
+                value={paymentAmount}
+                onChange={(e) => setPaymentAmount(e.target.value)}
+                className="pl-7"
+                placeholder="0.00"
+              />
+            </div>
+          </div>
+          
+          <div className="space-y-2">
+            <Label htmlFor="payment-proof">Payment Proof Image</Label>
+            <Input
+              id="payment-proof"
+              type="file"
+              accept="image/*"
+              onChange={(e) => {
+                const file = e.target.files?.[0];
+                if (file) {
+                  setSelectedFile(file);
+                }
+              }}
+            />
+            {selectedFile && (
+              <div className="relative mt-2">
+                <img 
+                  src={URL.createObjectURL(selectedFile)} 
+                  alt="Selected file preview" 
+                  className="max-h-40 w-full object-contain rounded-md border"
+                />
+                <Button 
+                  variant="destructive" 
+                  size="sm" 
+                  className="absolute top-2 right-2" 
+                  onClick={() => setSelectedFile(null)}
+                >
+                  <X className="h-4 w-4" />
+                </Button>
+              </div>
+            )}
+          </div>
+        </div>
+        
+        <div className="flex justify-end gap-2 mt-4">
+          <Button variant="outline" onClick={() => onOpenChange(false)}>Cancel</Button>
+          <Button 
+            onClick={() => selectedFile && handleUpload(selectedFile)}
+            disabled={!selectedFile || isUploading}
+          >
+            {isUploading ? (
+              <>
+                <div className="mr-2 h-4 w-4 animate-spin rounded-full border-2 border-primary border-t-transparent"></div>
+                Uploading...
+              </>
+            ) : (
+              <>Upload</>
+            )}
+          </Button>
+        </div>
+      </DialogContent>
+    </Dialog>
+  );
+};
 
 export default function MessagePage({ params }: { params: { providerId: string } }) {
   const { providerId } = params;
@@ -29,11 +267,31 @@ export default function MessagePage({ params }: { params: { providerId: string }
   const [loading, setLoading] = useState(true)
   const [messages, setMessages] = useState<any[]>([])
   const [contacts, setContacts] = useState<any[]>([])
+  const [messageType, setMessageType] = useState<"text" | "payment">("text");
+  const [showWelcomeMessage, setShowWelcomeMessage] = useState(true);
 
   const messagesEndRef = useRef<HTMLDivElement>(null)
 
   // Add state for mobile navigation
   const [activeMobileTab, setActiveMobileTab] = useState<'chat' | 'contacts' | 'info'>('chat');
+
+  // Check welcome message status on client-side only
+  useEffect(() => {
+    if (typeof window !== 'undefined' && user && providerId) {
+      const participants = [user.uid, providerId].sort();
+      const conversationId = participants.join('_');
+      const welcomeShownKey = `welcome_shown_${conversationId}`;
+      const welcomeShown = localStorage.getItem(welcomeShownKey);
+      
+      if (welcomeShown) {
+        setShowWelcomeMessage(false);
+      } else {
+        // Set it to shown
+        localStorage.setItem(welcomeShownKey, 'true');
+        setShowWelcomeMessage(true);
+      }
+    }
+  }, [user, providerId]);
 
   // Determine if chat user is a provider
   const isChatUserProvider = provider?.role === 'provider';
@@ -152,7 +410,7 @@ export default function MessagePage({ params }: { params: { providerId: string }
 
         const participants = [user.uid, providerId].sort();
         const conversationId = participants.join('_');
-
+        
         const messagesQuery = query(
           collection(db, "messages"),
           where("conversationId", "==", conversationId),
@@ -380,6 +638,7 @@ export default function MessagePage({ params }: { params: { providerId: string }
     }
   }
 
+  // Keep existing handlePaymentProofUpload for backward compatibility
   const handlePaymentProofUpload = async (file: File) => {
     try {
       setIsUploading(true)
@@ -409,7 +668,171 @@ export default function MessagePage({ params }: { params: { providerId: string }
       setIsUploading(false)
     }
   }
-  
+
+  // Add the new handleSendPaymentProof function
+  const handleSendPaymentProof = async (paymentInfo: {
+    text: string;
+    paymentProof: string;
+    serviceId?: string;
+    serviceTitle?: string;
+    paymentAmount?: number;
+  }) => {
+    if (!user) return;
+
+    // Another check to prevent self-messaging
+    if (user.uid === providerId) {
+      toast({
+        title: "Action not allowed",
+        description: "You cannot message yourself",
+        variant: "destructive",
+      })
+      return
+    }
+
+    try {
+      const { db } = await initializeFirebase();
+      if (!db) {
+        toast({
+          title: "Error",
+          description: "Failed to initialize Firebase",
+          variant: "destructive",
+        });
+        return;
+      }
+
+      const { collection, addDoc, serverTimestamp, doc, getDoc, setDoc } = await import("firebase/firestore");
+
+      // Get user profile data first
+      const userDoc = await getDoc(doc(db, "users", user.uid));
+      const userData = userDoc.data() || {};
+      const userName = userData?.displayName || userData?.name || user.displayName || "Anonymous";
+
+      // Create conversation ID and participants array
+      const participants = [user.uid, providerId].sort();
+      const conversationId = participants.join('_');
+      const timestamp = serverTimestamp();
+
+      // Create/update conversation data with service information if available
+      const conversationData: any = {
+        participants,
+        lastMessage: "Payment proof attached",
+        lastMessageTime: timestamp,
+        lastSenderId: user.uid,
+        lastSenderName: userName,
+        lastSenderAvatar: user.photoURL || userData?.profilePicture || userData?.avatar || null,
+      };
+      
+      // Include service info if available
+      let serviceTitle = paymentInfo.serviceTitle;
+      if (paymentInfo.serviceId && !serviceTitle) {
+        // Try to get the service title from the selected service
+        if (selectedService && selectedService.id === paymentInfo.serviceId) {
+          serviceTitle = selectedService.title;
+        } else {
+          // Try to get from provider services
+          const serviceDoc = await getDoc(doc(db, "services", paymentInfo.serviceId));
+          if (serviceDoc.exists()) {
+            serviceTitle = serviceDoc.data().title;
+          }
+        }
+      }
+      
+      if (paymentInfo.serviceId) {
+        conversationData.serviceId = paymentInfo.serviceId;
+        conversationData.serviceTitle = serviceTitle;
+        if (paymentInfo.paymentAmount) {
+          conversationData.servicePrice = paymentInfo.paymentAmount;
+        }
+      } else if (selectedService) {
+        conversationData.serviceId = selectedService.id;
+        conversationData.serviceTitle = selectedService.title;
+        conversationData.servicePrice = selectedService.price;
+      }
+      
+      await setDoc(doc(db, "conversations", conversationId), conversationData, { merge: true });
+
+      // Add the message
+      const messageData: any = {
+        conversationId,
+        senderId: user.uid,
+        senderName: userName,
+        senderAvatar: user.photoURL || userData?.profilePicture || userData?.avatar || null,
+        receiverId: providerId,
+        text: paymentInfo.text || "Payment proof attached",
+        timestamp,
+        read: false,
+        paymentProof: paymentInfo.paymentProof,
+        paymentAmount: paymentInfo.paymentAmount || 0
+      };
+      
+      if (paymentInfo.serviceId) {
+        messageData.serviceId = paymentInfo.serviceId;
+        messageData.serviceTitle = serviceTitle;
+      } else if (selectedService) {
+        messageData.serviceId = selectedService.id;
+        messageData.serviceTitle = selectedService.title;
+      }
+      
+      await addDoc(collection(db, "messages"), messageData);
+
+      // Create notification for provider
+      const notificationData: any = {
+        userId: providerId,
+        type: "payment_proof",
+        title: `Payment Proof: ${serviceTitle || "Service"}`,
+        description: paymentInfo.paymentAmount 
+          ? `${userName} sent payment proof of ₱${paymentInfo.paymentAmount}` 
+          : `${userName} sent you a payment proof`,
+        timestamp,
+        read: false,
+        data: {
+          conversationId,
+          senderId: user.uid,
+          senderName: userName,
+          senderAvatar: user.photoURL || userData?.profilePicture || userData?.avatar || null,
+          messageText: paymentInfo.text || "Payment proof attached",
+          paymentProofUrl: paymentInfo.paymentProof,
+          paymentAmount: paymentInfo.paymentAmount || 0
+        }
+      };
+      
+      if (paymentInfo.serviceId) {
+        notificationData.data.serviceId = paymentInfo.serviceId;
+        notificationData.data.serviceTitle = serviceTitle;
+      } else if (selectedService) {
+        notificationData.data.serviceId = selectedService.id;
+        notificationData.data.serviceTitle = selectedService.title;
+      }
+      
+      await addDoc(collection(db, "notifications"), notificationData);
+
+      toast({
+        title: "Payment proof sent",
+        description: "Your payment proof has been sent successfully",
+      });
+
+      // Clear the payment proof after sending
+      setPaymentProofUrl(null);
+      
+    } catch (error) {
+      console.error("Error sending payment proof:", error);
+      toast({
+        title: "Error",
+        description: "Failed to send payment proof",
+        variant: "destructive",
+      });
+    }
+  };
+
+  // Function to open payment proof dialog
+  const openPaymentProofDialog = () => {
+    // Find the UploadPaymentProofDialog component and set its open state to true
+    setPaymentProofOpen(true);
+  };
+
+  // Add state for dialog visibility
+  const [paymentProofOpen, setPaymentProofOpen] = useState(false);
+
   if (loading || authLoading) {
     return <Loading />
   }
@@ -476,8 +899,8 @@ export default function MessagePage({ params }: { params: { providerId: string }
   }
 
   return (
-    <div className="container mx-auto px-4 sm:px-6 py-4 sm:py-10">
-      <div className="flex justify-start mb-3 mt-2 sm:mt-4 -ml-2">
+    <div className="container mx-auto px-4 sm:px-6 py-4 sm:py-6 max-h-screen flex flex-col">
+      <div className="flex justify-start mb-3 mt-0 sm:mt-2 -ml-2">
         <Button variant="ghost" className="h-8 px-2 flex items-center" onClick={() => router.push("/popular-today")}>
           <ArrowLeft className="mr-1 h-4 w-4" />
           Back
@@ -485,34 +908,52 @@ export default function MessagePage({ params }: { params: { providerId: string }
       </div>
 
       {/* Mobile Tab Navigation - Only visible on mobile */}
-      <div className="flex border-b mb-3 md:hidden">
+      <div className="flex border-b md:hidden bg-white/80 backdrop-blur-sm sticky top-0 z-50">
         <Button 
           variant="ghost" 
-          className={`flex-1 rounded-none ${activeMobileTab === 'contacts' ? 'border-b-2 border-primary' : ''}`}
+          className={`flex-1 rounded-none ${activeMobileTab === 'contacts' ? 'border-b-2 border-primary font-medium bg-primary/5' : 'text-gray-600'}`}
           onClick={() => setActiveMobileTab('contacts')}
         >
-          Contacts
+          {activeMobileTab === 'contacts' ? (
+            <div className="flex items-center">
+              <span className="mr-1.5">Contacts</span>
+            </div>
+          ) : (
+            "Contacts"
+          )}
         </Button>
         <Button 
           variant="ghost" 
-          className={`flex-1 rounded-none ${activeMobileTab === 'chat' ? 'border-b-2 border-primary' : ''}`}
+          className={`flex-1 rounded-none ${activeMobileTab === 'chat' ? 'border-b-2 border-primary font-medium bg-primary/5' : 'text-gray-600'}`}
           onClick={() => setActiveMobileTab('chat')}
         >
-          Chat
+          {activeMobileTab === 'chat' ? (
+            <div className="flex items-center">
+              <span className="mr-1.5">Chat</span>
+            </div>
+          ) : (
+            "Chat"
+          )}
         </Button>
         <Button 
           variant="ghost" 
-          className={`flex-1 rounded-none ${activeMobileTab === 'info' ? 'border-b-2 border-primary' : ''}`}
+          className={`flex-1 rounded-none ${activeMobileTab === 'info' ? 'border-b-2 border-primary font-medium bg-primary/5' : 'text-gray-600'}`}
           onClick={() => setActiveMobileTab('info')}
         >
-          Info
+          {activeMobileTab === 'info' ? (
+            <div className="flex items-center">
+              <span className="mr-1.5">Info</span>
+            </div>
+          ) : (
+            "Info"
+          )}
         </Button>
       </div>
 
       <div className="grid gap-3 md:grid-cols-4 lg:grid-cols-5">
         {/* Contacts Sidebar - Hidden on mobile unless active */}
         <div className={`md:col-span-1 ${activeMobileTab === 'contacts' ? 'block' : 'hidden md:block'}`}>
-          <Card>
+          <Card className="h-full bg-white/90 backdrop-blur-md shadow-sm">
             <CardHeader className="p-3">
               <CardTitle className="text-base">Recent Conversations</CardTitle>
             </CardHeader>
@@ -570,7 +1011,7 @@ export default function MessagePage({ params }: { params: { providerId: string }
 
         {/* Message Card - Hidden on mobile unless active */}
         <div className={`md:col-span-2 lg:col-span-3 ${activeMobileTab === 'chat' ? 'block' : 'hidden md:block'}`}>
-          <Card>
+          <Card className="h-full bg-white/90 backdrop-blur-md shadow-sm">
             <CardHeader className="p-3">
               <div className="space-y-2">
                 <div className="flex items-center gap-4">
@@ -585,49 +1026,33 @@ export default function MessagePage({ params }: { params: { providerId: string }
                     <CardTitle className="truncate">{provider?.name || provider?.displayName || "User"}</CardTitle>
                     <CardDescription className="truncate">{provider?.title || provider?.bio?.substring(0, 60) || roleText.roleLabel}</CardDescription>
                   </div>
-                  
-                  {/* Mobile-only info button */}
-                  <Button 
-                    variant="outline" 
-                    size="sm" 
-                    onClick={() => setActiveMobileTab('info')} 
-                    className="md:hidden"
-                  >
-                    View Info
-                  </Button>
                 </div>
                 
-                {selectedService && (
-                  <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between p-2 bg-muted rounded-lg gap-2">
-                    <div className="flex items-center gap-2">
-                      <Badge variant="secondary">Current Service</Badge>
-                      <span className="font-medium truncate">{selectedService.title}</span>
-                    </div>
-                    <div className="flex items-center gap-2">
-                      {selectedService.category && (
-                        <Badge variant="outline" className="text-xs">
-                          {formatCategoryName(selectedService.category)}
-                        </Badge>
-                      )}
-                      <Badge variant="default" className="text-xs">₱{selectedService.price}</Badge>
-                    </div>
-                  </div>
-                )}
+                {/* Selected service card - removed from direct message view */}
               </div>
             </CardHeader>
             <CardContent className="p-6 pt-0">
-              <div className="mb-4 text-center bg-muted/30 py-2 rounded-md">
-                <p className="text-sm text-muted-foreground">
-                  Welcome to your conversation! You can now message this {isChatUserProvider ? 'service provider' : 'client'} directly.
-                </p>
-              </div>
-              <div className="mb-2 h-[calc(100vh-500px)] overflow-y-auto border rounded-md p-4">
+              {showWelcomeMessage && (
+                <div className="mb-4 text-center bg-muted/30 py-2 rounded-md">
+                  <p className="text-sm text-muted-foreground">
+                    Welcome to your conversation! You can now message this {isChatUserProvider ? 'service provider' : 'client'} directly.
+                  </p>
+                </div>
+              )}
+              <div className="mb-0 h-[calc(100vh-380px)] max-h-[calc(100vh-380px)] overflow-y-auto border rounded-md p-4">
                 {messages.map((msg) => (
                   <div
                     key={msg.id}
                     className={`mb-4 flex ${msg.senderId === user?.uid ? 'justify-end' : 'justify-start'}`}
                   >
-                    <div className={`max-w-[85%] sm:max-w-[70%] ${msg.senderId === user?.uid ? 'bg-primary text-primary-foreground' : 'bg-muted'} rounded-lg p-3`}>
+                    <div className={`max-w-[85%] sm:max-w-[70%] ${
+                      // Special styling for payment proofs from the current user
+                      msg.senderId === user?.uid && msg.paymentProof 
+                        ? 'bg-blue-500 text-white' 
+                        : msg.senderId === user?.uid 
+                          ? 'bg-primary text-primary-foreground' 
+                          : 'bg-muted'
+                    } rounded-lg p-3`}>
                       <div className="flex items-center gap-2 mb-1">
                         <Avatar className="h-6 w-6">
                           <AvatarImage src={msg.senderAvatar || "/person-male-1.svg"} />
@@ -635,14 +1060,55 @@ export default function MessagePage({ params }: { params: { providerId: string }
                         </Avatar>
                         <span className="text-sm font-medium">{msg.senderName}</span>
                       </div>
-                      <p className="text-sm break-words">{msg.text}</p>
-                      {msg.paymentProof && (
-                        <img 
-                          src={msg.paymentProof} 
-                          alt="Payment Proof" 
-                          className="mt-2 max-h-40 w-full object-contain rounded-md"
-                        />
+                      
+                      {/* Special formatting for payment proofs */}
+                      {msg.paymentProof ? (
+                        <div className="space-y-2">
+                          <p className="text-sm font-medium">I've sent the payment.</p>
+                          
+                          <div className="space-y-1 mt-1">
+                            <div className="flex justify-between items-center">
+                              <span className="text-xs font-semibold">Payment Proof:</span>
+                              {msg.paymentConfirmed && (
+                                <Badge className="bg-green-500 text-white text-xs">Confirmed</Badge>
+                              )}
+                            </div>
+                            
+                            {msg.serviceTitle && (
+                              <div className="flex items-center text-xs">
+                                <span className="font-semibold mr-1">Service:</span>
+                                <span>{msg.serviceTitle}</span>
+                              </div>
+                            )}
+                            
+                            {msg.paymentAmount > 0 && (
+                              <div className="flex items-center text-xs">
+                                <span className="font-semibold mr-1">Amount:</span>
+                                <span>₱{msg.paymentAmount.toLocaleString()}</span>
+                              </div>
+                            )}
+                          </div>
+                          
+                          <img 
+                            src={msg.paymentProof} 
+                            alt="Payment Proof" 
+                            className="mt-2 max-h-40 w-full object-contain rounded-md border border-white/20 bg-white/10"
+                          />
+                          
+                          {msg.paymentConfirmed && (
+                            <div className="flex items-center gap-1 text-xs mt-1">
+                              <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="h-3.5 w-3.5">
+                                <path d="M12 22c5.523 0 10-4.477 10-10S17.523 2 12 2 2 6.477 2 12s4.477 10 10 10z"></path>
+                                <path d="m9 12 2 2 4-4"></path>
+                              </svg>
+                              <span>Your payment was confirmed!</span>
+                            </div>
+                          )}
+                        </div>
+                      ) : (
+                        <p className="text-sm break-words">{msg.text}</p>
                       )}
+                      
                       <span className="text-xs opacity-70 block mt-1">
                         {msg.timestamp?.toLocaleTimeString()}
                       </span>
@@ -651,11 +1117,11 @@ export default function MessagePage({ params }: { params: { providerId: string }
                 ))}
                 <div ref={messagesEndRef} />
               </div>
-              <form onSubmit={handleSendMessage} className="space-y-2">
+              <form onSubmit={handleSendMessage} className="space-y-2 mt-2">
                 {providerServices.length > 1 && (
-                  <div className="space-y-2">
-                    <label className="text-sm font-medium">Select Service</label>
-                    <div className="flex flex-wrap gap-2">
+                  <div className="mb-2">
+                    <label className="text-sm font-medium mb-1 block">Select Service</label>
+                    <div className="flex flex-wrap gap-1">
                       {providerServices.map((service) => (
                         <Badge
                           key={service.id}
@@ -670,89 +1136,49 @@ export default function MessagePage({ params }: { params: { providerId: string }
                   </div>
                 )}
                 
-                <div className="flex flex-col gap-2">
-                  <div className="flex items-center gap-2">
+                {/* Message Input */}
+                <div className="border-t bg-white/90 backdrop-blur-md py-0 pb-1">
+                  <div className="flex items-center space-x-1 px-1 pt-1">
+                    <Button
+                      type="button"
+                      size="icon"
+                      variant="outline"
+                      onClick={openPaymentProofDialog}
+                      className="rounded-full h-10 w-10 flex-shrink-0"
+                    >
+                      <Upload className="h-4 w-4" />
+                    </Button>
                     <Textarea
-                      placeholder="Write your message here..."
+                      className="resize-none min-h-[90px] max-h-[150px] flex-1 w-full rounded-2xl border-gray-200 focus:ring-2 focus:ring-blue-500 focus:border-transparent px-3 py-3"
+                      placeholder="Type your message..."
                       value={message}
                       onChange={(e) => setMessage(e.target.value)}
-                      className="min-h-[60px] flex-1"
                     />
                     <Button 
                       type="submit" 
-                      onClick={handleSendMessage} 
-                      disabled={!message.trim() && !paymentProofUrl} 
-                      className="h-12 w-12 flex-shrink-0 rounded-md p-0"
-                      aria-label="Send Message"
+                      size="icon" 
+                      disabled={message.trim() === ""} 
+                      className="rounded-full bg-gradient-to-r from-blue-500 to-blue-600 hover:from-blue-600 hover:to-blue-700 text-white shadow-sm transition-all h-10 w-10 flex-shrink-0"
                     >
-                      <Send className="h-5 w-5" />
+                      <SendHorizontal className="h-4 w-4" />
                     </Button>
                   </div>
-                  
-                  {/* Payment proof upload button */}
-                  {(!user?.role || user?.role !== 'provider') && (
-                    <Dialog>
-                      <DialogTrigger asChild>
-                        <Button type="button" variant="outline" size="sm" className="flex items-center self-start">
-                          <Upload className="mr-2 h-4 w-4" />
-                          Upload Payment Proof
-                        </Button>
-                      </DialogTrigger>
-                      <DialogContent className="w-[95%] sm:max-w-md">
-                        <DialogHeader>
-                          <DialogTitle>Upload Payment Proof</DialogTitle>
-                          <DialogDescription>
-                            Upload an image that shows your payment transaction details.
-                          </DialogDescription>
-                        </DialogHeader>
-                        <div className="grid w-full max-w-sm items-center gap-1.5">
-                          <label htmlFor="payment-proof">
-                            Upload payment proof image
-                          </label>
-                          <input
-                            id="payment-proof"
-                            type="file"
-                            accept="image/*"
-                            className="w-full"
-                            onChange={(e) => {
-                              const file = e.target.files?.[0]
-                              if (file) {
-                                handlePaymentProofUpload(file)
-                              }
-                            }}
-                            disabled={isUploading}
-                          />
-                          {isUploading && (
-                            <div className="flex justify-center mt-2">
-                              <div className="animate-spin rounded-full h-6 w-6 border-b-2 border-primary"></div>
-                            </div>
-                          )}
-                        </div>
-                      </DialogContent>
-                    </Dialog>
-                  )}
                 </div>
                 
-                {paymentProofUrl && (
-                  <div className="mt-4">
-                    <p className="text-sm font-medium mb-2">Payment Proof:</p>
-                    <div className="relative">
-                      <img 
-                        src={paymentProofUrl} 
-                        alt="Payment Proof" 
-                        className="max-h-40 w-full object-contain rounded-md border" 
-                      />
-                      <Button 
-                        variant="destructive" 
-                        size="sm" 
-                        className="absolute top-2 right-2" 
-                        onClick={() => setPaymentProofUrl(null)}
-                      >
-                        <X className="h-4 w-4" />
-                      </Button>
-                    </div>
-                  </div>
-                )}
+                <UploadPaymentProofDialog
+                  providerId={params.providerId}
+                  onUpload={(imageUrl, serviceId, amount) => {
+                    handleSendPaymentProof({
+                      text: "I've sent the payment.",
+                      paymentProof: imageUrl,
+                      serviceId: serviceId,
+                      paymentAmount: amount
+                    });
+                    setMessageType("text");
+                  }}
+                  open={paymentProofOpen}
+                  onOpenChange={setPaymentProofOpen}
+                />
               </form>
             </CardContent>
           </Card>
@@ -760,22 +1186,8 @@ export default function MessagePage({ params }: { params: { providerId: string }
 
         {/* User Info Card - Hidden on mobile unless active */}
         <div className={`md:col-span-1 ${activeMobileTab === 'info' ? 'block' : 'hidden md:block'}`}>
-          <Card>
-            <CardHeader className="p-3">
-              <div className="flex justify-between items-center">
-                <CardTitle>{roleText.title}</CardTitle>
-                {/* Mobile-only back button */}
-                <Button 
-                  variant="ghost" 
-                  size="sm" 
-                  onClick={() => setActiveMobileTab('chat')} 
-                  className="md:hidden"
-                >
-                  Back to Chat
-                </Button>
-              </div>
-            </CardHeader>
-            <CardContent className="p-3 pt-0">
+          <Card className="h-full bg-white/90 backdrop-blur-md shadow-sm">
+            <CardContent className="p-3">
               <div className="space-y-4">
                 <div className="text-center mb-3">
                   <Avatar className="h-16 w-16 mx-auto">
@@ -790,6 +1202,8 @@ export default function MessagePage({ params }: { params: { providerId: string }
                   <Badge variant="outline" className="mt-2">
                     {roleText.roleLabel}
                   </Badge>
+                  
+                  <div className="text-2xl font-semibold leading-none tracking-tight mt-4">About Provider</div>
                 </div>
 
                 {provider?.rating && (

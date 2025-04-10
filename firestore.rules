@@ -72,9 +72,10 @@ service cloud.firestore {
       // Public read access for reviews
       allow read: if true;
       
-      // Only authenticated users can create reviews for existing services
+      // Only authenticated users can create reviews for existing services or providers
       allow create: if isAuthenticated() && 
-        exists(/databases/$(database)/documents/services/$(request.resource.data.serviceId));
+        (exists(/databases/$(database)/documents/services/$(request.resource.data.serviceId)) || 
+        exists(/databases/$(database)/documents/users/$(request.resource.data.providerId)));
       
       // Only the review owner can update their review
       allow update: if isAuthenticated() && 

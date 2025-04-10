@@ -15,30 +15,23 @@ import { formatDistanceToNow } from "date-fns"
 import { RatingModal } from "@/components/messages/rating-modal"
 
 interface Notification {
-  id: string
-  type: "message" | "review" | "payment" | "system" | "payment_proof" | "rating" | "payment_confirmed_rating"
-  title: string
-  description: string
-  timestamp: any
-  read: boolean
+  id: string;
+  userId: string;
+  type: "message" | "review" | "payment" | "system" | "payment_proof" | "rating" | "payment_confirmed_rating" | "client_rating" | "provider_rating";
+  title: string;
+  description: string;
+  timestamp: any;
+  read: boolean;
   data?: {
-    userId?: string
-    serviceId?: string
-    amount?: number
-    paymentProofUrl?: string
-    transactionId?: string
-    conversationId?: string
-    messageId?: string
-    senderId?: string
-    senderName?: string
-    senderAvatar?: string
-    messageText?: string
-    type?: string
-    rating?: number
-    feedback?: string
-    providerId?: string
-    providerName?: string
-  }
+    conversationId?: string;
+    messageId?: string;
+    serviceId?: string;
+    senderId?: string;
+    providerId?: string;
+    providerName?: string;
+    transactionId?: string;
+    [key: string]: any;
+  };
 }
 
 interface NotificationCenterProps {
@@ -61,6 +54,7 @@ export function NotificationCenter({ userOnly = false, onNotificationRead }: Not
     providerId: string;
     providerName: string;
     serviceId: string;
+    raterIsProvider?: boolean;
   }>({
     providerId: '',
     providerName: '',
@@ -117,12 +111,13 @@ export function NotificationCenter({ userOnly = false, onNotificationRead }: Not
             
             notifs.push({
               id: docSnap.id,
+              userId: data.userId || "",
               type: data.type,
               title: data.title,
               description: data.description,
               timestamp: data.timestamp,
               read: data.read,
-              data: data.data,
+              data: data.data || {}
             })
           }
           
@@ -236,7 +231,7 @@ export function NotificationCenter({ userOnly = false, onNotificationRead }: Not
 
   const handleNotificationClick = async (notification: Notification) => {
     if (!user) return
-
+    
     try {
       // Mark as read if not already
       if (!notification.read) {
@@ -257,7 +252,7 @@ export function NotificationCenter({ userOnly = false, onNotificationRead }: Not
           onNotificationRead();
         }
       }
-
+      
       // Handle navigation based on notification type
       if (notification.type === "message" && notification.data?.conversationId) {
         const otherUserId = notification.data.senderId
@@ -273,13 +268,17 @@ export function NotificationCenter({ userOnly = false, onNotificationRead }: Not
         router.push(`/services/${notification.data.serviceId}`)
       } else if (notification.type === "rating" && notification.data?.serviceId) {
         router.push(`/services/${notification.data.serviceId}`)
+      } else if (notification.type === "client_rating" || notification.type === "provider_rating") {
+        // For ratings, show the dashboard with ratings
+        router.push('/dashboard')
       } else if (notification.type === "payment_confirmed_rating") {
         // Show the rating dialog for confirmed payments
         if (notification.data?.providerId && notification.data?.serviceId) {
           setRatingData({
             providerId: notification.data.providerId,
             providerName: notification.data.providerName || 'Service Provider',
-            serviceId: notification.data.serviceId
+            serviceId: notification.data.serviceId,
+            raterIsProvider: false
           })
           setShowRatingDialog(true)
         } else {
@@ -302,6 +301,9 @@ export function NotificationCenter({ userOnly = false, onNotificationRead }: Not
       case 'message':
         return <MessageSquare className="h-4 w-4" />
       case 'review':
+      case 'rating':
+      case 'client_rating':
+      case 'provider_rating':
         return <Star className="h-4 w-4" />
       case 'payment':
       case 'payment_proof':
@@ -424,6 +426,7 @@ export function NotificationCenter({ userOnly = false, onNotificationRead }: Not
         providerId={ratingData.providerId}
         providerName={ratingData.providerName}
         serviceId={ratingData.serviceId}
+        raterIsProvider={ratingData.raterIsProvider}
       />
     </>
   )

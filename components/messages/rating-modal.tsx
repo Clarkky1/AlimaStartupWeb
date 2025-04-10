@@ -11,7 +11,7 @@ import {
 import { Button } from "@/components/ui/button"
 import { StarIcon } from "lucide-react"
 import { Textarea } from "@/components/ui/textarea"
-import { doc, updateDoc, getDoc, collection, query, where, getDocs } from "firebase/firestore"
+import { doc, updateDoc, getDoc, collection, query, where, getDocs, addDoc, serverTimestamp } from "firebase/firestore"
 import { initializeFirebase } from "@/app/lib/firebase"
 import { useToast } from "@/components/ui/use-toast"
 import { useAuth } from "@/app/context/auth-context"
@@ -32,9 +32,10 @@ interface RatingModalProps {
   onOpenChange: (open: boolean) => void
   providerId: string
   providerName: string
-  serviceId: string
+  serviceId?: string
   serviceTitle?: string
   transactionId?: string
+  raterIsProvider?: boolean
 }
 
 export function RatingModal({
@@ -42,9 +43,10 @@ export function RatingModal({
   onOpenChange,
   providerId,
   providerName,
-  serviceId,
-  serviceTitle,
-  transactionId
+  serviceId = "",
+  serviceTitle = "",
+  transactionId = "",
+  raterIsProvider = false
 }: RatingModalProps) {
   const [rating, setRating] = useState(0)
   const [feedback, setFeedback] = useState("")
@@ -52,265 +54,106 @@ export function RatingModal({
   const { toast } = useToast()
   const { user } = useAuth()
 
-  // Reset state when modal opens
+  // Reset form when dialog opens
   useEffect(() => {
     if (open) {
       setRating(0)
       setFeedback("")
-      setIsSubmitting(false)
     }
   }, [open])
 
-  // Debugging useEffect
-  useEffect(() => {
-    console.log("Rating modal state:", { 
-      rating, 
-      isSubmitting, 
-      isUserAuthenticated: !!user,
-      serviceId,
-      providerId 
-    })
-  }, [rating, isSubmitting, user, serviceId, providerId])
-
   const handleSubmit = async () => {
-    console.log("🚀 Submit button clicked, rating:", rating)
-    
-    // Check if already submitting to prevent double clicks
-    if (isSubmitting) {
-      console.log("Already submitting, ignoring click")
-      return
-    }
-    
-    // Basic validation
-    if (rating === 0) {
-      console.log("Rating is 0, showing error")
+    if (!user || !providerId || rating === 0) {
       toast({
         title: "Error",
-        description: "Please select a rating",
-        variant: "destructive"
+        description: "Please select a rating before submitting",
+        variant: "destructive",
       })
       return
     }
 
-    if (!serviceId) {
-      console.log("No serviceId provided, showing error")
-      toast({
-        title: "Error",
-        description: "Service ID is required to submit a rating",
-        variant: "destructive"
-      })
-      return
-    }
-
-    if (!user || !user.uid) {
-      console.log("User not authenticated, showing error")
-      toast({
-        title: "Error",
-        description: "You must be logged in to submit a rating",
-        variant: "destructive"
-      })
-      return
-    }
-
-    setIsSubmitting(true)
     try {
-      console.log("Initializing Firebase...")
+      setIsSubmitting(true)
       const { db } = await initializeFirebase()
       if (!db) {
-        console.error("Firebase db initialization failed")
-        throw new Error("Failed to initialize Firebase")
-      }
-      console.log("Firebase initialized successfully")
-
-      // First validate that the service exists since this is required by security rules
-      try {
-        console.log("Checking if service exists:", serviceId)
-        const serviceRef = doc(db, "services", serviceId)
-        const serviceDoc = await getDoc(serviceRef)
-        
-        if (!serviceDoc.exists()) {
-          console.error("Service does not exist:", serviceId)
-          toast({
-            title: "Error",
-            description: "The service you're trying to rate doesn't exist",
-            variant: "destructive"
-          })
-          setIsSubmitting(false)
-          return
-        }
-        console.log("Service exists, proceeding")
-      } catch (error) {
-        console.error("Error checking service:", error)
         toast({
           title: "Error",
-          description: "Could not verify service existence",
-          variant: "destructive"
+          description: "Failed to initialize Firebase",
+          variant: "destructive",
         })
-        setIsSubmitting(false)
         return
       }
 
-      // Create a review document first
-      let reviewDocId = null
-      try {
-        console.log("Importing Firebase addDoc...")
-        const { addDoc } = await import("firebase/firestore")
-        if (user) {
-          console.log("Creating review with user:", user.uid, "providerId:", providerId, "serviceId:", serviceId)
-          
-          // Create review data with required fields - MATCH EXACT STRUCTURE
-          const reviewData: ReviewData = {
-            userId: user.uid,
-            comment: feedback || "",
-            createdAt: new Date().toISOString(),
-            providerId,
-            rating: rating.toString(), // Convert to string to match Firestore structure
-            serviceId
-          }
-          
-          // Only add transactionId if it exists
-          if (transactionId) {
-            reviewData.transactionId = transactionId
-            console.log("Adding transactionId to review:", transactionId)
-          }
-          
-          // Log the review data we're about to save
-          console.log("Review data to be saved:", JSON.stringify(reviewData))
-          
-          // Attempt to create the review document
-          console.log("Attempting to add review document...")
-          const reviewRef = await addDoc(collection(db, "reviews"), reviewData)
-          reviewDocId = reviewRef.id
-          console.log("Created review document:", reviewDocId)
-        } else {
-          console.error("User not authenticated")
-          throw new Error("User not authenticated")
-        }
-      } catch (error) {
-        console.error("Error adding review document:", error)
-        toast({
-          title: "Error",
-          description: "Failed to submit review. Please try again.",
-          variant: "destructive"
-        })
-        setIsSubmitting(false)
-        return
+      // Set up review data
+      const reviewData = {
+        userId: user.uid,
+        userName: user.displayName || user.name || "Anonymous",
+        userAvatar: user.photoURL || user.avatar || null,
+        providerId,
+        providerName,
+        serviceId,
+        serviceTitle,
+        rating,
+        feedback,
+        transactionId,
+        createdAt: serverTimestamp(),
+        raterIsProvider: raterIsProvider
       }
 
-      // Now that review is created, update transaction if it exists
+      // Add the review
+      const reviewRef = await addDoc(collection(db, "reviews"), reviewData)
+      console.log("Review added with ID:", reviewRef.id)
+
+      // Update the transaction to mark it as rated if this is a transaction rating
       if (transactionId) {
-        console.log("Updating transaction with ID:", transactionId)
-        const transactionRef = doc(db, "transactions", transactionId)
+        await updateDoc(doc(db, "transactions", transactionId), {
+          rated: true,
+          rating,
+          updatedAt: new Date().toISOString()
+        })
+      }
+
+      // Update provider's average rating
+      const providerRef = doc(db, "users", providerId)
+      const providerDoc = await getDoc(providerRef)
+
+      if (providerDoc.exists()) {
+        const providerData = providerDoc.data()
+        const currentRating = providerData.rating || 0
+        const ratingCount = providerData.ratingCount || 0
         
-        try {
-          const transactionDoc = await getDoc(transactionRef)
-          
-          if (transactionDoc.exists()) {
-            console.log("Transaction exists, updating with rating:", rating)
-            try {
-              // Update the transaction with the rating
-              await updateDoc(transactionRef, {
-                rated: true,
-                rating: rating.toString(), // Convert to string to match structure
-                feedback: feedback || "",
-                updatedAt: new Date().toISOString()
-              })
-              console.log("Transaction updated successfully")
-            } catch (error) {
-              console.error("Error updating transaction:", error)
-              // Don't fail the whole process if transaction update fails
-              // The review was still created
-              toast({
-                title: "Warning",
-                description: "Rating submitted but transaction update failed.",
-                variant: "destructive"
-              })
-            }
-          } else {
-            console.log("Transaction does not exist:", transactionId)
-          }
-        } catch (error) {
-          console.error("Error getting transaction:", error)
-        }
-      } 
-      // Otherwise try to update related transaction status to completed
-      else if (user) {
-        try {
-          // Find transactions between this user and provider for this service
-          const transactionsQuery = query(
-            collection(db, "transactions"),
-            where("userId", "==", user.uid),
-            where("providerId", "==", providerId),
-            where("status", "==", "confirmed")
-          )
-          
-          if (serviceId) {
-            // If we have a serviceId, add it to the query
-            const serviceTransactionsQuery = query(
-              collection(db, "transactions"),
-              where("userId", "==", user.uid),
-              where("providerId", "==", providerId),
-              where("serviceId", "==", serviceId),
-              where("status", "==", "confirmed")
-            )
-            
-            const serviceTransactionsSnapshot = await getDocs(serviceTransactionsQuery)
-            
-            // Update the most recent transaction to completed
-            if (!serviceTransactionsSnapshot.empty) {
-              // Sort by timestamp desc to get the most recent one
-              const sortedTransactions = serviceTransactionsSnapshot.docs.sort((a, b) => {
-                const aTime = a.data().updatedAt || a.data().createdAt
-                const bTime = b.data().updatedAt || b.data().createdAt
-                return new Date(bTime).getTime() - new Date(aTime).getTime()
-              })
-              
-              // Update the most recent transaction
-              const transactionRef = doc(db, "transactions", sortedTransactions[0].id)
-              await updateDoc(transactionRef, {
-                rated: true,
-                rating: rating.toString(),
-                feedback: feedback || "",
-                updatedAt: new Date().toISOString()
-              })
-            } else {
-              // If no transaction found with the exact service, try to find any confirmed transaction
-              const transactionsSnapshot = await getDocs(transactionsQuery)
-              
-              if (!transactionsSnapshot.empty) {
-                // Sort by timestamp desc to get the most recent one
-                const sortedTransactions = transactionsSnapshot.docs.sort((a, b) => {
-                  const aTime = a.data().updatedAt || a.data().createdAt
-                  const bTime = b.data().updatedAt || b.data().createdAt
-                  return new Date(bTime).getTime() - new Date(aTime).getTime()
-                })
-                
-                // Update the most recent transaction
-                const transactionRef = doc(db, "transactions", sortedTransactions[0].id)
-                await updateDoc(transactionRef, {
-                  rated: true,
-                  rating: rating.toString(),
-                  feedback: feedback || "",
-                  updatedAt: new Date().toISOString()
-                })
-              }
-            }
-          }
-        } catch (error) {
-          console.error("Error updating transactions:", error)
-          toast({
-            title: "Warning",
-            description: "Rating submitted but transaction update failed.",
-            variant: "destructive"
-          })
+        // Calculate new average rating
+        const newRatingCount = ratingCount + 1
+        const newRating = ((currentRating * ratingCount) + rating) / newRatingCount
+        
+        await updateDoc(providerRef, {
+          rating: newRating,
+          ratingCount: newRatingCount,
+          lastRated: new Date().toISOString()
+        })
+      }
+
+      // Create notification for the provider
+      const notificationData = {
+        userId: providerId,
+        type: raterIsProvider ? "provider_rating" : "client_rating",
+        title: `New ${raterIsProvider ? "Provider" : "Client"} Rating: ${rating}/5 Stars`,
+        description: `${user.displayName || user.name || "Someone"} rated ${serviceTitle ? `your service "${serviceTitle}"` : "you"} ${rating}/5 stars${feedback ? ` with feedback: "${feedback}"` : ""}.`,
+        timestamp: serverTimestamp(),
+        read: false,
+        data: {
+          reviewId: reviewRef.id,
+          serviceId,
+          rating
         }
       }
+
+      await addDoc(collection(db, "notifications"), notificationData)
 
       toast({
-        title: "Success",
-        description: "Thank you for rating this service!"
+        title: "Thank you!",
+        description: "Your rating has been submitted successfully",
       })
-      console.log("Rating submitted successfully")
 
       // Close the modal
       onOpenChange(false)
@@ -319,11 +162,10 @@ export function RatingModal({
       toast({
         title: "Error",
         description: "Failed to submit rating. Please try again.",
-        variant: "destructive"
+        variant: "destructive",
       })
     } finally {
       setIsSubmitting(false)
-      console.log("Submission process completed")
     }
   }
 

@@ -36,6 +36,7 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import { Skeleton } from "@/components/ui/skeleton"
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
 import { Label } from "@/components/ui/label"
+import { Sheet, SheetContent, SheetHeader, SheetTitle, SheetDescription } from "@/components/ui/sheet"
 
 interface User {
   id: string
@@ -449,186 +450,195 @@ const UploadPaymentProofDialog = ({
 }
 
 // User/Provider profile component with service details
-const ConversationInfo = ({ userId, serviceId, isVisible, onClose }: { 
+const ConversationInfo = ({ 
+  userId, 
+  serviceId, 
+  isVisible, 
+  onClose,
+  onRateProvider
+}: { 
   userId: string; 
   serviceId?: string;
   isVisible: boolean;
   onClose: () => void;
+  onRateProvider?: (providerId: string, providerName: string) => void;
 }) => {
+  const [loading, setLoading] = useState(true)
   const [user, setUser] = useState<any>(null)
   const [service, setService] = useState<any>(null)
-  const [loading, setLoading] = useState(true)
+  const { toast } = useToast()
+  const { user: currentUser } = useAuth()
+  
+  // Check if the current user is a provider
+  const [isCurrentUserProvider, setIsCurrentUserProvider] = useState(false)
+  const [isUserProvider, setIsUserProvider] = useState(false)
 
   useEffect(() => {
-    async function fetchProfileData() {
-      if (!userId) return
-
+    async function fetchUserRole() {
+      if (!currentUser?.uid) return
+      
       try {
         const { db } = await initializeFirebase()
         if (!db) return
-
-        const { doc, getDoc, collection, query, where, getDocs } = await import("firebase/firestore")
         
-        // Fetch user profile
+        const currentUserDoc = await getDoc(doc(db, "users", currentUser.uid))
+        if (currentUserDoc.exists()) {
+          setIsCurrentUserProvider(currentUserDoc.data().role === "provider")
+        }
+      } catch (error) {
+        console.error("Error fetching current user role:", error)
+      }
+    }
+    
+    fetchUserRole()
+  }, [currentUser])
+  
+  useEffect(() => {
+    const fetchUserAndService = async () => {
+      if (!userId) {
+        setLoading(false)
+        return
+      }
+      
+      setLoading(true)
+      
+      try {
+        const { db } = await initializeFirebase()
+        if (!db) throw new Error("Firestore not initialized")
+        
+        // Get user data
         const userDoc = await getDoc(doc(db, "users", userId))
         if (userDoc.exists()) {
           const userData = userDoc.data()
-          // Prioritize name, then displayName, then fallback to email
-          const name = userData.name || userData.displayName || userData.email?.split('@')[0] || 'Unknown User'
-          const avatar = userData.profilePicture || userData.avatar
           setUser({
-            id: userDoc.id,
-            name,
-            avatar,
-            ...userData
+            ...userData,
+            id: userId
           })
+          
+          // Check if user is a provider
+          setIsUserProvider(userData.role === "provider")
         }
         
-        // Fetch service if available
+        // Get service data if available
         if (serviceId) {
           const serviceDoc = await getDoc(doc(db, "services", serviceId))
           if (serviceDoc.exists()) {
             setService({
-              id: serviceDoc.id,
-              ...serviceDoc.data()
-            })
-          }
-        } else if (userDoc.exists() && userDoc.data().role === 'provider') {
-          // If no service ID but user is a provider, fetch their first service
-          const servicesQuery = query(
-            collection(db, "services"),
-            where("providerId", "==", userId),
-            where("active", "==", true)
-          )
-          
-          const servicesSnapshot = await getDocs(servicesQuery)
-          if (!servicesSnapshot.empty) {
-            const firstService = servicesSnapshot.docs[0]
-            setService({
-              id: firstService.id,
-              ...firstService.data()
+              ...serviceDoc.data(),
+              id: serviceId
             })
           }
         }
       } catch (error) {
-        console.error("Error fetching profile data:", error)
+        console.error("Error fetching user info:", error)
+        toast({
+          title: "Error",
+          description: "Failed to load user information",
+          variant: "destructive",
+        })
       } finally {
         setLoading(false)
       }
     }
     
-    if (isVisible) {
-      fetchProfileData()
-    }
-  }, [userId, serviceId, isVisible])
-
-  // Format category name for display
-  const formatCategoryName = (category: string) => {
-    if (!category) return ""
-    return category
-      .split('-')
-      .map(word => word.charAt(0).toUpperCase() + word.slice(1))
-      .join(' ')
-  }
-
+    fetchUserAndService()
+  }, [userId, serviceId, toast])
+  
   if (!isVisible) return null
   
   return (
-    <div className="p-4">
-      {/* User info content - no section heading */}
-      
-      {loading ? (
-        <div className="space-y-4">
-          <Skeleton className="h-24 w-full" />
-          <Skeleton className="h-16 w-full" />
-        </div>
-      ) : (
-        <div className="max-h-[calc(100vh-300px)] overflow-y-auto pb-6">
-          {user && (
-            <>
-              {user.bio && (
-                <div className="pt-3">
-                  <h4 className="text-sm font-semibold mb-1">Bio</h4>
-                  <p className="text-sm text-muted-foreground">{user.bio}</p>
-                </div>
-              )}
-
-              <div className="pt-3">
-                <h4 className="text-sm font-semibold mb-2">Contact Info</h4>
-                <div className="space-y-2">
-                  {user.email && (
-                    <div className="flex items-center gap-2 text-sm">
-                      <Mail className="h-4 w-4 text-muted-foreground" />
-                      <span>{user.email}</span>
-                    </div>
-                  )}
-                  {user.phone && (
-                    <div className="flex items-center gap-2 text-sm">
-                      <Phone className="h-4 w-4 text-muted-foreground" />
-                      <span>{user.phone}</span>
-                    </div>
-                  )}
-                  {user.location && (
-                    <div className="flex items-center gap-2 text-sm">
-                      <MapPin className="h-4 w-4 text-muted-foreground" />
-                      <span>{user.location}</span>
-                    </div>
+    <Sheet open={isVisible} onOpenChange={onClose}>
+      <SheetContent side="right" className="sm:max-w-md">
+        <SheetHeader>
+          <SheetTitle>Information</SheetTitle>
+          <SheetDescription>
+            View details about this conversation
+          </SheetDescription>
+        </SheetHeader>
+        
+        {loading ? (
+          <div className="p-8 flex justify-center">
+            <div className="animate-spin h-8 w-8 border-2 border-primary rounded-full border-t-transparent"></div>
+          </div>
+        ) : (
+          <div className="p-4 space-y-4">
+            {user && (
+              <>
+                <div className="text-center">
+                  <Avatar className="h-24 w-24 mx-auto">
+                    <AvatarImage
+                      src={user.avatar || user.profilePicture || "/person-male-1.svg?height=96&width=96"}
+                      alt={user.name || "User"}
+                    />
+                    <AvatarFallback>{user.name?.charAt(0) || "U"}</AvatarFallback>
+                  </Avatar>
+                  <h3 className="font-semibold mt-3">{user.name || user.displayName}</h3>
+                  {user.title && <p className="text-sm text-muted-foreground">{user.title}</p>}
+                  {user.role && (
+                    <Badge variant="outline" className="mt-2">
+                      {user.role === 'provider' ? 'Service Provider' : 'Client'}
+                    </Badge>
                   )}
                 </div>
-              </div>
 
-              {user.specialties && (
-                <div className="pt-3">
-                  <h4 className="text-sm font-semibold mb-2">Specialties</h4>
-                  <div className="flex flex-wrap gap-1">
-                    {user.specialties.map((specialty: string, index: number) => (
-                      <Badge key={index} variant="outline" className="text-xs">
-                        {specialty}
-                      </Badge>
-                    ))}
+                {user.rating && (
+                  <div className="flex items-center justify-center gap-1 text-sm my-2">
+                    <div className="flex items-center">
+                      {[1, 2, 3, 4, 5].map((star) => (
+                        <Star
+                          key={star}
+                          className={`h-4 w-4 ${star <= Math.round(user.rating) ? "text-yellow-400 fill-yellow-400" : "text-gray-300"}`}
+                        />
+                      ))}
+                    </div>
+                    <span className="ml-1">{user.rating.toFixed(1)}</span>
                   </div>
-                </div>
-              )}
-            </>
-          )}
+                )}
 
-          {service && (
-            <div className="pt-3">
-              <h4 className="text-sm font-semibold mb-2">Service Information</h4>
-              <div className="rounded-md overflow-hidden bg-muted/10">
-                <div className="p-3 flex flex-col gap-3">
-                  {service.image && (
-                    <div>
-                      <img 
-                        src={service.image} 
-                        alt={service.title} 
-                        className="w-full h-40 object-cover rounded-md"
-                        onError={(e) => {
-                          e.currentTarget.src = "/placeholder.jpg"
-                          e.currentTarget.onerror = null
-                        }}
-                      />
-                    </div>
-                  )}
-                  <div>
-                    <h3 className="font-medium">{service.title}</h3>
-                    <p className="text-sm text-muted-foreground my-2">{service.description}</p>
-                    <div className="flex justify-between items-center">
-                      <span className="text-sm font-bold">₱{service.price?.toLocaleString() || "N/A"}</span>
-                      {service.category && (
-                        <Badge variant="outline">
-                          {formatCategoryName(service.category)}
-                        </Badge>
-                      )}
+                {user.bio && (
+                  <div className="border-t pt-3">
+                    <h4 className="text-sm font-semibold mb-1">Bio</h4>
+                    <p className="text-sm text-muted-foreground">{user.bio}</p>
+                  </div>
+                )}
+                
+                {/* Provider-to-Provider Rating Feature */}
+                {isCurrentUserProvider && isUserProvider && currentUser?.uid !== user.id && (
+                  <div className="border-t pt-3">
+                    <Button 
+                      variant="outline" 
+                      className="w-full flex items-center justify-center gap-2"
+                      onClick={() => onRateProvider?.(user.id, user.name || user.displayName || "Provider")}
+                    >
+                      <Star className="h-4 w-4 text-yellow-400" />
+                      <span>Rate this Provider</span>
+                    </Button>
+                  </div>
+                )}
+
+                {user.location && (
+                  <div className="border-t pt-3">
+                    <h4 className="text-sm font-semibold mb-1">Location</h4>
+                    <p className="text-sm text-muted-foreground">{user.location}</p>
+                  </div>
+                )}
+
+                {user.specialties && user.specialties.length > 0 && (
+                  <div className="border-t pt-3">
+                    <h4 className="text-sm font-semibold mb-1">Specialties</h4>
+                    <div className="flex flex-wrap gap-1 mt-1">
+                      {user.specialties.map((specialty: string, index: number) => (
+                        <Badge key={index} variant="secondary">{specialty}</Badge>
+                      ))}
                     </div>
                   </div>
-                </div>
-              </div>
-            </div>
-          )}
-        </div>
-      )}
-    </div>
+                )}
+              </>
+            )}
+          </div>
+        )}
+      </SheetContent>
+    </Sheet>
   )
 }
 
@@ -759,19 +769,21 @@ const ImagePreviewDialog = ({ src, isOpen, onClose }: { src: string, isOpen: boo
 const RatingDialog = ({ 
   isOpen, 
   onClose, 
-  serviceId, 
-  serviceTitle, 
+  serviceId = "", 
+  serviceTitle = "", 
   providerId,
   providerName,
-  transactionId 
+  transactionId = "",
+  raterIsProvider = false
 }: { 
   isOpen: boolean; 
   onClose: () => void; 
-  serviceId: string; 
-  serviceTitle: string; 
+  serviceId?: string; 
+  serviceTitle?: string; 
   providerId: string;
   providerName: string;
-  transactionId: string;
+  transactionId?: string;
+  raterIsProvider?: boolean;
 }) => {
   const [rating, setRating] = useState(5);
   const [feedback, setFeedback] = useState("");
@@ -948,6 +960,13 @@ export function MessageCenter() {
   } | null>(null);
   // Add a new hook for checking participants' roles after the existing hooks
   const [otherParticipantRole, setOtherParticipantRole] = useState<string | null>(null);
+  // Chat members info display for the sidebar
+  const [selectedUserId, setSelectedUserId] = useState<string | null>(null)
+  const [providerRatingDialogOpen, setProviderRatingDialogOpen] = useState(false)
+  const [providerToRate, setProviderToRate] = useState({
+    providerId: "",
+    providerName: ""
+  })
 
   // Define getOtherParticipantId function before it's used in useEffect
   const getOtherParticipantId = (conversation: ConversationData) => {
@@ -2064,6 +2083,21 @@ export function MessageCenter() {
     );
   };
 
+  // Handle opening user info panel
+  const handleUserInfoClick = (userId: string) => {
+    setSelectedUserId(userId)
+    setShowUserInfo(true)
+  }
+  
+  // Handle provider rating
+  const handleRateProvider = (providerId: string, providerName: string) => {
+    setProviderToRate({
+      providerId,
+      providerName
+    })
+    setProviderRatingDialogOpen(true)
+  }
+
   return (
     <div className="h-[calc(100vh-8rem)] overflow-hidden border rounded-xl bg-background/90 backdrop-blur-md shadow-sm">
       {/* Top navigation bar - removed completely for mobile */}
@@ -2490,6 +2524,7 @@ export function MessageCenter() {
                       setActiveMobileTab('chat');
                     }
                   }}
+                  onRateProvider={handleRateProvider}
                 />
                 </div>
               </div>
@@ -2511,7 +2546,13 @@ export function MessageCenter() {
           isOpen={ratingDialogOpen}
           onClose={() => {
             setRatingDialogOpen(false);
-            setRatingService(null);
+            setRatingService({
+              serviceId: "",
+              serviceTitle: "",
+              providerId: "",
+              providerName: "",
+              transactionId: ""
+            });
           }}
           serviceId={ratingService.serviceId}
           serviceTitle={ratingService.serviceTitle}
@@ -2520,6 +2561,21 @@ export function MessageCenter() {
           transactionId={ratingService.transactionId}
         />
       )}
+      
+      {/* Provider-to-Provider Rating Dialog */}
+      <RatingDialog
+        isOpen={providerRatingDialogOpen}
+        onClose={() => {
+          setProviderRatingDialogOpen(false);
+          setProviderToRate({
+            providerId: "",
+            providerName: ""
+          });
+        }}
+        providerId={providerToRate.providerId}
+        providerName={providerToRate.providerName}
+        raterIsProvider={true}
+      />
     </div>
   )
 }

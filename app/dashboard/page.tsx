@@ -14,6 +14,29 @@ export default function DashboardPage() {
     if (!loading && (!user || user.role !== "provider")) {
       router.push("/login")
     }
+    
+    // Force a refresh of the component
+    const refreshDashboard = () => {
+      console.log("Refreshing dashboard...")
+      const dashboardElement = document.getElementById('dashboard-content')
+      if (dashboardElement) {
+        // Force browser to redraw the element
+        dashboardElement.style.display = 'none'
+        setTimeout(() => {
+          dashboardElement.style.display = 'block'
+        }, 0)
+      }
+    }
+    
+    // Run refresh after DOM is loaded
+    if (typeof window !== 'undefined') {
+      window.addEventListener('load', refreshDashboard)
+      // Also try to refresh immediately if DOM is already loaded
+      if (document.readyState === 'complete') {
+        refreshDashboard()
+      }
+      return () => window.removeEventListener('load', refreshDashboard)
+    }
   }, [user, loading, router])
 
   if (loading) {

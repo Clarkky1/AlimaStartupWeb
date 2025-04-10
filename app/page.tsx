@@ -605,37 +605,49 @@ export default function Home() {
                       <div className="absolute top-40 left-24 h-2 w-2 rounded-full bg-[#fcd34d]"></div>
                     </div>
                     
-                    {/* User Statistics */}
-                    <div className="flex items-center justify-between mt-8 bg-white/80 dark:bg-black/80 backdrop-blur-sm rounded-xl p-4 shadow-lg">
-                      <div className="text-center px-4">
-                        <p className="text-2xl font-bold text-primary">
+                    {/* User Statistics - Premium Apple 2025 Style */}
+                    <div className="flex items-center justify-between mt-8 backdrop-blur-xl bg-white/15 dark:bg-black/15 border border-white/20 dark:border-white/10 rounded-2xl p-6 shadow-[0_10px_40px_-15px_rgba(0,0,0,0.15)] dark:shadow-[0_10px_40px_-15px_rgba(255,255,255,0.05)] overflow-hidden relative group transition-all duration-300 hover:shadow-[0_15px_60px_-15px_rgba(0,0,0,0.2)] dark:hover:shadow-[0_15px_60px_-15px_rgba(255,255,255,0.07)]">
+                      {/* Premium glass background effects */}
+                      <div className="absolute inset-0 bg-gradient-to-br from-white/5 via-white/10 to-white/5 dark:from-white/5 dark:via-white/2 dark:to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-500"></div>
+                      <div className="absolute -inset-1 bg-gradient-to-r from-blue-500/10 via-purple-500/10 to-pink-500/10 dark:from-blue-500/5 dark:via-purple-500/5 dark:to-pink-500/5 blur-xl opacity-0 group-hover:opacity-100 transition-opacity duration-500 rounded-3xl"></div>
+                      
+                      {/* Active Users */}
+                      <div className="text-center px-5 relative z-10 flex flex-col items-center">
+                        <p className="text-3xl md:text-4xl font-bold bg-gradient-to-r from-blue-600 to-blue-400 dark:from-blue-400 dark:to-blue-300 inline-block text-transparent bg-clip-text">
                           {isLoading ? (
-                            <span className="inline-block h-6 w-16 bg-gray-200 dark:bg-gray-700 animate-pulse rounded-md"></span>
+                            <span className="inline-block h-8 w-16 bg-gray-200/50 dark:bg-gray-700/50 animate-pulse rounded-md"></span>
                           ) : (
                             formatStatNumber(userCount)
                           )}
                         </p>
-                        <p className="text-sm text-neutral-500">Active Users</p>
+                        <div className="h-1 w-8 bg-blue-500/50 rounded-full mt-2 mb-1"></div>
+                        <p className="text-sm font-medium text-neutral-700 dark:text-neutral-300">Active Users</p>
                       </div>
-                      <div className="text-center px-4 border-x border-gray-200 dark:border-gray-800">
-                        <p className="text-2xl font-bold text-primary">
+                      
+                      {/* Services */}
+                      <div className="text-center px-5 relative z-10 flex flex-col items-center">
+                        <p className="text-3xl md:text-4xl font-bold bg-gradient-to-r from-purple-600 to-purple-400 dark:from-purple-400 dark:to-purple-300 inline-block text-transparent bg-clip-text">
                           {isLoading ? (
-                            <span className="inline-block h-6 w-16 bg-gray-200 dark:bg-gray-700 animate-pulse rounded-md"></span>
+                            <span className="inline-block h-8 w-16 bg-gray-200/50 dark:bg-gray-700/50 animate-pulse rounded-md"></span>
                           ) : (
                             formatStatNumber(serviceCount)
                           )}
                         </p>
-                        <p className="text-sm text-neutral-500">Services</p>
+                        <div className="h-1 w-8 bg-purple-500/50 rounded-full mt-2 mb-1"></div>
+                        <p className="text-sm font-medium text-neutral-700 dark:text-neutral-300">Services</p>
                       </div>
-                      <div className="text-center px-4">
-                        <p className="text-2xl font-bold text-primary">
+                      
+                      {/* Providers */}
+                      <div className="text-center px-5 relative z-10 flex flex-col items-center">
+                        <p className="text-3xl md:text-4xl font-bold bg-gradient-to-r from-emerald-600 to-emerald-400 dark:from-emerald-400 dark:to-emerald-300 inline-block text-transparent bg-clip-text">
                           {isLoading ? (
-                            <span className="inline-block h-6 w-16 bg-gray-200 dark:bg-gray-700 animate-pulse rounded-md"></span>
+                            <span className="inline-block h-8 w-16 bg-gray-200/50 dark:bg-gray-700/50 animate-pulse rounded-md"></span>
                           ) : (
                             formatStatNumber(providerCount)
                           )}
                         </p>
-                        <p className="text-sm text-neutral-500">Providers</p>
+                        <div className="h-1 w-8 bg-emerald-500/50 rounded-full mt-2 mb-1"></div>
+                        <p className="text-sm font-medium text-neutral-700 dark:text-neutral-300">Providers</p>
                       </div>
                     </div>
                   </div>

@@ -13,6 +13,10 @@ import { useStatistics } from "@/app/hooks/useStatistics"
 import { useNetworkStatus } from "@/app/context/network-status-context";
 import { PlaceholderImage } from "@/components/ui/placeholder-image";
 import { usePathname } from "next/navigation";
+import dynamic from "next/dynamic";
+
+// Dynamically import the QuoteCard component to avoid styled-components SSR issues
+const QuoteCard = dynamic(() => import("@/components/home/quote-card"), { ssr: false });
 
 // Client component for animations
 const AnimationStyles = () => {
@@ -1387,9 +1391,18 @@ export default function Home() {
             </div>
             
             {/* Ready to Get Started Section with glass morphism */}
-            <div className="max-w-5xl mx-auto p-[1px] rounded-[32px] shadow-xl bg-gradient-to-b from-white/30 to-white/10 dark:from-white/10 dark:to-white/5 backdrop-blur-xl" 
+            <div className="max-w-5xl mx-auto p-[1px] rounded-[32px] shadow-xl bg-gradient-to-b from-white/30 to-white/10 dark:from-white/10 dark:to-white/5 backdrop-blur-xl relative overflow-hidden" 
                  data-aos="fade-up" 
                  data-aos-delay="200">
+              {/* Background pattern */}
+              <div className="absolute inset-0 z-0"
+                   style={{
+                     backgroundColor: 'transparent',
+                     backgroundImage: 'radial-gradient(rgba(59, 130, 246, 0.5) 2.5px, transparent 0)',
+                     backgroundSize: '30px 30px',
+                     backgroundPosition: '0 0'
+                   }}
+              ></div>
               {/* Cursor follower */}
               <div className="opacity-0 group-hover:opacity-100 absolute -inset-2 blur-xl bg-gradient-to-r from-blue-500 to-green-400 rounded-full w-32 h-32 transition-all duration-500 cursor-none pointer-events-none" 
                    id="cursor-follower"></div>
@@ -1415,82 +1428,106 @@ export default function Home() {
         </div>
         
         {/* Why Choose Us Section - Restyled with Apple Aesthetic */}
-        <section id="why-choose-us" className="py-16 md:py-24 bg-gray-50 dark:bg-neutral-950 relative"> 
-          <div className="container px-6 md:px-8">
-            {/* Changed grid column definition from lg:grid-cols-2 to lg:grid-cols-[2fr_1fr] */}
-            <div className="grid gap-12 lg:grid-cols-[2fr_1fr] lg:gap-16 xl:gap-24 items-center"> {/* Changed items-center to items-start */}
-              {/* Text Content Area */}
-              <div className="flex flex-col justify-center space-y-8">
-                <div className="space-y-4">
-                  <h2 className="text-4xl font-bold tracking-tight text-gray-900 dark:text-white sm:text-5xl md:text-6xl">
-                    Why Choose Alima?
+        <section 
+          id="why-choose-us" 
+          className="py-24 md:py-32 lg:py-40 min-h-[90vh] flex items-center relative"
+          style={{
+            backgroundImage: 'url(/Why%20choose%20alima.svg)',
+            backgroundSize: 'cover',
+            backgroundPosition: 'center',
+            backgroundRepeat: 'no-repeat',
+            position: 'relative',
+            filter: 'contrast(1.05) brightness(1.02)'
+          }}
+          data-aos="fade-up"
+          data-aos-duration="800"
+        > 
+          {/* Overlay with reduced opacity to let more of the background show through */}
+          <div className="absolute inset-0 bg-gray-50/10 dark:bg-neutral-950/20 backdrop-blur-[2px]"></div>
+          
+          {/* Top fade effect */}
+          <div className="absolute inset-x-0 top-0 h-24 bg-gradient-to-b from-white dark:from-black to-transparent z-[1]"></div>
+          
+          {/* Bottom fade effect */}
+          <div className="absolute inset-x-0 bottom-0 h-24 bg-gradient-to-t from-white dark:from-black to-transparent z-[1]"></div>
+          
+          {/* Decorative elements */}
+          <div className="absolute top-[15%] left-[10%] w-24 h-24 bg-blue-500/15 rounded-full blur-xl animate-pulse-slow"></div>
+          <div className="absolute bottom-[20%] right-[15%] w-32 h-32 bg-indigo-500/15 rounded-full blur-xl animate-pulse-medium"></div>
+          <div className="absolute top-[30%] right-[10%] w-16 h-16 bg-blue-600/15 rounded-full blur-xl animate-pulse-very-slow"></div>
+          
+          {/* Standard container padding */}
+          <div className="container px-6 md:px-8 relative z-10">
+            {/* Modified grid - removed gap and added justify-end to move content to the right */}
+            <div className="grid max-w-6xl mx-auto lg:grid-cols-2 items-center">
+              {/* Text Content Area - Added justify-end to move content to the right */}
+              <div className="flex flex-col justify-center space-y-8 lg:ml-auto lg:max-w-2xl" data-aos="fade-left" data-aos-delay="100">
+                <div className="space-y-6">
+                  <span className="text-sm font-medium tracking-wider uppercase text-gray-700 dark:text-gray-400">Reimagine Connections</span>
+                  <h2 className="text-4xl font-bold tracking-tight text-gray-800 dark:text-gray-200 sm:text-5xl md:text-6xl drop-shadow-sm leading-tight">
+                    The Future of <br className="md:block hidden" /> Service Connections
                   </h2>
-                  <p className="max-w-2xl text-lg text-gray-600 dark:text-gray-400 md:text-xl">
-                    Join our vibrant community of service providers and clients today and experience a new way to connect.
+                  <p className="max-w-2xl text-lg text-gray-700 dark:text-gray-300 md:text-xl font-light leading-relaxed">
+                    Experience seamless connections with verified professionals in a space designed with intention and care. Exceptional by design.
                   </p>
                 </div>
                 {/* Features Grid */}
-                <div className="grid gap-8 sm:grid-cols-2">
+                <div className="grid gap-8 sm:grid-cols-2 mt-6">
                   {/* Feature 1: Verified Providers */}
-                  <div className="flex items-start gap-4">
-                    <div className="flex h-12 w-12 shrink-0 items-center justify-center rounded-xl bg-blue-100/80 dark:bg-blue-900/30 text-blue-600 dark:text-blue-400">
+                  <div className="flex items-start gap-4 transform transition-all duration-300 hover:translate-y-[-5px] hover:bg-white/50 dark:hover:bg-black/20 p-4 rounded-xl" data-aos="fade-up" data-aos-delay="200">
+                    <div className="flex h-12 w-12 shrink-0 items-center justify-center rounded-xl bg-gradient-to-br from-gray-700 to-gray-800 text-white shadow-md">
                       <CheckCircle className="h-6 w-6" />
                     </div>
-                    <div className="space-y-1">
-                      <h3 className="text-lg font-semibold text-gray-900 dark:text-white">Verified Providers</h3>
-                      <p className="text-base text-gray-600 dark:text-gray-400">
-                        All service providers undergo verification to ensure quality and reliability.
+                    <div className="space-y-2">
+                      <h3 className="text-lg font-semibold text-gray-900 dark:text-white">Verified Excellence</h3>
+                      <p className="text-base text-gray-700 dark:text-gray-300 font-light leading-relaxed">
+                        Every provider undergoes thorough verification, ensuring uncompromising quality in every interaction.
                       </p>
                     </div>
                   </div>
                   {/* Feature 2: Direct Communication */}
-                  <div className="flex items-start gap-4">
-                    <div className="flex h-12 w-12 shrink-0 items-center justify-center rounded-xl bg-blue-100/80 dark:bg-blue-900/30 text-blue-600 dark:text-blue-400">
+                  <div className="flex items-start gap-4 transform transition-all duration-300 hover:translate-y-[-5px] hover:bg-white/50 dark:hover:bg-black/20 p-4 rounded-xl" data-aos="fade-up" data-aos-delay="300">
+                    <div className="flex h-12 w-12 shrink-0 items-center justify-center rounded-xl bg-gradient-to-br from-gray-700 to-gray-800 text-white shadow-md">
                       <MessageSquare className="h-6 w-6" />
                     </div>
-                    <div className="space-y-1">
-                      <h3 className="text-lg font-semibold text-gray-900 dark:text-white">Direct Communication</h3>
-                      <p className="text-base text-gray-600 dark:text-gray-400">
-                        Connect directly with providers through our secure messaging system.
+                    <div className="space-y-2">
+                      <h3 className="text-lg font-semibold text-gray-900 dark:text-white">Seamless Communication</h3>
+                      <p className="text-base text-gray-700 dark:text-gray-300 font-light leading-relaxed">
+                        Connect effortlessly through our intuitive, secure messaging system designed for clarity and privacy.
                       </p>
                     </div>
                   </div>
                   {/* Feature 3: Secure Payments */}
-                  <div className="flex items-start gap-4">
-                    <div className="flex h-12 w-12 shrink-0 items-center justify-center rounded-xl bg-blue-100/80 dark:bg-blue-900/30 text-blue-600 dark:text-blue-400">
+                  <div className="flex items-start gap-4 transform transition-all duration-300 hover:translate-y-[-5px] hover:bg-white/50 dark:hover:bg-black/20 p-4 rounded-xl" data-aos="fade-up" data-aos-delay="400">
+                    <div className="flex h-12 w-12 shrink-0 items-center justify-center rounded-xl bg-gradient-to-br from-gray-700 to-gray-800 text-white shadow-md">
                       <CreditCard className="h-6 w-6" />
                     </div>
-                    <div className="space-y-1">
-                      <h3 className="text-lg font-semibold text-gray-900 dark:text-white">Secure Payments</h3>
-                      <p className="text-base text-gray-600 dark:text-gray-400">
-                        Our platform ensures safe and transparent payment processing for all services.
+                    <div className="space-y-2">
+                      <h3 className="text-lg font-semibold text-gray-900 dark:text-white">Transparent Transactions</h3>
+                      <p className="text-base text-gray-700 dark:text-gray-300 font-light leading-relaxed">
+                        Experience worry-free payments with our secure, transparent processing system built on trust.
                       </p>
                     </div>
                   </div>
                   {/* Feature 4: Find Exactly What You Need */}
-                  <div className="flex items-start gap-4">
-                    <div className="flex h-12 w-12 shrink-0 items-center justify-center rounded-xl bg-blue-100/80 dark:bg-blue-900/30 text-blue-600 dark:text-blue-400">
+                  <div className="flex items-start gap-4 transform transition-all duration-300 hover:translate-y-[-5px] hover:bg-white/50 dark:hover:bg-black/20 p-4 rounded-xl" data-aos="fade-up" data-aos-delay="500">
+                    <div className="flex h-12 w-12 shrink-0 items-center justify-center rounded-xl bg-gradient-to-br from-gray-700 to-gray-800 text-white shadow-md">
                       <UserRoundSearch className="h-6 w-6" />
                     </div>
-                    <div className="space-y-1">
-                      <h3 className="text-lg font-semibold text-gray-900 dark:text-white">Find Exactly What You Need</h3>
-                      <p className="text-base text-gray-600 dark:text-gray-400">
-                        Our search and filter options make it easy to find the perfect service provider.
+                    <div className="space-y-2">
+                      <h3 className="text-lg font-semibold text-gray-900 dark:text-white">Precision Matching</h3>
+                      <p className="text-base text-gray-700 dark:text-gray-300 font-light leading-relaxed">
+                        Find exactly what you need with intelligent search tools that connect you to your perfect service match.
                       </p>
                     </div>
                   </div>
                 </div>
               </div>
-              {/* Animated Card Area - Centered within its column */} 
-              <div className="flex flex-col items-center justify-center pt-8">
-                <div className="flex flex-col items-center space-y-6">
-                  {/* Consider adding a subtle background or container for the card if needed */}
-                  <AnimatedCard /> 
-                  <div className="space-y-2 text-center">
-                    <p className="text-base text-gray-600 dark:text-gray-400">
-                      Connecting skilled professionals with those who need their services.
-                    </p>
-                  </div>
+              
+              {/* Quote Card on the left side */}
+              <div className="hidden lg:flex items-center justify-center" data-aos="fade-right" data-aos-delay="200">
+                <div className="transform rotate-3 hover:rotate-0 transition-transform duration-300">
+                  <QuoteCard />
                 </div>
               </div>
             </div>

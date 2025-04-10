@@ -21,7 +21,9 @@ export function ClientLayout({ children }: { children: React.ReactNode }) {
                           pathname === '/register' ||
                           pathname === '/notifications' ||
                           pathname === '/profile' ||
-                          pathname?.startsWith('/message');
+                          pathname?.startsWith('/message') ||
+                          pathname === '/terms-of-service' ||
+                          pathname === '/privacy-policy';
                           
   // Hide navbar only on dashboard, login, signup, and notifications pages
   const shouldHideNavbar = shouldHideFooter;

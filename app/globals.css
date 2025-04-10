@@ -28,6 +28,12 @@ h1, h2, h3, h4, h5, h6 {
   font-weight: 600;
 }
 
+/* Fix for text with background-clip to properly display descenders (g, j, p, q, y) */
+[class*="bg-clip-text"] {
+  padding-bottom: 0.2em;
+  margin-bottom: -0.1em;
+}
+
 /* Hide scrollbar for Chrome, Safari and Opera */
 ::-webkit-scrollbar {
   display: none;

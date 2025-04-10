@@ -1217,33 +1217,39 @@ export function MessageCenter() {
         }
       }
       
-      // Get provider name for the notification
-      const providerDoc = await getDoc(doc(db, "users", user.uid));
-      const providerData = providerDoc.data() || {};
-      const providerName = providerData.displayName || providerData.name || user.displayName || "Service Provider";
-      
-      // Create notification for the user to rate the service
-      const notificationData = {
-        userId: message.senderId,
-        type: "payment_confirmed_rating", // Special type to trigger rating dialog
-        title: `Payment Confirmed: ${serviceTitle} - ₱${typeof paymentAmount === 'number' ? paymentAmount.toLocaleString() : paymentAmount}`,
-        description: `Your payment of ₱${typeof paymentAmount === 'number' ? paymentAmount.toLocaleString() : paymentAmount} for ${serviceTitle} has been confirmed. Please rate your experience.`,
-        timestamp: serverTimestamp(),
-        read: false,
-        data: {
-          conversationId: message.conversationId,
-          messageId: message.id,
-          serviceId: serviceId,
-          serviceTitle: serviceTitle,
-          providerId: user.uid,
-          providerName: providerName,
-          transactionId: transactionId,
-          requiresRating: true,
-          amount: paymentAmount
-        }
-      };
-      
-      await addDoc(collection(db, "notifications"), notificationData);
+      // Create notification for rating in a separate try-catch block
+      try {
+        // Get provider name for the notification
+        const providerDoc = await getDoc(doc(db, "users", user.uid));
+        const providerData = providerDoc.data() || {};
+        const providerName = providerData.displayName || providerData.name || user.displayName || "Service Provider";
+        
+        // Create notification for the user to rate the service
+        const notificationData = {
+          userId: message.senderId,
+          type: "payment_confirmed_rating", // Special type to trigger rating dialog
+          title: `Payment Confirmed: ${serviceTitle} - ₱${typeof paymentAmount === 'number' ? paymentAmount.toLocaleString() : paymentAmount}`,
+          description: `Your payment of ₱${typeof paymentAmount === 'number' ? paymentAmount.toLocaleString() : paymentAmount} for ${serviceTitle} has been confirmed. Please rate your experience.`,
+          timestamp: serverTimestamp(),
+          read: false,
+          data: {
+            conversationId: message.conversationId,
+            messageId: message.id,
+            serviceId: serviceId,
+            serviceTitle: serviceTitle,
+            providerId: user.uid,
+            providerName: providerName,
+            transactionId: transactionId,
+            requiresRating: true,
+            amount: paymentAmount
+          }
+        };
+        
+        await addDoc(collection(db, "notifications"), notificationData);
+      } catch (notificationError) {
+        console.error("Error creating notification (non-critical):", notificationError);
+        // Continue execution - notification is not critical
+      }
       
       toast({
         title: "Success",

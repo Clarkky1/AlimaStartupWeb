@@ -1085,7 +1085,8 @@ export function MessageCenter() {
       const transactionsQuery = query(
         collection(db, "transactions"),
         where("paymentProofUrl", "==", message.paymentProof),
-        where("status", "==", "pending")
+        where("status", "==", "pending"),
+        where("providerId", "==", user.uid)
       );
       
       let transactionsSnapshot;

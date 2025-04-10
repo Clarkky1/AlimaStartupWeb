@@ -2013,7 +2013,7 @@ export function MessageCenter() {
         {/* Conversations List - Hide on mobile when not on conversations tab */}
         {(showConversationList || activeMobileTab === 'conversations') && (
           <div className={`border-r flex flex-col h-full overflow-hidden bg-white/70 backdrop-blur-sm ${(windowWidth < 768 && activeMobileTab !== 'conversations') ? 'hidden' : 'block'}`}>
-            <div className="p-4 border-b bg-background/80 backdrop-blur-sm">
+            <div className="p-4 border-b bg-background/80 backdrop-blur-sm hidden md:block">
               <h2 className="font-medium text-base tracking-tight">Your Conversations</h2>
             </div>
             <div className="overflow-y-auto flex-1 scrollbar-hide">
@@ -2089,7 +2089,7 @@ export function MessageCenter() {
                     {/* Conversation Header */}
                     <div className="p-4 border-b flex justify-between items-center bg-white/80 backdrop-blur-md">
                       <div className="flex items-center space-x-3">
-                        {/* Back button for mobile */}
+                        {/* Back button for mobile - hidden on mobile */}
                         <Button 
                           variant="ghost" 
                           size="icon" 
@@ -2097,7 +2097,7 @@ export function MessageCenter() {
                             showConversationsList();
                             setActiveMobileTab('conversations');
                           }}
-                          className="md:hidden mr-1 rounded-full hover:bg-gray-100/80"
+                          className="hidden mr-1 rounded-full hover:bg-gray-100/80"
                         >
                           <ChevronLeft className="h-5 w-5" />
                         </Button>
@@ -2143,21 +2143,6 @@ export function MessageCenter() {
                         >
                           <Info className="h-5 w-5" />
                         </Button>
-                        
-                        {/* Mobile-only info button */}
-                        {windowWidth < 768 && (
-                          <Button 
-                            variant="outline" 
-                            size="sm" 
-                            onClick={() => {
-                              setShowUserInfo(true);
-                              setActiveMobileTab('info');
-                            }}
-                            className="md:hidden ml-1 rounded-full border-gray-200 hover:bg-gray-100/80 text-gray-700"
-                          >
-                            View Profile
-                          </Button>
-                        )}
                       </div>
                     </div>
 
@@ -2177,61 +2162,58 @@ export function MessageCenter() {
                     {/* Message Input */}
                     <div className="p-4 border-t bg-white/80 backdrop-blur-md">
                       <form onSubmit={handleSendMessage} className="flex items-start space-x-2">
+                        {/* Add payment proof button - only show if both users are providers */}
+                        {selectedConversation && user?.role === 'provider' && otherParticipantRole === 'provider' && (
+                          <UploadPaymentProofDialog
+                            onUpload={(imageUrl, serviceId, amount) => {
+                              // Create a message with payment proof
+                              const paymentMessage = {
+                                text: "I've sent the payment.",
+                                paymentProof: imageUrl,
+                                serviceId: serviceId || selectedConversation.serviceId || activeService || undefined,
+                                serviceTitle: selectedConversation.serviceTitle || "Service",
+                                paymentAmount: amount || 0
+                              };
+                              
+                              // Add the payment proof to the message
+                              handleSendPaymentProof(paymentMessage);
+                            }}
+                            providerId={getOtherParticipantId(selectedConversation) || undefined}
+                            services={
+                              // Create services array for the dialog
+                              [
+                                // Add the main service
+                                selectedConversation.serviceId && selectedConversation.serviceTitle ? {
+                                  id: selectedConversation.serviceId,
+                                  title: selectedConversation.serviceTitle,
+                                  price: selectedConversation.servicePrice
+                                } : null,
+                                // Add related services
+                                ...(selectedConversation.relatedConversations?.map(conv => 
+                                  conv.serviceId && conv.serviceTitle ? {
+                                    id: conv.serviceId,
+                                    title: conv.serviceTitle,
+                                    price: conv.price
+                                  } : null
+                                ) || [])
+                              ].filter(Boolean) as Array<{id: string, title: string, price?: number | string}>
+                            }
+                          />
+                        )}
                         <Textarea
                           value={newMessage}
                           onChange={(e) => setNewMessage(e.target.value)}
                           placeholder="Type your message..."
                           className="resize-none min-h-[50px] flex-1 rounded-2xl border-gray-200 focus:ring-2 focus:ring-blue-500 focus:border-transparent"
                         />
-                        <div className="flex flex-col gap-2">
-                          {/* Add payment proof button - only show if both users are providers */}
-                          {selectedConversation && user?.role === 'provider' && otherParticipantRole === 'provider' && (
-                            <UploadPaymentProofDialog
-                              onUpload={(imageUrl, serviceId, amount) => {
-                                // Create a message with payment proof
-                                const paymentMessage = {
-                                  text: "I've sent the payment.",
-                                  paymentProof: imageUrl,
-                                  serviceId: serviceId || selectedConversation.serviceId || activeService || undefined,
-                                  serviceTitle: selectedConversation.serviceTitle || "Service",
-                                  paymentAmount: amount || 0
-                                };
-                                
-                                // Add the payment proof to the message
-                                handleSendPaymentProof(paymentMessage);
-                              }}
-                              providerId={getOtherParticipantId(selectedConversation) || undefined}
-                              services={
-                                // Create services array for the dialog
-                                [
-                                  // Add the main service
-                                  selectedConversation.serviceId && selectedConversation.serviceTitle ? {
-                                    id: selectedConversation.serviceId,
-                                    title: selectedConversation.serviceTitle,
-                                    price: selectedConversation.servicePrice
-                                  } : null,
-                                  // Add related services
-                                  ...(selectedConversation.relatedConversations?.map(conv => 
-                                    conv.serviceId && conv.serviceTitle ? {
-                                      id: conv.serviceId,
-                                      title: conv.serviceTitle,
-                                      price: conv.price
-                                    } : null
-                                  ) || [])
-                                ].filter(Boolean) as Array<{id: string, title: string, price?: number | string}>
-                              }
-                            />
-                          )}
-                          
-                          <Button 
-                            type="submit" 
-                            size="icon" 
-                            disabled={!newMessage.trim()} 
-                            className="rounded-full bg-gradient-to-r from-blue-500 to-blue-600 hover:from-blue-600 hover:to-blue-700 text-white shadow-sm transition-all"
-                          >
-                            <Send className="h-4 w-4" />
-                          </Button>
-                        </div>
+                        <Button 
+                          type="submit" 
+                          size="icon" 
+                          disabled={!newMessage.trim()} 
+                          className="rounded-full bg-gradient-to-r from-blue-500 to-blue-600 hover:from-blue-600 hover:to-blue-700 text-white shadow-sm transition-all"
+                        >
+                          <Send className="h-4 w-4" />
+                        </Button>
                       </form>
                     </div>
                   </div>
@@ -2242,7 +2224,7 @@ export function MessageCenter() {
                     <div className="border-b bg-white/90 backdrop-blur-md sticky top-0 z-10">
                       <div className="p-4 flex justify-between items-center">
                         <div className="flex items-center space-x-3">
-                          {/* Back button for mobile */}
+                          {/* Back button for mobile - hidden on mobile */}
                           <Button 
                             variant="ghost" 
                             size="icon" 
@@ -2250,7 +2232,7 @@ export function MessageCenter() {
                               showConversationsList();
                               setActiveMobileTab('conversations');
                             }}
-                            className="md:hidden mr-1 rounded-full hover:bg-gray-100/80"
+                            className="hidden mr-1 rounded-full hover:bg-gray-100/80"
                           >
                             <ChevronLeft className="h-5 w-5" />
                           </Button>
@@ -2296,21 +2278,6 @@ export function MessageCenter() {
                           >
                             <Info className="h-5 w-5" />
                           </Button>
-                          
-                          {/* Mobile-only info button */}
-                          {windowWidth < 768 && (
-                            <Button 
-                              variant="outline" 
-                              size="sm" 
-                              onClick={() => {
-                                setShowUserInfo(true);
-                                setActiveMobileTab('info');
-                              }}
-                              className="md:hidden ml-1 rounded-full border-gray-200 hover:bg-gray-100/80 text-gray-700"
-                            >
-                              View Profile
-                            </Button>
-                          )}
                         </div>
                       </div>
                       {activeService && <ServiceSelector />}
@@ -2449,61 +2416,58 @@ export function MessageCenter() {
                     {/* Message Input Area */}
                     <div className="p-4 border-t bg-white/90 backdrop-blur-md">
                       <form onSubmit={handleSendMessage} className="flex items-start space-x-2">
+                        {/* Add payment proof button - only show if both users are providers */}
+                        {selectedConversation && user?.role === 'provider' && otherParticipantRole === 'provider' && (
+                          <UploadPaymentProofDialog
+                            onUpload={(imageUrl, serviceId, amount) => {
+                              // Create a message with payment proof
+                              const paymentMessage = {
+                                text: "I've sent the payment.",
+                                paymentProof: imageUrl,
+                                serviceId: serviceId || selectedConversation.serviceId || activeService || undefined,
+                                serviceTitle: selectedConversation.serviceTitle || "Service",
+                                paymentAmount: amount || 0
+                              };
+                              
+                              // Add the payment proof to the message
+                              handleSendPaymentProof(paymentMessage);
+                            }}
+                            providerId={getOtherParticipantId(selectedConversation) || undefined}
+                            services={
+                              // Create services array for the dialog
+                              [
+                                // Add the main service
+                                selectedConversation.serviceId && selectedConversation.serviceTitle ? {
+                                  id: selectedConversation.serviceId,
+                                  title: selectedConversation.serviceTitle,
+                                  price: selectedConversation.servicePrice
+                                } : null,
+                                // Add related services
+                                ...(selectedConversation.relatedConversations?.map(conv => 
+                                  conv.serviceId && conv.serviceTitle ? {
+                                    id: conv.serviceId,
+                                    title: conv.serviceTitle,
+                                    price: conv.price
+                                  } : null
+                                ) || [])
+                              ].filter(Boolean) as Array<{id: string, title: string, price?: number | string}>
+                            }
+                          />
+                        )}
                         <Textarea
                           value={newMessage}
                           onChange={(e) => setNewMessage(e.target.value)}
                           placeholder="Type your message..."
                           className="resize-none min-h-[50px] flex-1 rounded-2xl border-gray-200 focus:ring-2 focus:ring-blue-500 focus:border-transparent"
                         />
-                        <div className="flex flex-col gap-2">
-                          {/* Add payment proof button - only show if both users are providers */}
-                          {selectedConversation && user?.role === 'provider' && otherParticipantRole === 'provider' && (
-                            <UploadPaymentProofDialog
-                              onUpload={(imageUrl, serviceId, amount) => {
-                                // Create a message with payment proof
-                                const paymentMessage = {
-                                  text: "I've sent the payment.",
-                                  paymentProof: imageUrl,
-                                  serviceId: serviceId || selectedConversation.serviceId || activeService || undefined,
-                                  serviceTitle: selectedConversation.serviceTitle || "Service",
-                                  paymentAmount: amount || 0
-                                };
-                                
-                                // Add the payment proof to the message
-                                handleSendPaymentProof(paymentMessage);
-                              }}
-                              providerId={getOtherParticipantId(selectedConversation) || undefined}
-                              services={
-                                // Create services array for the dialog
-                                [
-                                  // Add the main service
-                                  selectedConversation.serviceId && selectedConversation.serviceTitle ? {
-                                    id: selectedConversation.serviceId,
-                                    title: selectedConversation.serviceTitle,
-                                    price: selectedConversation.servicePrice
-                                  } : null,
-                                  // Add related services
-                                  ...(selectedConversation.relatedConversations?.map(conv => 
-                                    conv.serviceId && conv.serviceTitle ? {
-                                      id: conv.serviceId,
-                                      title: conv.serviceTitle,
-                                      price: conv.price
-                                    } : null
-                                  ) || [])
-                                ].filter(Boolean) as Array<{id: string, title: string, price?: number | string}>
-                              }
-                            />
-                          )}
-                          
-                          <Button 
-                            type="submit" 
-                            size="icon" 
-                            disabled={!newMessage.trim()} 
-                            className="rounded-full bg-gradient-to-r from-blue-500 to-blue-600 hover:from-blue-600 hover:to-blue-700 text-white shadow-sm transition-all"
-                          >
-                            <Send className="h-4 w-4" />
-                          </Button>
-                        </div>
+                        <Button 
+                          type="submit" 
+                          size="icon" 
+                          disabled={!newMessage.trim()} 
+                          className="rounded-full bg-gradient-to-r from-blue-500 to-blue-600 hover:from-blue-600 hover:to-blue-700 text-white shadow-sm transition-all"
+                        >
+                          <Send className="h-4 w-4" />
+                        </Button>
                       </form>
                     </div>
                   </>

@@ -1239,30 +1239,6 @@ export function DashboardOverview() {
                 </p>
               </div>
             )}
-            
-            {/* Debug section - only visible in development */}
-            {process.env.NODE_ENV === 'development' && (
-              <div className="mt-4 p-3 text-xs border border-dashed border-emerald-200 rounded-lg bg-emerald-50 dark:bg-emerald-900/10 dark:border-emerald-800">
-                <details>
-                  <summary className="font-medium cursor-pointer">Revenue Debug Info</summary>
-                  <div className="mt-2 space-y-1">
-                    <p>Raw value: <code>{stats.revenue}</code></p>
-                    <p>Transaction count: <code>{stats.transactions}</code></p>
-                    <p>User ID: <code>{user?.uid}</code></p>
-                    <p>Provider filter: <code>{user?.uid ? 'Active' : 'Not Active'}</code></p>
-                    <p>Transaction sources:</p>
-                    <ul className="list-disc pl-5">
-                      <li>Direct: <code>{allTransactions?.filter(tx => tx?.type === 'transaction')?.length || 0}</code></li>
-                      <li>Notifications: <code>{allTransactions?.filter(tx => tx?.type === 'notification')?.length || 0}</code></li>
-                      <li>Message payments: <code>{allTransactions?.filter(tx => tx?.type === 'message_payment')?.length || 0}</code></li>
-                    </ul>
-                    <p className="mt-2 text-emerald-600 dark:text-emerald-400">
-                      Check console logs for detailed transaction data
-                    </p>
-                  </div>
-                </details>
-              </div>
-            )}
           </CardContent>
         </Card>
       </div>

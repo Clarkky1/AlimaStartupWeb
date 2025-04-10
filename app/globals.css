@@ -170,8 +170,30 @@ h1, h2, h3, h4, h5, h6 {
   pointer-events: auto;
 }
 
-/* Add additional mobile scroll optimizations */
+/* Mobile-specific AOS adjustments */
 @media (max-width: 768px) {
+  /* Make AOS animations more visible on mobile */
+  [data-aos="fade-up"] {
+    transform: translate3d(0, 15px, 0);
+  }
+  
+  [data-aos="fade-down"] {
+    transform: translate3d(0, -15px, 0);
+  }
+  
+  [data-aos="fade-right"] {
+    transform: translate3d(-15px, 0, 0);
+  }
+  
+  [data-aos="fade-left"] {
+    transform: translate3d(15px, 0, 0);
+  }
+  
+  /* Make sure animations are completed */
+  [data-aos].aos-animate {
+    transform: translate3d(0, 0, 0) !important;
+  }
+  
   /* Improve scroll performance on mobile */
   body {
     touch-action: manipulation;

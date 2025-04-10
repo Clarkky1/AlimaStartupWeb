@@ -31,40 +31,45 @@ export function ClientLayout({ children }: { children: React.ReactNode }) {
     // Only run on client-side
     if (typeof window === 'undefined') return;
     
+    // Refresh AOS when needed
+    const refreshHandler = () => {
+      AOS.refresh();
+    };
+    
+    // Add debounced resize handler to avoid performance issues
+    let resizeTimer: ReturnType<typeof setTimeout>;
+    const debouncedRefresh = () => {
+      clearTimeout(resizeTimer);
+      resizeTimer = setTimeout(refreshHandler, 150);
+    };
+    
     // Wait a bit for hydration to complete
     setTimeout(() => {
+      // Check if mobile device for optimized animations
+      const isMobile = window.innerWidth < 768;
+      
       AOS.init({
-        duration: 800,
+        duration: isMobile ? 600 : 800, // Faster animations on mobile
         easing: 'ease-out-cubic',
         once: false,
         mirror: true,
-        offset: 50,
-        delay: 100,
+        offset: isMobile ? 30 : 50, // Smaller offset on mobile
+        delay: isMobile ? 50 : 100, // Shorter delay on mobile
         debounceDelay: 50,
-        throttleDelay: 99,
+        throttleDelay: isMobile ? 150 : 99, // More throttling on mobile for performance
         anchorPlacement: 'top-bottom',
-        disable: 'mobile',
         startEvent: 'DOMContentLoaded'
       });
-  
-      // Refresh AOS when the window is resized for responsiveness
-      window.addEventListener('resize', () => {
-        AOS.refresh();
-      });
-  
-      // Refresh AOS on route change
-      window.addEventListener('load', () => {
-        AOS.refresh();
-      });
+      
+      window.addEventListener('resize', debouncedRefresh);
+      window.addEventListener('orientationchange', refreshHandler);
+      window.addEventListener('load', refreshHandler);
     }, 100); // Short delay to ensure hydration completes
 
     return () => {
-      window.removeEventListener('resize', () => {
-        AOS.refresh();
-      });
-      window.removeEventListener('load', () => {
-        AOS.refresh();
-      });
+      window.removeEventListener('resize', debouncedRefresh);
+      window.removeEventListener('orientationchange', refreshHandler);
+      window.removeEventListener('load', refreshHandler);
     };
   }, []);
 

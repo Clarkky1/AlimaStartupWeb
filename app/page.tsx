@@ -4,6 +4,7 @@ import { HeroSection } from "@/components/home/hero-section"
 import { GlobalServices } from "@/components/home/featured-services"
 import { TopProviders } from "@/components/popular/top-providers"
 import { buttonVariants } from "@/components/ui/button"
+import { AnimatedCard } from "@/app/components/home/animated-card"
 import Link from "next/link"
 import { Suspense, useEffect, useState, useCallback } from "react"
 import { CheckCircle, Search, MessageSquare, CreditCard, Plus, Circle, UserRoundSearch, MessagesSquare, X } from "lucide-react"
@@ -732,6 +733,11 @@ export default function Home() {
                     </div>
                     <div className="absolute -bottom-6 -right-6 w-48 h-48 bg-gradient-to-br from-indigo-100 to-blue-100 dark:from-indigo-900/30 dark:to-blue-900/20 rounded-2xl blur-2xl opacity-70"></div>
                     <div className="absolute -top-6 -left-6 w-32 h-32 bg-gradient-to-br from-amber-100 to-rose-100 dark:from-amber-900/30 dark:to-rose-900/20 rounded-2xl blur-2xl opacity-70"></div>
+                    
+                    {/* Add the animated card below the main image */}
+                    {/* <div className="absolute -bottom-12 right-0 transform rotate-6">
+                      <AnimatedCard />
+                    </div> */}
                   </div>
                 </div>
               </div>
@@ -1407,6 +1413,89 @@ export default function Home() {
             </div>
           </div>
         </div>
+        
+        {/* Why Choose Us Section - Restyled with Apple Aesthetic */}
+        <section id="why-choose-us" className="py-16 md:py-24 bg-gray-50 dark:bg-neutral-950 relative"> 
+          <div className="container px-6 md:px-8">
+            {/* Changed grid column definition from lg:grid-cols-2 to lg:grid-cols-[2fr_1fr] */}
+            <div className="grid gap-12 lg:grid-cols-[2fr_1fr] lg:gap-16 xl:gap-24 items-center"> {/* Changed items-center to items-start */}
+              {/* Text Content Area */}
+              <div className="flex flex-col justify-center space-y-8">
+                <div className="space-y-4">
+                  <h2 className="text-4xl font-bold tracking-tight text-gray-900 dark:text-white sm:text-5xl md:text-6xl">
+                    Why Choose Alima?
+                  </h2>
+                  <p className="max-w-2xl text-lg text-gray-600 dark:text-gray-400 md:text-xl">
+                    Join our vibrant community of service providers and clients today and experience a new way to connect.
+                  </p>
+                </div>
+                {/* Features Grid */}
+                <div className="grid gap-8 sm:grid-cols-2">
+                  {/* Feature 1: Verified Providers */}
+                  <div className="flex items-start gap-4">
+                    <div className="flex h-12 w-12 shrink-0 items-center justify-center rounded-xl bg-blue-100/80 dark:bg-blue-900/30 text-blue-600 dark:text-blue-400">
+                      <CheckCircle className="h-6 w-6" />
+                    </div>
+                    <div className="space-y-1">
+                      <h3 className="text-lg font-semibold text-gray-900 dark:text-white">Verified Providers</h3>
+                      <p className="text-base text-gray-600 dark:text-gray-400">
+                        All service providers undergo verification to ensure quality and reliability.
+                      </p>
+                    </div>
+                  </div>
+                  {/* Feature 2: Direct Communication */}
+                  <div className="flex items-start gap-4">
+                    <div className="flex h-12 w-12 shrink-0 items-center justify-center rounded-xl bg-blue-100/80 dark:bg-blue-900/30 text-blue-600 dark:text-blue-400">
+                      <MessageSquare className="h-6 w-6" />
+                    </div>
+                    <div className="space-y-1">
+                      <h3 className="text-lg font-semibold text-gray-900 dark:text-white">Direct Communication</h3>
+                      <p className="text-base text-gray-600 dark:text-gray-400">
+                        Connect directly with providers through our secure messaging system.
+                      </p>
+                    </div>
+                  </div>
+                  {/* Feature 3: Secure Payments */}
+                  <div className="flex items-start gap-4">
+                    <div className="flex h-12 w-12 shrink-0 items-center justify-center rounded-xl bg-blue-100/80 dark:bg-blue-900/30 text-blue-600 dark:text-blue-400">
+                      <CreditCard className="h-6 w-6" />
+                    </div>
+                    <div className="space-y-1">
+                      <h3 className="text-lg font-semibold text-gray-900 dark:text-white">Secure Payments</h3>
+                      <p className="text-base text-gray-600 dark:text-gray-400">
+                        Our platform ensures safe and transparent payment processing for all services.
+                      </p>
+                    </div>
+                  </div>
+                  {/* Feature 4: Find Exactly What You Need */}
+                  <div className="flex items-start gap-4">
+                    <div className="flex h-12 w-12 shrink-0 items-center justify-center rounded-xl bg-blue-100/80 dark:bg-blue-900/30 text-blue-600 dark:text-blue-400">
+                      <UserRoundSearch className="h-6 w-6" />
+                    </div>
+                    <div className="space-y-1">
+                      <h3 className="text-lg font-semibold text-gray-900 dark:text-white">Find Exactly What You Need</h3>
+                      <p className="text-base text-gray-600 dark:text-gray-400">
+                        Our search and filter options make it easy to find the perfect service provider.
+                      </p>
+                    </div>
+                  </div>
+                </div>
+              </div>
+              {/* Animated Card Area - Centered within its column */} 
+              <div className="flex flex-col items-center justify-center pt-8">
+                <div className="flex flex-col items-center space-y-6">
+                  {/* Consider adding a subtle background or container for the card if needed */}
+                  <AnimatedCard /> 
+                  <div className="space-y-2 text-center">
+                    <p className="text-base text-gray-600 dark:text-gray-400">
+                      Connecting skilled professionals with those who need their services.
+                    </p>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+        </section>
       </main>
     </div>
   )

@@ -343,10 +343,9 @@ export function ContactModal({
         }}
       >
         <DialogHeader key={`header-${modalId}`}>
-          <DialogTitle key={`title-${modalId}`}>Contact Service Provider</DialogTitle>
-          <DialogDescription key={`description-${modalId}`}>
-            Service Provider
-          </DialogDescription>
+          <DialogTitle key={`title-${modalId}`}>
+            Contact Service Provider
+          </DialogTitle>
         </DialogHeader>
         <div className="flex items-center gap-4 mb-4" key={`provider-info-${modalId}`}>
           <Avatar className="h-10 w-10" key={`avatar-${modalId}`}>
@@ -355,9 +354,7 @@ export function ContactModal({
           </Avatar>
           <div key={`provider-details-${modalId}`}>
             <h4 className="font-semibold" key={`provider-name-${modalId}`}>{providerName || "Service Provider"}</h4>
-            <p className="text-sm text-muted-foreground" key={`provider-title-${modalId}`}>
-              {user?.uid === providerId ? "Service Provider" : "Client"}
-            </p>
+            <p id="radix-:rg:" className="text-xs sm:text-sm text-muted-foreground">Service Provider</p>
           </div>
         </div>
         <div className="rounded-lg border bg-card text-card-foreground shadow-sm mb-4">

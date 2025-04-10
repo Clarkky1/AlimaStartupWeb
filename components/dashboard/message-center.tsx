@@ -1060,11 +1060,25 @@ export function MessageCenter() {
         return;
       }
       
+      // Add a console log to track permission errors
+      console.log("Payment confirmation - user:", user.uid, "message:", message.id);
+      
       // First update the message to mark payment as confirmed
-      const messageRef = doc(db, "messages", message.id);
-      await updateDoc(messageRef, {
-        paymentConfirmed: true
-      });
+      try {
+        const messageRef = doc(db, "messages", message.id);
+        await updateDoc(messageRef, {
+          paymentConfirmed: true
+        });
+        console.log("Message updated successfully");
+      } catch (error) {
+        console.error("Error updating message:", error);
+        toast({
+          title: "Error",
+          description: "Failed to update message status",
+          variant: "destructive",
+        });
+        return;
+      }
       
       // Find the transaction related to this payment proof
       // Search by paymentProofUrl, serviceId, and the involved users
@@ -1074,7 +1088,19 @@ export function MessageCenter() {
         where("status", "==", "pending")
       );
       
-      const transactionsSnapshot = await getDocs(transactionsQuery);
+      let transactionsSnapshot;
+      try {
+        transactionsSnapshot = await getDocs(transactionsQuery);
+        console.log("Found transactions:", transactionsSnapshot.size);
+      } catch (error) {
+        console.error("Error querying transactions:", error);
+        toast({
+          title: "Error",
+          description: "Failed to find transaction",
+          variant: "destructive",
+        });
+        return;
+      }
       
       let transactionId = "";
       const paymentAmount = message.paymentAmount || 0;
@@ -1148,13 +1174,21 @@ export function MessageCenter() {
         transactionId = transaction.id;
         const transactionData = transaction.data();
         
-        await updateDoc(doc(db, "transactions", transaction.id), {
-          status: "confirmed",
-          updatedAt: new Date().toISOString(),
-          rated: false,
-          serviceTitle: serviceTitle, // Ensure service title is updated
-          amount: paymentAmount // Ensure amount is updated
-        });
+        try {
+          // Only update status and updatedAt fields to comply with security rules
+          await updateDoc(doc(db, "transactions", transaction.id), {
+            status: "confirmed",
+            updatedAt: new Date().toISOString()
+          });
+        } catch (error) {
+          console.error("Error confirming payment:", error);
+          toast({
+            title: "Error",
+            description: "Failed to confirm payment status",
+            variant: "destructive",
+          });
+          // Continue with the flow even if transaction update fails
+        }
         
         // Update provider's revenue
         const revenueRef = doc(db, "revenue", user.uid);

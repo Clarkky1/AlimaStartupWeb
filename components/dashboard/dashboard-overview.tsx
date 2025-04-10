@@ -20,7 +20,7 @@ import {
 import { useAuth } from "@/app/context/auth-context";
 import { initializeFirebase } from "@/app/lib/firebase";
 import { getDoc, doc, collection, query, where, getDocs, orderBy, limit, Timestamp, documentId, onSnapshot, DocumentData, QuerySnapshot, CollectionReference, Firestore } from "firebase/firestore";
-import { DashboardStats, TimelineData } from "@/types";
+import { TimelineData } from "@/types";
 import { Skeleton } from "@/components/ui/skeleton";
 import { Badge } from "@/components/ui/badge";
 
@@ -81,6 +81,9 @@ interface TransactionData extends DocumentData {
 interface CombinedTransactionData {
   id: string;
   providerId?: string;
+  userId?: string;
+  senderId?: string;
+  receiverId?: string;
   amount?: number | string;
   parsedDate?: Date;
   createdAt?: any;
@@ -96,6 +99,25 @@ interface CombinedTransactionData {
   timestamp?: any;
   serviceType?: string;
   [key: string]: any;
+}
+
+// Update DashboardStats interface to include new properties
+interface DashboardStats {
+  contacts: number;
+  contactsChange: number;
+  transactions: number;
+  transactionsChange: number;
+  rating: number;
+  ratingChange: number;
+  revenue: string;
+  revenueChange: number;
+  serviceContactPercentage: number;
+  totalServices: number;
+  contactedServices: number;
+  topServices?: any[];
+  providerIncome?: string;
+  clientSpending?: string;
+  isProvider?: boolean;
 }
 
 // Add utility function to handle various date formats from Firestore
@@ -351,6 +373,13 @@ export function DashboardOverview() {
                   } as CombinedTransactionData;
                 });
                 
+                // Debug logging for transactions
+                console.log('==== DEBUG REVENUE DATA ====');
+                console.log('Transaction data (first 5):', allFilteredTransactions.slice(0, 5));
+                console.log('Payment notifications (first 5):', paymentDates.slice(0, 5));
+                console.log('Message payments (first 5):', messagePayments.slice(0, 5));
+                console.log('User ID for provider filter:', user?.uid);
+                
                 // Look up conversation-related service details for message payments
                 const conversationIds = messagePayments
                   .filter(mp => !mp.serviceId && mp.conversationId)
@@ -427,14 +456,14 @@ export function DashboardOverview() {
                     // Get a non-null user reference for TypeScript
                     const currentUser = user as {uid: string};
                     
-                    // For regular transactions, check providerId
+                    // For regular transactions, check providerId OR userId
                     if (tx.type === 'transaction') {
-                      return tx.providerId === currentUser.uid;
+                      return tx.providerId === currentUser.uid || tx.userId === currentUser.uid;
                     }
                     
-                    // For message payments, verify they're directed to this user
+                    // For message payments, verify they're directed to this user OR sent by this user
                     if (tx.type === 'message_payment') {
-                      return tx.receiverId === currentUser.uid;
+                      return tx.receiverId === currentUser.uid || tx.senderId === currentUser.uid;
                     }
                     
                     // For notifications, check that they're for this user
@@ -527,11 +556,21 @@ export function DashboardOverview() {
                   let currentRevenue = 0;
                   let serviceRevenues: Record<string, {revenue: number, count: number, name: string}> = {};
                   
+                  // Log revenue calculation process
+                  console.log("Starting revenue calculation with", currentTransactions.length, "transactions in current period");
+                  
                   // Process all transactions and message payments in current period
                   currentTransactions.forEach(transaction => {
+                    // Make sure we're only counting revenue for this provider
+                    if (transaction.type === 'transaction' && transaction.providerId && transaction.providerId !== user?.uid) {
+                      console.log(`Skipping transaction ${transaction.id} - not for current provider`);
+                      return;
+                    }
+                    
                     const amount = Number(transaction.amount || 0);
                     
                     if (!isNaN(amount) && amount > 0) {
+                      console.log(`Adding revenue: ${amount} from ${transaction.type} ${transaction.id}`);
                       currentRevenue += amount;
                       
                       // For revenue tracking by service
@@ -570,7 +609,7 @@ export function DashboardOverview() {
                           
                           console.log(`Adding ${amount} revenue to service ${serviceName} from message payment in conversation ${transaction.conversationId}`);
                           console.log(`Current revenue for ${serviceName}: ${serviceRevenues[conversationData.serviceId].revenue}`);
-          } else {
+                        } else {
                           // Track as unknown service if we can't determine the service
                           const unknownServiceId = 'unknown';
                           
@@ -586,10 +625,10 @@ export function DashboardOverview() {
                           serviceRevenues[unknownServiceId].count += 1;
                           console.log(`Adding ${amount} revenue to Unknown Service from message payment - conversation not found: ${transaction.conversationId}`);
                         }
-          }
-        }
-      });
-      
+                      }
+                    }
+                  });
+                  
                   // Create sorted topServices array with additional metrics
                   const topServices = Object.entries(serviceRevenues)
                     .map(([id, data]) => ({
@@ -619,6 +658,28 @@ export function DashboardOverview() {
                   
                   console.log(`Revenue calculations: Current: ${currentRevenue}, Previous: ${previousRevenue}, Change: ${revenueChange}%`);
 
+                  // Separate income (as provider) from spending (as client)
+                  let providerIncome = 0;
+                  let clientSpending = 0;
+
+                  currentTransactions.forEach(tx => {
+                    const amount = Number(tx.amount || 0);
+                    if (isNaN(amount) || amount <= 0) return;
+
+                    if (tx.providerId === user?.uid) {
+                      // User is receiving money as provider
+                      providerIncome += amount;
+                    } else if (
+                      (tx.type === 'transaction' && tx.userId === user?.uid) || 
+                      (tx.type === 'message_payment' && tx.senderId === user?.uid)
+                    ) {
+                      // User is spending money as client
+                      clientSpending += amount;
+                    }
+                  });
+
+                  console.log(`User roles: Provider income: ${providerIncome}, Client spending: ${clientSpending}`);
+                  
                   // Calculate contacted services percentage
                   const serviceIds = new Set(services.map(s => s.id));
                   const contactedServiceIds = new Set<string>();
@@ -714,7 +775,10 @@ export function DashboardOverview() {
                     serviceContactPercentage: parseFloat(contactedServicesPercentage.toFixed(1)) || 0,
                     totalServices: totalServices,
                     contactedServices: contactedServiceIds.size,
-                    topServices: topServices // Add top services to stats
+                    topServices: topServices, // Add top services to stats
+                    providerIncome: providerIncome.toFixed(2), // Add provider income
+                    clientSpending: clientSpending.toFixed(2), // Add client spending
+                    isProvider: totalServices > 0 // Check if user is a provider (has services)
                   });
                   
                   setCategoryData(Object.entries(serviceRevenues).map(([id, data]) => ({
@@ -1075,25 +1139,73 @@ export function DashboardOverview() {
         <Card className="overflow-hidden border-none rounded-2xl bg-gradient-to-br from-emerald-50 to-teal-50 dark:from-gray-900 dark:to-emerald-900/20 shadow-lg dark:shadow-emerald-900/5 hover:shadow-xl hover:-translate-y-1 transition-all duration-300">
           <CardHeader className="flex flex-row items-center justify-between pb-2 relative">
             <div className="absolute top-0 right-0 w-20 h-20 bg-gradient-to-br from-emerald-200 to-teal-200 dark:from-emerald-800/30 dark:to-teal-800/30 rounded-full blur-2xl opacity-50 -translate-y-1/2 translate-x-1/3"></div>
-            <CardTitle className="text-sm font-medium z-10">Revenue</CardTitle>
+            <CardTitle className="text-sm font-medium z-10">
+              {stats.isProvider ? 
+                (parseFloat(stats.clientSpending || "0") > 0 ? "Finance" : "Revenue") : 
+                "Spending"}
+            </CardTitle>
             <div className="h-10 w-10 rounded-xl bg-gradient-to-br from-emerald-500 to-teal-500 flex items-center justify-center z-10 shadow-md shadow-emerald-500/20">
               <MessageSquare className="h-5 w-5 text-white" />
             </div>
           </CardHeader>
           <CardContent className="relative">
-            <div className="text-3xl font-semibold mb-3 text-transparent bg-clip-text bg-gradient-to-r from-emerald-600 to-teal-600 dark:from-emerald-400 dark:to-teal-400">{formatCurrency(stats.revenue)}</div>
-            <div className="flex items-center">
-              <div className="text-xs flex items-center">
-              {stats.revenueChange > 0 ? (
-                  <TrendingUp className="mr-1 h-3 w-3 text-emerald-500" />
-                ) : (
-                  <TrendingDown className="mr-1 h-3 w-3 text-rose-500" />
-                )}
-                <span className={stats.revenueChange > 0 ? "text-emerald-500" : "text-rose-500"}>
-                  {stats.revenueChange > 0 ? "+" : ""}{stats.revenueChange}%
-                </span>
-                <span className="ml-1 text-gray-400">vs last {timeframe}</span>
-              </div>
+            <div className="flex flex-col gap-2">
+              {/* Provider income section */}
+              {stats.isProvider && parseFloat(stats.providerIncome || "0") > 0 && (
+                <div>
+                  <div className="flex justify-between items-center">
+                    <span className="text-xs text-emerald-600 dark:text-emerald-400 font-medium">Provider Income</span>
+                    <span className="text-2xl font-semibold text-transparent bg-clip-text bg-gradient-to-r from-emerald-600 to-teal-600 dark:from-emerald-400 dark:to-teal-400">
+                      {formatCurrency(stats.providerIncome || "0")}
+                    </span>
+                  </div>
+                  <div className="flex items-center mt-1">
+                    <div className="text-xs flex items-center">
+                      {stats.revenueChange > 0 ? (
+                        <TrendingUp className="mr-1 h-3 w-3 text-emerald-500" />
+                      ) : (
+                        <TrendingDown className="mr-1 h-3 w-3 text-rose-500" />
+                      )}
+                      <span className={stats.revenueChange > 0 ? "text-emerald-500" : "text-rose-500"}>
+                        {stats.revenueChange > 0 ? "+" : ""}{stats.revenueChange}%
+                      </span>
+                      <span className="ml-1 text-gray-400">vs last {timeframe}</span>
+                    </div>
+                  </div>
+                </div>
+              )}
+              
+              {/* Client spending section */}
+              {parseFloat(stats.clientSpending || "0") > 0 && (
+                <div className={stats.isProvider && parseFloat(stats.providerIncome || "0") > 0 ? "mt-3 pt-3 border-t border-emerald-100 dark:border-emerald-800/30" : ""}>
+                  <div className="flex justify-between items-center">
+                    <span className="text-xs text-emerald-600 dark:text-emerald-400 font-medium">Client Spending</span>
+                    <span className="text-2xl font-semibold text-transparent bg-clip-text bg-gradient-to-r from-emerald-600 to-teal-600 dark:from-emerald-400 dark:to-teal-400">
+                      {formatCurrency(stats.clientSpending || "0")}
+                    </span>
+                  </div>
+                </div>
+              )}
+              
+              {/* Show original revenue if both provider income and client spending are zero */}
+              {parseFloat(stats.providerIncome || "0") === 0 && parseFloat(stats.clientSpending || "0") === 0 && (
+                <div className="text-3xl font-semibold mb-3 text-transparent bg-clip-text bg-gradient-to-r from-emerald-600 to-teal-600 dark:from-emerald-400 dark:to-teal-400">
+                  {formatCurrency(stats.revenue)}
+                  <div className="flex items-center">
+                    <div className="text-xs flex items-center">
+                      {stats.revenueChange > 0 ? (
+                        <TrendingUp className="mr-1 h-3 w-3 text-emerald-500" />
+                      ) : (
+                        <TrendingDown className="mr-1 h-3 w-3 text-rose-500" />
+                      )}
+                      <span className={stats.revenueChange > 0 ? "text-emerald-500" : "text-rose-500"}>
+                        {stats.revenueChange > 0 ? "+" : ""}{stats.revenueChange}%
+                      </span>
+                      <span className="ml-1 text-gray-400">vs last {timeframe}</span>
+                    </div>
+                  </div>
+                </div>
+              )}
             </div>
             
             {/* Enhanced revenue visualization */}
@@ -1109,6 +1221,48 @@ export function DashboardOverview() {
                 />
               </div>
             </div>
+            
+            {/* Show help message when revenue is zero */}
+            {parseFloat(stats.revenue) === 0 && (
+              <div className="mt-4 p-3 text-xs border border-dashed border-emerald-200 rounded-lg bg-emerald-50 dark:bg-emerald-900/10 dark:border-emerald-800">
+                <p className="font-medium text-emerald-800 dark:text-emerald-300">Looking for your revenue?</p>
+                <p className="mt-1 text-emerald-700 dark:text-emerald-400">
+                  Revenue will appear here when:
+                </p>
+                <ul className="mt-1 list-disc pl-5 text-emerald-700 dark:text-emerald-400">
+                  <li>You receive payment confirmations in chat</li>
+                  <li>Clients mark payments as complete</li>
+                  <li>Payment proofs are submitted for your services</li>
+                </ul>
+                <p className="mt-2 text-emerald-700 dark:text-emerald-400">
+                  Check your conversations for payment confirmations.
+                </p>
+              </div>
+            )}
+            
+            {/* Debug section - only visible in development */}
+            {process.env.NODE_ENV === 'development' && (
+              <div className="mt-4 p-3 text-xs border border-dashed border-emerald-200 rounded-lg bg-emerald-50 dark:bg-emerald-900/10 dark:border-emerald-800">
+                <details>
+                  <summary className="font-medium cursor-pointer">Revenue Debug Info</summary>
+                  <div className="mt-2 space-y-1">
+                    <p>Raw value: <code>{stats.revenue}</code></p>
+                    <p>Transaction count: <code>{stats.transactions}</code></p>
+                    <p>User ID: <code>{user?.uid}</code></p>
+                    <p>Provider filter: <code>{user?.uid ? 'Active' : 'Not Active'}</code></p>
+                    <p>Transaction sources:</p>
+                    <ul className="list-disc pl-5">
+                      <li>Direct: <code>{allTransactions?.filter(tx => tx?.type === 'transaction')?.length || 0}</code></li>
+                      <li>Notifications: <code>{allTransactions?.filter(tx => tx?.type === 'notification')?.length || 0}</code></li>
+                      <li>Message payments: <code>{allTransactions?.filter(tx => tx?.type === 'message_payment')?.length || 0}</code></li>
+                    </ul>
+                    <p className="mt-2 text-emerald-600 dark:text-emerald-400">
+                      Check console logs for detailed transaction data
+                    </p>
+                  </div>
+                </details>
+              </div>
+            )}
           </CardContent>
         </Card>
       </div>

@@ -219,7 +219,7 @@ service cloud.firestore {
       allow update: if isAuthenticated() && 
         ((resource.data.providerId == request.auth.uid && 
           request.resource.data.diff(resource.data).affectedKeys()
-            .hasOnly(['status', 'updatedAt'])) ||
+            .hasOnly(['status', 'updatedAt', 'rated', 'serviceTitle', 'amount'])) ||
          (resource.data.userId == request.auth.uid && 
           request.resource.data.diff(resource.data).affectedKeys()
             .hasOnly(['paymentProofUrl', 'cloudinaryId', 'updatedAt'])));

@@ -192,10 +192,9 @@ export function DashboardLayout({ children }: DashboardLayoutProps) {
                   <Link 
                     href="/" 
                     className="flex items-center gap-3 font-semibold relative z-10"
-                    onClick={(e) => {
-                      e.preventDefault();
+                    onClick={() => {
                       setIsMobileSidebarOpen(false);
-                      // Force a hard navigation to home page
+                      // Navigate directly to home page
                       window.location.href = "/";
                     }}
                   >

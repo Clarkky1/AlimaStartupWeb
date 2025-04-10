@@ -726,10 +726,10 @@ export default function Home() {
             
             <div className="grid grid-cols-1 md:grid-cols-3 gap-8 lg:gap-12">
                 {/* Step 1 */}
-              <div className="backdrop-blur-xl bg-white/90 dark:bg-black/40 border border-gray-200/50 dark:border-white/5 p-8 rounded-2xl shadow-sm group transition-all duration-300 hover:shadow-md hover:translate-y-[-3px]" data-aos="fade-up" data-aos-delay="100">
+              <div className="backdrop-blur-xl bg-white/90 dark:bg-black/40 border border-gray-200/50 dark:border-white/5 p-8 rounded-2xl shadow-sm group" data-aos="fade-up" data-aos-delay="100">
                 <div className="flex flex-col items-center text-center">
                   <div className="w-16 h-16 mb-6 rounded-full flex items-center justify-center bg-gradient-to-br from-blue-500/10 to-purple-500/10 dark:from-blue-500/20 dark:to-purple-500/20">
-                    <UserRoundSearch className="w-8 h-8 text-blue-600 dark:text-blue-400 group-hover:scale-110 transition-transform duration-300" />
+                    <UserRoundSearch className="w-8 h-8 text-blue-600 dark:text-blue-400" />
                   </div>
                   <h3 className="text-xl font-medium mb-3">Search for Services</h3>
                   <p className="text-gray-600 dark:text-gray-400">
@@ -739,10 +739,10 @@ export default function Home() {
                 </div>
                 
                 {/* Step 2 */}
-              <div className="backdrop-blur-xl bg-white/90 dark:bg-black/40 border border-gray-200/50 dark:border-white/5 p-8 rounded-2xl shadow-sm group transition-all duration-300 hover:shadow-md hover:translate-y-[-3px]" data-aos="fade-up" data-aos-delay="200">
+              <div className="backdrop-blur-xl bg-white/90 dark:bg-black/40 border border-gray-200/50 dark:border-white/5 p-8 rounded-2xl shadow-sm group" data-aos="fade-up" data-aos-delay="200">
                 <div className="flex flex-col items-center text-center">
                   <div className="w-16 h-16 mb-6 rounded-full flex items-center justify-center bg-gradient-to-br from-green-500/10 to-teal-500/10 dark:from-green-500/20 dark:to-teal-500/20">
-                    <MessagesSquare className="w-8 h-8 text-green-600 dark:text-green-400 group-hover:scale-110 transition-transform duration-300" />
+                    <MessagesSquare className="w-8 h-8 text-green-600 dark:text-green-400" />
                   </div>
                   <h3 className="text-xl font-medium mb-3">Connect and Discuss</h3>
                   <p className="text-gray-600 dark:text-gray-400">
@@ -752,10 +752,10 @@ export default function Home() {
                 </div>
                 
                 {/* Step 3 */}
-              <div className="backdrop-blur-xl bg-white/90 dark:bg-black/40 border border-gray-200/50 dark:border-white/5 p-8 rounded-2xl shadow-sm group transition-all duration-300 hover:shadow-md hover:translate-y-[-3px]" data-aos="fade-up" data-aos-delay="300">
+              <div className="backdrop-blur-xl bg-white/90 dark:bg-black/40 border border-gray-200/50 dark:border-white/5 p-8 rounded-2xl shadow-sm group" data-aos="fade-up" data-aos-delay="300">
                 <div className="flex flex-col items-center text-center">
                   <div className="w-16 h-16 mb-6 rounded-full flex items-center justify-center bg-gradient-to-br from-amber-500/10 to-orange-500/10 dark:from-amber-500/20 dark:to-orange-500/20">
-                    <CheckCircle className="w-8 h-8 text-amber-600 dark:text-amber-400 group-hover:scale-110 transition-transform duration-300" />
+                    <CheckCircle className="w-8 h-8 text-amber-600 dark:text-amber-400" />
                   </div>
                   <h3 className="text-xl font-medium mb-3">Hire and Review</h3>
                   <p className="text-gray-600 dark:text-gray-400">

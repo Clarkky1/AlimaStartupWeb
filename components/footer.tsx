@@ -4,8 +4,8 @@ export function Footer() {
   return (
     <footer className="border-t bg-background">
       <div className="container mx-auto px-4 py-8">
-        <div className="grid grid-cols-1 gap-8 md:grid-cols-4">
-          <div>
+        <div className="grid grid-cols-2 gap-6 sm:grid-cols-2 md:grid-cols-4">
+          <div className="col-span-2 sm:col-span-1 mb-2 sm:mb-0">
             <Link href="/" className="flex items-center">
               <img src="/AlimaLOGO.svg?height=32&width=32" alt="Logo" className="h-8 w-8" />
               <span className="ml-2 text-xl font-bold text-blue">Alima</span>
@@ -16,7 +16,7 @@ export function Footer() {
           </div>
 
           <div>
-            <h3 className="mb-4 text-sm font-semibold">Services</h3>
+            <h3 className="mb-3 text-sm font-semibold">Services</h3>
             <ul className="space-y-2 text-sm">
               <li>
                 <Link href="/popular-today" className="text-muted-foreground hover:text-primary">
@@ -42,7 +42,7 @@ export function Footer() {
           </div>
 
           <div>
-            <h3 className="mb-4 text-sm font-semibold">Company</h3>
+            <h3 className="mb-3 text-sm font-semibold">Company</h3>
             <ul className="space-y-2 text-sm">
               <li>
                 <Link href="/about" className="text-muted-foreground hover:text-primary">
@@ -68,7 +68,7 @@ export function Footer() {
           </div>
 
           <div>
-            <h3 className="mb-4 text-sm font-semibold">Legal</h3>
+            <h3 className="mb-3 text-sm font-semibold">Legal</h3>
             <ul className="space-y-2 text-sm">
               <li>
                 <Link href="/terms" className="text-muted-foreground hover:text-primary">
@@ -89,7 +89,7 @@ export function Footer() {
           </div>
         </div>
 
-        <div className="mt-8 border-t pt-8 text-center text-sm text-muted-foreground">
+        <div className="mt-6 border-t pt-6 text-center text-sm text-muted-foreground">
           <p>&copy; {new Date().getFullYear()} Alima. All rights reserved.</p>
         </div>
       </div>

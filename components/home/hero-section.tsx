@@ -48,19 +48,23 @@ export function HeroSection() {
         <div className="mx-auto max-w-6xl">
           <div className="grid items-center gap-6 md:gap-8 md:grid-cols-2">
             <div className="order-1 text-left" data-aos="fade-right">
-              <h1 className="text-4xl font-bold tracking-tight sm:text-5xl md:text-6xl lg:text-7xl" data-aos="fade-up" data-aos-delay="100">
-                <span className="block text-[#10b981]">Empower</span>
-                <span className="block text-[#3b82f6]">Excel</span>
-                <span className="block text-[#10b981]">Earn</span>
+              {/* Premium subtle decorative elements */}
+              <div className="absolute -left-12 -top-12 w-48 h-48 bg-gradient-to-r from-blue-400/10 to-indigo-400/10 rounded-full blur-3xl"></div>
+              <div className="absolute right-0 bottom-12 w-64 h-64 bg-gradient-to-br from-emerald-400/10 to-teal-400/10 rounded-full blur-3xl"></div>
+              
+              <h1 className="text-4xl font-bold tracking-tight sm:text-5xl md:text-6xl lg:text-7xl relative" data-aos="fade-up" data-aos-delay="100">
+                <span className="block bg-clip-text text-transparent bg-gradient-to-r from-emerald-600 to-emerald-400 dark:from-emerald-400 dark:to-emerald-300 drop-shadow-sm">Empower</span>
+                <span className="block bg-clip-text text-transparent bg-gradient-to-r from-blue-600 to-blue-400 dark:from-blue-400 dark:to-blue-300 drop-shadow-sm">Excel</span>
+                <span className="block bg-clip-text text-transparent bg-gradient-to-r from-purple-600 to-purple-400 dark:from-purple-400 dark:to-purple-300 drop-shadow-sm">Earn</span>
               </h1>
               
-              <p className="mt-4 md:mt-6 text-lg text-neutral-600 dark:text-neutral-300 md:text-xl max-w-md" data-aos="fade-up" data-aos-delay="200">
-                Discover opportunities and unlock your potential with <span className="font-bold">Alima</span>.
+              <p className="mt-4 md:mt-6 text-lg text-neutral-600 dark:text-neutral-300 md:text-xl max-w-md backdrop-blur-sm relative" data-aos="fade-up" data-aos-delay="200">
+                Discover opportunities and unlock your potential with <span className="font-bold bg-clip-text text-transparent bg-gradient-to-r from-gray-800 to-gray-900 dark:from-white dark:to-gray-200">Alima</span>.
               </p>
               
               <div className="mt-6 md:mt-10 flex flex-col sm:flex-row w-full gap-3">
                 <a 
-                  className="w-full sm:w-auto inline-flex items-center justify-center gap-2 whitespace-nowrap text-sm font-medium ring-offset-background transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:pointer-events-none disabled:opacity-50 [&_svg]:pointer-events-none [&_svg]:size-4 [&_svg]:shrink-0 bg-primary text-primary-foreground hover:bg-primary/90 h-12 rounded-full px-8"
+                  className="w-full sm:w-auto inline-flex items-center justify-center gap-2 whitespace-nowrap text-sm font-medium ring-offset-background transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:pointer-events-none disabled:opacity-50 [&_svg]:pointer-events-none [&_svg]:size-4 [&_svg]:shrink-0 bg-gradient-to-r from-blue-600 to-indigo-600 hover:from-blue-700 hover:to-indigo-700 text-white h-12 rounded-full px-8 shadow-[0_8px_30px_rgba(59,130,246,0.2)] hover:shadow-[0_8px_20px_rgba(59,130,246,0.3)] transition-all duration-300"
                   href="/popular-today"
                   data-aos="fade-up"
                   data-aos-delay="100"
@@ -69,7 +73,7 @@ export function HeroSection() {
                 </a>
                 <a 
                   href="#how-it-works"
-                  className="w-full sm:w-auto inline-flex items-center justify-center gap-2 whitespace-nowrap text-sm font-medium ring-offset-background transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:pointer-events-none disabled:opacity-50 [&_svg]:pointer-events-none [&_svg]:size-4 [&_svg]:shrink-0 border border-input bg-background hover:bg-accent hover:text-accent-foreground h-12 rounded-full px-8"
+                  className="w-full sm:w-auto inline-flex items-center justify-center gap-2 whitespace-nowrap text-sm font-medium ring-offset-background transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:pointer-events-none disabled:opacity-50 [&_svg]:pointer-events-none [&_svg]:size-4 [&_svg]:shrink-0 border-2 border-gray-200 dark:border-gray-800 bg-white/80 dark:bg-black/40 backdrop-blur-sm text-gray-800 dark:text-gray-200 hover:bg-white hover:text-blue-600 dark:hover:bg-black/60 dark:hover:text-blue-400 h-12 rounded-full px-8 shadow-[0_8px_30px_rgba(0,0,0,0.05)] hover:shadow-[0_8px_20px_rgba(0,0,0,0.1)] dark:shadow-[0_8px_30px_rgba(255,255,255,0.03)] dark:hover:shadow-[0_8px_20px_rgba(255,255,255,0.05)] transition-all duration-300"
                   onClick={(e) => {
                     e.preventDefault();
                     const element = document.getElementById("how-it-works");

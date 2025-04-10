@@ -480,30 +480,40 @@ export default function Home() {
             <section className="pt-16 md:pt-24 pb-16 md:pb-24 bg-transparent" id="home">
               <div className="grid grid-cols-1 gap-10 lg:grid-cols-2 lg:gap-20 items-center">
                 <div className="order-2 lg:order-1" data-aos="fade-right" data-aos-delay="200">
-                  <h1 className="text-3xl font-bold tracking-tight sm:text-4xl md:text-5xl mb-8">
-                    Connect with local and global talent for any service you need
-                  </h1>
-                  <p className="mb-10 max-w-lg text-base sm:text-lg text-gray-600 dark:text-gray-300">
-                    Find skilled professionals for both digital and physical services. Whether you need a web developer or a local handyman, Alima connects you with the right talent.
-                  </p>
-                  <div className="flex flex-wrap gap-4">
-                    <Button asChild size="lg" className="rounded-full px-8 w-full sm:w-auto min-w-[180px]">
-                      <Link href="/popular-today">Browse Services</Link>
-                    </Button>
-                    <Button asChild size="lg" variant="outline" className="rounded-full px-8 w-full sm:w-auto min-w-[180px]">
-                      <a 
-                        href="#how-it-works"
-                        onClick={(e) => {
-                          e.preventDefault();
-                          const element = document.getElementById("how-it-works");
-                          if (element) {
-                            element.scrollIntoView({ behavior: "smooth" });
-                          }
-                        }}
-                      >
-                        How It Works
-                      </a>
-                    </Button>
+                  <div className="relative">
+                    {/* Subtle accent elements */}
+                    <div className="absolute -left-6 -top-6 w-20 h-20 bg-gradient-to-br from-blue-400/20 to-indigo-400/20 rounded-full blur-xl"></div>
+                    <div className="absolute -right-4 bottom-12 w-32 h-32 bg-gradient-to-tr from-purple-400/20 to-pink-400/20 rounded-full blur-xl"></div>
+                    
+                    <h1 className="text-3xl font-bold tracking-tight sm:text-4xl md:text-5xl lg:text-6xl mb-8 relative">
+                      <span className="bg-clip-text text-transparent bg-gradient-to-r from-gray-900 via-gray-800 to-gray-700 dark:from-white dark:via-gray-100 dark:to-gray-300 drop-shadow-sm">
+                        Connect with <span className="bg-clip-text text-transparent bg-gradient-to-r from-blue-600 to-indigo-600 dark:from-blue-400 dark:to-indigo-400">local</span> and <span className="bg-clip-text text-transparent bg-gradient-to-r from-purple-600 to-pink-600 dark:from-purple-400 dark:to-pink-400">global</span> talent for any service you need
+                      </span>
+                    </h1>
+                    
+                    <p className="mb-10 max-w-lg text-base sm:text-lg text-gray-600 dark:text-gray-300 backdrop-blur-sm relative">
+                      Find skilled professionals for both digital and physical services. Whether you need a web developer or a local handyman, Alima connects you with the right talent.
+                    </p>
+                    
+                    <div className="flex flex-wrap gap-4 relative">
+                      <Button asChild size="lg" className="rounded-full px-8 w-full sm:w-auto min-w-[180px] bg-gradient-to-r from-blue-600 to-indigo-600 hover:from-blue-700 hover:to-indigo-700 border-0 shadow-[0_8px_30px_rgba(59,130,246,0.2)] hover:shadow-[0_8px_20px_rgba(59,130,246,0.3)] transition-all duration-300">
+                        <Link href="/popular-today">Browse Services</Link>
+                      </Button>
+                      <Button asChild size="lg" variant="outline" className="rounded-full px-8 w-full sm:w-auto min-w-[180px] border-2 border-gray-200 dark:border-gray-800 bg-white/80 dark:bg-black/40 backdrop-blur-sm text-gray-800 dark:text-gray-200 hover:bg-white hover:text-blue-600 dark:hover:bg-black/60 dark:hover:text-blue-400 shadow-[0_8px_30px_rgba(0,0,0,0.05)] hover:shadow-[0_8px_20px_rgba(0,0,0,0.1)] dark:shadow-[0_8px_30px_rgba(255,255,255,0.03)] dark:hover:shadow-[0_8px_20px_rgba(255,255,255,0.05)] transition-all duration-300">
+                        <a 
+                          href="#how-it-works"
+                          onClick={(e) => {
+                            e.preventDefault();
+                            const element = document.getElementById("how-it-works");
+                            if (element) {
+                              element.scrollIntoView({ behavior: "smooth" });
+                            }
+                          }}
+                        >
+                          How It Works
+                        </a>
+                      </Button>
+                    </div>
                   </div>
                 </div>
                 <div className="order-1 lg:order-2" data-aos="fade-left" data-aos-delay="300">

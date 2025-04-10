@@ -286,7 +286,7 @@ export default function MessagePage({ params }: { params: { providerId: string }
   const messagesEndRef = useRef<HTMLDivElement>(null)
 
   // Add state for mobile navigation
-  const [activeMobileTab, setActiveMobileTab] = useState<'chat' | 'contacts' | 'info'>('chat');
+  const [activeMobileTab, setActiveMobileTab] = useState<'chat' | 'contacts' | 'info'>('contacts');
 
   // Check welcome message status on client-side only
   useEffect(() => {
@@ -492,6 +492,51 @@ export default function MessagePage({ params }: { params: { providerId: string }
 
     fetchMessages();
   }, [user, providerId, authLoading]);
+
+  // Add effect to mark messages as read when viewing them
+  useEffectState(() => {
+    async function markMessagesAsRead() {
+      if (!user || !providerId) return;
+      
+      try {
+        const { db } = await initializeFirebase();
+        if (!db) return;
+        
+        const { collection, query, where, getDocs, writeBatch, doc } = await import("firebase/firestore");
+        
+        const participants = [user.uid, providerId].sort();
+        const conversationId = participants.join('_');
+        
+        // Find all unread messages where the current user is the receiver
+        const q = query(
+          collection(db, "messages"),
+          where("conversationId", "==", conversationId),
+          where("receiverId", "==", user.uid),
+          where("read", "==", false)
+        );
+        
+        const snapshot = await getDocs(q);
+        if (snapshot.empty) return;
+        
+        // Use batch update for efficiency
+        const batch = writeBatch(db);
+        
+        snapshot.forEach((doc) => {
+          batch.update(doc.ref, { read: true });
+        });
+        
+        await batch.commit();
+        console.log(`Marked ${snapshot.size} messages as read`);
+      } catch (error) {
+        console.error("Error marking messages as read:", error);
+      }
+    }
+    
+    // Mark messages as read whenever messages are loaded or change
+    if (messages.length > 0 && !messagesLoading) {
+      markMessagesAsRead();
+    }
+  }, [user, providerId, messages, messagesLoading]);
 
   // Fetch user's conversations
   useEffectState(() => {
@@ -1095,9 +1140,9 @@ export default function MessagePage({ params }: { params: { providerId: string }
                         }`}
                         onClick={() => {
                           router.push(`/message/${contact.contactId}`);
-                          // On mobile, switch to chat view after selecting a contact
+                          // Keep on contacts tab instead of switching to chat
                           if (window.innerWidth < 768) {
-                            setActiveMobileTab('chat');
+                            setActiveMobileTab('contacts');
                           }
                         }}
                       >
@@ -1262,7 +1307,13 @@ export default function MessagePage({ params }: { params: { providerId: string }
                           key={service.id}
                           variant={selectedService?.id === service.id ? "default" : "outline"}
                           className="cursor-pointer"
-                          onClick={() => setSelectedService(service)}
+                          onClick={() => {
+                            setSelectedService(service);
+                            // Keep on 'contacts' tab instead of switching to chat
+                            if (window.innerWidth < 768) {
+                              setActiveMobileTab('contacts');
+                            }
+                          }}
                         >
                           {service.title}
                         </Badge>
@@ -1448,9 +1499,9 @@ export default function MessagePage({ params }: { params: { providerId: string }
                               className="p-2 rounded-md border cursor-pointer hover:bg-muted"
                               onClick={() => {
                                 setSelectedService(service);
-                                // On mobile, switch to chat view after selecting a service
+                                // Keep on 'contacts' tab instead of switching to chat
                                 if (window.innerWidth < 768) {
-                                  setActiveMobileTab('chat');
+                                  setActiveMobileTab('contacts');
                                 }
                               }}
                             >
@@ -1480,29 +1531,6 @@ export default function MessagePage({ params }: { params: { providerId: string }
           </Card>
         </div>
       </div>
-
-      {/* Add a debug button (only in development) */}
-      {process.env.NODE_ENV === "development" && (
-        <div className="fixed bottom-4 right-4 z-50">
-          <Button
-            size="sm"
-            variant="outline"
-            onClick={() => {
-              console.log("Manual trigger of rating dialog");
-              setRatingService({
-                serviceId: providerId || "",
-                serviceTitle: "Test Service",
-                providerId: providerId,
-                providerName: provider?.name || "Provider",
-                transactionId: "test-transaction"
-              });
-              setRatingDialogOpen(true);
-            }}
-          >
-            Test Rating Dialog
-          </Button>
-        </div>
-      )}
 
       {/* Replace the inline dialog with the imported RatingModal component */}
       <RatingModal 

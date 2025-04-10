@@ -9,6 +9,7 @@ import { ThemeProvider } from "@/components/theme-provider";
 import { Navbar } from "@/components/navbar";
 import { Footer } from "@/components/footer";
 import { ChatButtonWrapper } from "@/components/chat-button-wrapper";
+import Script from "next/script";
 
 // Import providers in a specific order to prevent circular dependencies
 import { Toaster } from "@/components/ui/toaster";
@@ -67,45 +68,6 @@ export default function RootLayout({
         />
         {/* Add font fallback script */}
         <script src="/fonts.js" defer></script>
-        
-        {/* Add script to fix scroll issues */}
-        <script dangerouslySetInnerHTML={{
-          __html: `
-            // Fix to ensure navbar links can scroll to top
-            document.addEventListener('DOMContentLoaded', function() {
-              // Save a reference to any link that points to the homepage
-              const homeLinks = document.querySelectorAll('a[href="/"]');
-              
-              // Keep track of whether we're clicking on the avatar dropdown
-              let isAvatarClick = false;
-              
-              // Add a listener to capture avatar dropdown clicks
-              document.addEventListener('mousedown', function(e) {
-                // Check if clicking on avatar dropdown (look for the Avatar component or its parent button)
-                if (e.target.closest('.rounded-full.overflow-hidden') || 
-                    e.target.closest('[role="menu"]') ||
-                    e.target.closest('[data-state="open"]')) {
-                  isAvatarClick = true;
-                  // Reset the flag after a short delay
-                  setTimeout(() => { isAvatarClick = false }, 300);
-                }
-              }, true);
-              
-              homeLinks.forEach(link => {
-                link.addEventListener('click', function(e) {
-                  const path = window.location.pathname;
-                  // Only scroll to top if on home page AND not clicking avatar
-                  if (path === '/' && !isAvatarClick) {
-                    e.preventDefault();
-                    window.scrollTo(0, 0);
-                    document.body.scrollTop = 0;
-                    document.documentElement.scrollTop = 0;
-                  }
-                });
-              });
-            });
-          `
-        }} />
       </head>
       <body className={cn(
         'min-h-screen bg-background font-sans antialiased',
@@ -129,6 +91,49 @@ export default function RootLayout({
             <Toaster />
           </AuthProvider>
         </NetworkStatusProvider>
+
+        {/* Use next/script to properly handle client-side script loading */}
+        <Script
+          id="scroll-fix-script"
+          strategy="afterInteractive"
+          dangerouslySetInnerHTML={{
+            __html: `
+              // Fix to ensure navbar links can scroll to top
+              document.addEventListener('DOMContentLoaded', function() {
+                // Save a reference to any link that points to the homepage
+                const homeLinks = document.querySelectorAll('a[href="/"]');
+                
+                // Keep track of whether we're clicking on the avatar dropdown
+                let isAvatarClick = false;
+                
+                // Add a listener to capture avatar dropdown clicks
+                document.addEventListener('mousedown', function(e) {
+                  // Check if clicking on avatar dropdown (look for the Avatar component or its parent button)
+                  if (e.target.closest('.dropdown-trigger') || 
+                      e.target.closest('[role="menu"]') ||
+                      e.target.closest('[data-state="open"]')) {
+                    isAvatarClick = true;
+                    // Reset the flag after a short delay
+                    setTimeout(() => { isAvatarClick = false }, 300);
+                  }
+                }, true);
+                
+                homeLinks.forEach(link => {
+                  link.addEventListener('click', function(e) {
+                    const path = window.location.pathname;
+                    // Only scroll to top if on home page AND not clicking avatar
+                    if (path === '/' && !isAvatarClick) {
+                      e.preventDefault();
+                      window.scrollTo(0, 0);
+                      document.body.scrollTop = 0;
+                      document.documentElement.scrollTop = 0;
+                    }
+                  });
+                });
+              });
+            `
+          }}
+        />
       </body>
     </html>
   );

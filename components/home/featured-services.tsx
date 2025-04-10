@@ -263,48 +263,53 @@ export function GlobalServices({ category = 'recent', expandable = false }: Glob
   const limitedServices = isExpanded ? displayServices : displayServices.slice(0, limitedCount);
 
   return (
-    <div className="space-y-3">
-      {loading ? (
-        <div className="grid gap-3 md:grid-cols-2 lg:grid-cols-4">
-          {[1, 2, 3, 4].map((i) => (
-            <Skeleton key={i} className="h-[280px] w-full" />
-          ))}
-        </div>
-      ) : (
-        <>
-          <div className="grid gap-3 md:grid-cols-2 lg:grid-cols-4">
-            {limitedServices.length > 0 ? (
-              limitedServices.map((service) => (
+    <div className="flex flex-col w-full justify-center items-center gap-20 md:px-10">
+      <div className="w-full max-w-[1400px] mx-auto text-center">
+        <h2 className="text-4xl md:text-5xl font-bold mb-5 text-gray-900 dark:text-white">Featured Services</h2>
+        <p className="text-xl text-gray-600 dark:text-gray-400 mb-12 max-w-3xl mx-auto">Discover curated services that meet the highest standards of quality and reliability.</p>
+
+        {loading ? (
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-5">
+            {[...Array(4)].map((_, index) => (
+              <Skeleton key={index} className="h-[320px] w-full rounded-xl" />
+            ))}
+          </div>
+        ) : (
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-5">
+            {limitedServices.map((service) => (
+              <div key={service.id} className="transition-transform hover:scale-105 p-1">
                 <ServiceCard
-                  key={service.id}
                   id={service.id}
                   title={service.title}
                   description={service.description}
                   price={service.price}
                   category={service.category}
                   image={service.image}
-                  provider={service.provider}
+                  provider={{
+                    name: service.provider.name,
+                    avatar: service.provider.avatar || "/person-male-1.svg",
+                    rating: service.provider.rating,
+                    ratingCount: service.provider.ratingCount,
+                    location: service.provider.location,
+                    id: service.provider.id
+                  }}
                   showRating={true}
                 />
-              ))
-            ) : (
-              <div className="col-span-4 text-center py-8">
-                <p className="text-muted-foreground">No services found</p>
               </div>
-            )}
+            ))}
           </div>
-          {expandable && displayServices.length > 4 && (
-            <div className="flex justify-center mt-4">
-              <Button
-                variant="outline"
-                onClick={() => setIsExpanded(!isExpanded)}
-                className="px-5 py-1.5"
-              >
-                {isExpanded ? "Show Less" : "Show More"}
-              </Button>
-            </div>
-          )}
-        </>
+        )}
+      </div>
+      {expandable && displayServices.length > 4 && (
+        <div className="flex justify-center mt-4">
+          <Button
+            variant="outline"
+            onClick={() => setIsExpanded(!isExpanded)}
+            className="px-5 py-1.5"
+          >
+            {isExpanded ? "Show Less" : "Show More"}
+          </Button>
+        </div>
       )}
     </div>
   );

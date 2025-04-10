@@ -96,48 +96,50 @@ export function ServiceCard({
 
   return (
     <>
-      <Card className="group overflow-hidden h-full flex flex-col border rounded-lg shadow-sm hover:shadow-md transition-all duration-200">
-        <CardContent className="p-0 flex flex-col h-full">
+      <Card className="group overflow-hidden h-full flex flex-col border rounded-xl shadow-sm hover:shadow-md transition-all duration-300 backdrop-blur-sm bg-white/95 dark:bg-black/85 dark:border-gray-800">
+        <CardContent className="p-0 flex flex-col h-full relative">
           <div className="aspect-video overflow-hidden relative">
             <img
               src={currentServiceImageSrc}
               alt={title}
-              className="h-full w-full object-cover transition-transform group-hover:scale-105 duration-300"
+              className="h-full w-full object-cover transition-transform group-hover:scale-105 duration-500"
               onError={isOnline ? handleServiceImageError : undefined}
             />
           </div>
 
-          <div className="space-y-2 p-3 sm:p-4 flex-1 flex flex-col">
-            <div className="flex flex-wrap items-start justify-between gap-1 sm:gap-2">
-              <h3 className="font-semibold leading-tight tracking-tight text-xs sm:text-sm md:text-base line-clamp-2">
+          <div className="space-y-3 p-4 flex-1 flex flex-col relative">
+            <div className="flex flex-wrap items-start justify-between gap-2">
+              <h3 className="font-semibold leading-tight tracking-tight text-sm sm:text-base line-clamp-2 group-hover:text-blue-600 dark:group-hover:text-blue-400 transition-colors duration-300">
                 {title}
               </h3>
               <Badge 
-                className="bg-green-500 hover:bg-green-600 text-white border-0 text-[10px] sm:text-xs whitespace-nowrap flex-shrink-0 mt-0.5"
+                className="bg-gradient-to-r from-green-500 to-emerald-500 hover:from-green-600 hover:to-emerald-600 text-white border-0 text-xs whitespace-nowrap flex-shrink-0 mt-0.5"
                 variant="secondary"
               >
                 {formatCategoryName(category)}
               </Badge>
             </div>
             
-            <p className="text-[10px] sm:text-xs md:text-sm text-muted-foreground line-clamp-2 flex-grow">{description}</p>
+            <p className="text-xs sm:text-sm text-muted-foreground/80 line-clamp-2 flex-grow">{description}</p>
 
-            <div className="flex items-center justify-between mt-auto">
-              <div className="flex items-baseline gap-1">
-                <span className="text-sm sm:text-base md:text-lg font-bold">{formatPrice(price)}</span>
-              </div>
-              {showRating && provider.hasRating && (
-                <div className="flex items-center gap-1">
-                  <StarIcon className="h-3 w-3 sm:h-4 sm:w-4 fill-yellow-400 text-yellow-400" />
-                  <span className="text-[10px] sm:text-xs md:text-sm font-medium">{provider.rating}</span>
+            <div className="flex items-center justify-between mt-auto pt-2">
+              {showRating && provider.hasRating ? (
+                <div className="flex items-center gap-1.5">
+                  <StarIcon className="h-4 w-4 fill-yellow-400 text-yellow-400" />
+                  <span className="text-xs sm:text-sm font-medium">{provider.rating}</span>
                 </div>
+              ) : (
+                <div className="flex-1"></div>
               )}
+              <div className="flex justify-end w-full mr-1">
+                <span className="text-base sm:text-lg font-bold text-blue-500">{formatPrice(price)}</span>
+              </div>
             </div>
 
-            <div className="space-y-2 border-t pt-2 sm:pt-3">
+            <div className="space-y-2 border-t border-gray-100 dark:border-gray-800 pt-3 mt-1">
               <div className="flex items-center justify-between">
-                <div className="flex items-center gap-1 sm:gap-2 min-w-0 flex-1">
-                  <div className="h-6 w-6 sm:h-7 sm:w-7 md:h-8 md:w-8 overflow-hidden rounded-full bg-primary/10 flex-shrink-0">
+                <div className="flex items-center gap-2 min-w-0 flex-1">
+                  <div className="h-10 w-10 overflow-hidden rounded-full bg-gray-100 dark:bg-gray-800 flex-shrink-0">
                     <img 
                       src={currentAvatarSrc}
                       alt={provider.name} 
@@ -146,23 +148,23 @@ export function ServiceCard({
                     />
                   </div>
                   <div className="min-w-0 flex-1">
-                    <p className="text-[10px] sm:text-xs md:text-sm font-medium truncate">{provider.name}</p>
-                    <div className="flex items-center gap-1 text-[8px] sm:text-[10px] md:text-xs text-muted-foreground truncate">
-                      <MapPinIcon className="h-2 w-2 sm:h-3 sm:w-3 flex-shrink-0" />
+                    <p className="text-xs sm:text-sm font-medium truncate">{provider.name}</p>
+                    <div className="flex items-center gap-1 text-xs text-muted-foreground/70 truncate mt-0.5">
+                      <MapPinIcon className="h-3 w-3 flex-shrink-0" />
                       <span className="truncate">{provider.location}</span>
                     </div>
                   </div>
                 </div>
                 
                 <Button
-                  size="icon"
-                  variant="ghost"
-                  className="h-6 w-6 sm:h-7 sm:w-7 md:h-8 md:w-8 flex-shrink-0 ml-1"
+                  size="sm"
+                  className="rounded-full bg-blue-500 hover:bg-blue-600 text-white border-0 flex-shrink-0 ml-2"
                   onClick={() => setIsContactModalOpen(true)}
                   title="Contact Provider"
                   aria-label="Contact Provider"
                 >
-                  <MessageSquare className="h-3 w-3 sm:h-4 sm:w-4" />
+                  <MessageSquare className="h-4 w-4 mr-1.5" />
+                  <span className="text-xs font-medium">Contact</span>
                 </Button>
               </div>
             </div>

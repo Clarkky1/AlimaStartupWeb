@@ -8,6 +8,7 @@ import { collection, query, where, orderBy, limit, getDocs, getDoc, doc } from "
 import { initializeFirebase } from "@/app/lib/firebase"
 import { useToast } from "@/components/ui/use-toast"
 import { useCategory } from "@/app/context/category-context"
+import Link from "next/link"
 
 interface LocalServicesProps {
   category?: string
@@ -255,58 +256,50 @@ export function LocalServices({ category = 'recent', expandable = false }: Local
   const limitedServices = isExpanded ? displayServices : displayServices.slice(0, 4);
 
   return (
-    <div className="space-y-6">
-      {loading ? (
-        <div className="grid grid-cols-1 gap-6 sm:grid-cols-2 lg:grid-cols-4">
-          {Array(4)
-            .fill(0)
-            .map((_, i) => (
-              <div key={i} className="space-y-3">
-                <Skeleton className="h-48 w-full rounded-lg" />
-                <div className="space-y-2">
-                  <Skeleton className="h-5 w-3/4" />
-                  <Skeleton className="h-4 w-full" />
-                  <div className="flex items-center gap-2 pt-2">
-                    <Skeleton className="h-8 w-8 rounded-full" />
-                    <Skeleton className="h-4 w-24" />
-                  </div>
-                </div>
-              </div>
+    <div className="flex flex-col w-full justify-center items-center gap-20 md:px-10">
+      <div className="w-full max-w-[1400px] mx-auto text-center">
+        <h2 className="text-4xl md:text-5xl font-bold mb-5 text-gray-900 dark:text-white">Services Near You</h2>
+        <p className="text-xl text-gray-600 dark:text-gray-400 mb-12 max-w-3xl mx-auto">Find quality services available in your local area.</p>
+
+        {loading ? (
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-5">
+            {[...Array(4)].map((_, index) => (
+              <Skeleton key={index} className="h-[320px] w-full rounded-xl" />
             ))}
-        </div>
-      ) : displayServices.length > 0 ? (
-        <>
-          <div className="grid grid-cols-1 gap-6 sm:grid-cols-2 lg:grid-cols-4">
+          </div>
+        ) : displayServices.length > 0 ? (
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-5">
             {limitedServices.map((service) => (
-              <div key={service.id} className="transition-transform hover:scale-105">
-                <ServiceCard 
+              <div key={service.id} className="transition-transform hover:scale-105 p-1">
+                <ServiceCard
                   id={service.id}
                   title={service.title}
                   description={service.description}
                   price={service.price}
                   category={service.category}
                   image={service.image}
-                  provider={service.provider}
+                  provider={{
+                    name: service.provider.name,
+                    avatar: service.provider.avatar || "/person-male-1.svg",
+                    rating: service.provider.rating,
+                    ratingCount: service.provider.ratingCount,
+                    location: service.provider.location,
+                    id: service.provider.id
+                  }}
+                  showRating={true}
                 />
               </div>
             ))}
           </div>
-          {expandable && displayServices.length > 4 && (
-            <div className="flex justify-center mt-8">
-              <Button
-                variant="outline"
-                onClick={() => setIsExpanded(!isExpanded)}
-              >
-                {isExpanded ? 'Show Less' : 'View All'}
-              </Button>
-            </div>
-          )}
-        </>
-      ) : (
-        <div className="flex h-48 items-center justify-center rounded-lg border">
-          <p className="text-muted-foreground">No services available</p>
-        </div>
-      )}
+        ) : (
+          <div className="text-center py-8">
+            <p className="text-lg text-gray-500 dark:text-gray-400">No local services available at this time.</p>
+            <Button className="mt-4" asChild>
+              <Link href="/services">Browse All Services</Link>
+            </Button>
+          </div>
+        )}
+      </div>
     </div>
   );
 }

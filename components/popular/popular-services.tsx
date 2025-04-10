@@ -1016,87 +1016,99 @@ export function PopularServices({ category, limit: serviceLimit = 8 }: PopularSe
   }, [])
 
   return (
-    <div className="space-y-3">
-      {!loading && (
-        <div className="mb-10">
-          <h2 className="text-2xl font-bold mb-4">Recently Added Services</h2>
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4">
-            {services
-              .filter(service => 
-                service.title && 
-                service.description && 
-                service.price && 
-                service.category && 
-                service.image && 
-                service.provider?.name
-              )
-              .slice(0, 4)
-              .map((service) => (
-                <div key={service.id} className="transition-transform hover:scale-105">
-                  <ServiceCard 
-                    id={service.id}
-                    title={service.title}
-                    description={service.description}
-                    price={service.price}
-                    category={service.category}
-                    image={service.image || "https://via.placeholder.com/800x600?text=Service+Image"}
-                    provider={{
-                      ...service.provider,
-                      avatar: service.provider.avatar || "/person-male-1.svg"
-                    }}
-                    showRating={true}
-                  />
-                </div>
-              ))}
+    <div className="space-y-6 w-full max-w-[1400px] mx-auto">
+      <div className="space-y-5">
+        {!loading && (
+          <div className="mb-16">
+            <h2 className="text-3xl font-semibold mb-6 bg-clip-text text-transparent bg-gradient-to-r from-gray-900 via-gray-800 to-gray-700 dark:from-white dark:via-gray-100 dark:to-gray-300 drop-shadow-sm">Recently Added Services</h2>
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-5">
+              {services
+                .filter(service => 
+                  service.title && 
+                  service.description && 
+                  service.price && 
+                  service.category && 
+                  service.image && 
+                  service.provider?.name
+                )
+                .slice(0, 4)
+                .map((service) => (
+                  <div key={service.id} className="transition-transform hover:scale-105 p-1">
+                    <ServiceCard 
+                      id={service.id}
+                      title={service.title}
+                      description={service.description}
+                      price={service.price}
+                      category={service.category}
+                      image={service.image || "https://via.placeholder.com/800x600?text=Service+Image"}
+                      provider={{
+                        ...service.provider,
+                        avatar: service.provider.avatar || "/person-male-1.svg"
+                      }}
+                      showRating={true}
+                    />
+                  </div>
+                ))}
+            </div>
           </div>
-        </div>
-      )}
+        )}
+      </div>
 
-      <h2 className="text-2xl font-bold mb-4">Search Services</h2>
-      <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
+      <h2 className="text-3xl font-semibold mb-6 bg-clip-text text-transparent bg-gradient-to-r from-gray-900 via-gray-800 to-gray-700 dark:from-white dark:via-gray-100 dark:to-gray-300 drop-shadow-sm">Search Services</h2>
+      <div className="flex flex-col gap-5 sm:flex-row sm:items-center sm:justify-between mb-8">
         <Tabs 
-          value={activeTab} 
-          className="w-full sm:w-auto" 
+          value={activeTab}
+          className="w-full sm:w-auto"
           onValueChange={(value) => {
-            console.log("Tab changed to:", value);
             setActiveTab(value);
+            // Filter services based on the selected tab
+            const filtered = services.filter(service => value === "global" ? service.isGlobalService : service.isLocalService);
+            setFilteredServices(filtered);
           }}
         >
-          <TabsList className="grid w-full grid-cols-2 sm:w-[400px]">
-            <TabsTrigger value="global">Global Services</TabsTrigger>
-            <TabsTrigger value="local">Local Services</TabsTrigger>
+          <TabsList className="h-14 grid w-full grid-cols-2 sm:w-[440px] rounded-full bg-white dark:bg-black shadow-[0_8px_30px_rgba(0,0,0,0.06)] dark:shadow-[0_8px_30px_rgba(255,255,255,0.03)] border border-gray-100 dark:border-gray-800 backdrop-blur-xl">
+            <TabsTrigger 
+              value="global" 
+              className="rounded-full text-base data-[state=active]:bg-gradient-to-r data-[state=active]:from-blue-500 data-[state=active]:to-indigo-500 data-[state=active]:text-white text-gray-600 dark:text-gray-300 data-[state=active]:shadow-md transition-all duration-300"
+            >
+              Global Services
+            </TabsTrigger>
+            <TabsTrigger 
+              value="local" 
+              className="rounded-full text-base data-[state=active]:bg-gradient-to-r data-[state=active]:from-blue-500 data-[state=active]:to-indigo-500 data-[state=active]:text-white text-gray-600 dark:text-gray-300 data-[state=active]:shadow-md transition-all duration-300"
+            >
+              Local Services
+            </TabsTrigger>
           </TabsList>
         </Tabs>
-
-        <div className="flex items-center gap-2">
-          <Button
-            variant="outline"
-            size="sm"
-            onClick={() => setShowFilters(!showFilters)}
-          >
-            <Search className="mr-2 h-4 w-4" />
-            Filters
-          </Button>
-        </div>
+        
+        <Button 
+          variant="outline" 
+          onClick={() => setShowFilters(!showFilters)}
+          className="inline-flex items-center justify-center gap-2 whitespace-nowrap text-base font-medium ring-offset-background transition-all focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:pointer-events-none disabled:opacity-50 border border-gray-200 dark:border-gray-800 bg-white dark:bg-black hover:bg-gray-50 hover:text-blue-600 dark:hover:bg-gray-900 dark:hover:text-blue-400 h-14 rounded-full px-8 shadow-[0_8px_30px_rgba(0,0,0,0.06)] dark:shadow-[0_8px_30px_rgba(255,255,255,0.03)] backdrop-blur-xl duration-300 hover:shadow-[0_8px_20px_rgba(0,0,0,0.1)] dark:hover:shadow-[0_8px_20px_rgba(255,255,255,0.05)]"
+        >
+          <Search className="mr-2 h-5 w-5" />
+          Filters
+        </Button>
       </div>
 
       {showFilters && (
-        <div className="bg-muted/50 rounded-xl p-4">
-          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
-            <div className="space-y-2">
-              <Label>Search</Label>
+        <div className="bg-muted/30 rounded-2xl p-6 mb-10 shadow-sm">
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-8">
+            <div className="space-y-3">
+              <Label className="text-base">Search</Label>
               <Input
                 placeholder="Search services..."
                 value={searchTerm}
                 onChange={(e) => setSearchTerm(e.target.value)}
-                className="h-8"
+                className="h-10 rounded-lg"
               />
             </div>
 
-            <div className="space-y-2">
-              <Label>Category</Label>
+            <div className="space-y-3">
+              <Label className="text-base">Category</Label>
               <Select value={selectedCategory} onValueChange={setSelectedCategory}>
-                <SelectTrigger className="h-8">
+                <SelectTrigger className="h-10 rounded-lg">
                   <SelectValue placeholder="Select category" />
                 </SelectTrigger>
                   <SelectContent>
@@ -1109,26 +1121,26 @@ export function PopularServices({ category, limit: serviceLimit = 8 }: PopularSe
               </Select>
             </div>
 
-            <div className="space-y-2">
-              <Label>Price Range</Label>
+            <div className="space-y-3">
+              <Label className="text-base">Price Range</Label>
               <Slider
                 value={priceRange}
                 onValueChange={setPriceRange}
                 min={0}
                 max={10000}
                 step={100}
-                className="py-2"
+                className="py-5"
               />
-              <div className="flex justify-between text-sm text-muted-foreground">
+              <div className="flex justify-between text-sm text-muted-foreground mt-2">
                 <span>₱{priceRange[0]}</span>
                 <span>₱{priceRange[1]}</span>
               </div>
             </div>
 
-            <div className="space-y-2">
-              <Label>Location</Label>
+            <div className="space-y-3">
+              <Label className="text-base">Location</Label>
               <Select value={location} onValueChange={setLocation}>
-                <SelectTrigger className="h-8">
+                <SelectTrigger className="h-10 rounded-lg">
                   <SelectValue placeholder="Select location" />
                 </SelectTrigger>
                 <SelectContent>
@@ -1145,47 +1157,56 @@ export function PopularServices({ category, limit: serviceLimit = 8 }: PopularSe
               </Select>
             </div>
           </div>
+          
+          <div className="flex justify-end mt-6">
+            <Button 
+              onClick={resetFilters}
+              variant="outline"
+              className="rounded-lg h-10 px-6 mr-3"
+            >
+              <X className="h-4 w-4 mr-2" />
+              Reset Filters
+            </Button>
+          </div>
         </div>
       )}
 
       {loading ? (
-        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-3">
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-5 mt-10">
           {[...Array(serviceLimit)].map((_, index) => (
-            <Skeleton key={index} className="h-[280px] w-full rounded-xl" />
+            <Skeleton key={index} className="h-[300px] w-full rounded-xl" />
             ))}
         </div>
       ) : (
-        <>
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4 mt-8">
-            {filteredServices
-              .filter(service => 
-                service.title && 
-                service.description && 
-                service.price && 
-                service.category && 
-                service.image && 
-                service.provider?.name
-              )
-              .slice(0, 8)
-              .map((service) => (
-                <div key={service.id} className="transition-transform hover:scale-105">
-                  <ServiceCard 
-                    id={service.id}
-                    title={service.title}
-                    description={service.description}
-                    price={service.price}
-                    category={service.category}
-                    image={service.image || "https://via.placeholder.com/800x600?text=Service+Image"}
-                    provider={{
-                      ...service.provider,
-                      avatar: service.provider.avatar || "/person-male-1.svg"
-                    }}
-                    showRating={true}
-                  />
-                </div>
-              ))}
-          </div>
-        </>
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-5 mt-10">
+          {filteredServices
+            .filter(service => 
+              service.title && 
+              service.description && 
+              service.price && 
+              service.category && 
+              service.image && 
+              service.provider?.name
+            )
+            .slice(0, 8)
+            .map((service) => (
+              <div key={service.id} className="transition-transform hover:scale-105 p-1">
+                <ServiceCard 
+                  id={service.id}
+                  title={service.title}
+                  description={service.description}
+                  price={service.price}
+                  category={service.category}
+                  image={service.image || "https://via.placeholder.com/800x600?text=Service+Image"}
+                  provider={{
+                    ...service.provider,
+                    avatar: service.provider.avatar || "/person-male-1.svg"
+                  }}
+                  showRating={true}
+                />
+              </div>
+            ))}
+        </div>
       )}
     </div>
   )

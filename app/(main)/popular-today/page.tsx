@@ -137,17 +137,13 @@ export default function PopularTodayPage() {
         <div className="absolute inset-0 backdrop-blur-[2px] bg-white/10 dark:bg-black/5 z-0"></div>
         
         {/* Content with premium styling */}
-        <div className="container relative mx-auto px-6 z-10 text-center">
-          <div className="max-w-3xl mx-auto space-y-6">
-            <h1 className="mb-6 text-6xl font-semibold tracking-tight text-slate-800 dark:text-white md:text-7xl bg-clip-text"
-                style={{ 
-                  textShadow: '0 2px 10px rgba(0,0,0,0.04), 0 0 30px rgba(59, 130, 246, 0.3)',
-                  WebkitTextStroke: '1px rgba(59, 130, 246, 0.2)'
-                }}>
-              Discover Services Near & Far
+        <div className="container relative mx-auto px-8 z-10 text-center">
+          <div className="max-w-3xl mx-auto space-y-8">
+            <h1 className="mb-8 text-5xl sm:text-6xl font-semibold tracking-tight md:text-7xl">
+              Discover Services <span className="bg-clip-text text-transparent bg-gradient-to-r from-blue-600 to-indigo-600 dark:from-blue-400 dark:to-indigo-400">Near</span> & <span className="bg-clip-text text-transparent bg-gradient-to-r from-purple-600 to-pink-600 dark:from-purple-400 dark:to-pink-400">Far</span>
             </h1>
-            <p className="mx-auto text-xl md:text-2xl leading-relaxed text-slate-600 dark:text-slate-200 max-w-2xl font-light"
-               style={{ textShadow: '0 1px 3px rgba(0,0,0,0.02)' }}>
+            <p className="mx-auto text-lg sm:text-xl md:text-2xl leading-relaxed text-slate-600 dark:text-slate-200 max-w-2xl font-light"
+               style={{ textShadow: '0 1px 3px rgba(0,0,0,0.01)' }}>
               From skilled local handymen to top digital professionals — find the perfect talent for any job.
             </p>
           </div>
@@ -162,21 +158,38 @@ export default function PopularTodayPage() {
         <div className="absolute bottom-0 left-0 right-0 h-24 bg-gradient-to-t from-slate-50 dark:from-slate-900 to-transparent z-10 pointer-events-none"></div>
       </div>
       
-      {/* Main content with premium styling */}
-      <main className="flex-1 py-24 bg-gradient-to-b from-slate-50 to-white dark:from-slate-900 dark:to-slate-800">
-        <div className="container mx-auto px-6">
-          <div className="mx-auto max-w-5xl lg:max-w-6xl">
-            <div className="relative space-y-12">
-              <div className="absolute -top-4 left-1/4 h-32 w-32 rounded-full bg-blue-400/20 blur-3xl"></div>
-              <div className="absolute top-1/2 right-1/4 h-32 w-32 rounded-full bg-primary/20 blur-3xl"></div>
-              
+      {/* Main content with lighter styling */}
+      <main className="flex-1 py-32 bg-gradient-to-b from-slate-50 via-white to-slate-50 dark:from-slate-900 dark:via-slate-800 dark:to-slate-900 relative">
+        {/* Lighter background elements */}
+        <div className="absolute inset-0 overflow-hidden pointer-events-none">
+          {/* Animated subtle background pattern - lighter */}
+          <div className="absolute top-0 left-0 w-full h-full opacity-[0.02] dark:opacity-[0.03]">
+            <svg width="100%" height="100%" xmlns="http://www.w3.org/2000/svg">
+              <defs>
+                <pattern id="grid" width="40" height="40" patternUnits="userSpaceOnUse">
+                  <path d="M 40 0 L 0 0 0 40" fill="none" stroke="currentColor" strokeWidth="0.3" />
+                </pattern>
+              </defs>
+              <rect width="100%" height="100%" fill="url(#grid)" />
+            </svg>
+          </div>
+          
+          {/* Lighter decorative gradients */}
+          <div className="absolute -top-4 left-1/4 h-56 w-56 rounded-full bg-blue-400/15 blur-[100px] animate-float-slow"></div>
+          <div className="absolute top-1/2 right-1/4 h-56 w-56 rounded-full bg-purple-400/15 blur-[100px] animate-float-medium"></div>
+          <div className="absolute bottom-[10%] left-[30%] h-64 w-64 rounded-full bg-green-400/15 blur-[100px] animate-float-slow-reverse"></div>
+        </div>
+        
+        <div className="container mx-auto px-8 relative z-10">
+          <div className="mx-auto max-w-7xl">
+            <div className="relative space-y-20">
               <section>
                 <Suspense fallback={
-                  <div className="space-y-6">
-                    <div className="h-10 w-48 bg-neutral-200 dark:bg-neutral-800 animate-pulse rounded-full" />
+                  <div className="space-y-8">
+                    <div className="h-10 w-48 bg-neutral-200/60 dark:bg-neutral-800/60 animate-pulse rounded-full" />
                     <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-8">
                       {[...Array(8)].map((_, i) => (
-                        <div key={i} className="h-[300px] bg-neutral-200 dark:bg-neutral-800 animate-pulse rounded-2xl" />
+                        <div key={i} className="h-[300px] bg-neutral-200/60 dark:bg-neutral-800/60 animate-pulse rounded-2xl" />
                       ))}
                     </div>
                   </div>

@@ -894,66 +894,81 @@ export function DashboardOverview() {
   }
 
   return (
-    <div className="space-y-6">
-      {/* Personalized greeting and time selector */}
-      <div className="mb-8 flex flex-col space-y-2">
-        <h1 className="text-3xl font-bold tracking-tight">Good {getTimeOfDay()}!</h1>
-        <h1 className="text-3xl font-bold tracking-tight">{user.displayName || 'there'}</h1>
-        <p className="text-muted-foreground">
-          Alima notifies you have {stats.contacts} contacts waiting for your service. You also have {stats.transactions} completed transactions.
-        </p>
-        
-        <div className="mt-4 flex items-center justify-between">
-          <span className="text-sm font-medium text-muted-foreground">
-            Overview for {timeframe === "week" ? "this week" : timeframe === "month" ? "this month" : "this year"}
-          </span>
-        <Tabs 
-          value={timeframe}
-          onValueChange={(value) => setTimeframe(value as "week" | "month" | "year")}
-          className="w-[240px]"
-        >
-          <TabsList className="grid w-full grid-cols-3">
-            <TabsTrigger value="week">Week</TabsTrigger>
-            <TabsTrigger value="month">Month</TabsTrigger>
-            <TabsTrigger value="year">Year</TabsTrigger>
-          </TabsList>
-        </Tabs>
+    <div className="space-y-8">
+      {/* Personalized greeting with enhanced styling for graphic designers */}
+      <div className="mb-12 relative overflow-hidden p-8 rounded-3xl bg-gradient-to-br from-indigo-500/10 via-purple-500/5 to-pink-500/10 border border-gray-100 dark:border-gray-800">
+        <div className="absolute inset-0 bg-grid-pattern opacity-5"></div>
+        <div className="relative z-10">
+          <div className="flex flex-col space-y-1">
+            <h1 className="text-5xl font-medium tracking-tight text-transparent bg-clip-text bg-gradient-to-r from-indigo-600 to-purple-600 dark:from-indigo-400 dark:to-purple-400">
+              Good {getTimeOfDay()}, {user.displayName || 'there'}
+            </h1>
+            <p className="text-lg text-gray-500 dark:text-gray-400 font-light max-w-2xl">
+              You have <span className="font-medium text-indigo-600 dark:text-indigo-400">{stats.contacts} contacts</span> and <span className="font-medium text-purple-600 dark:text-purple-400">{stats.transactions} completed transactions</span>.
+            </p>
+          </div>
+          
+          <div className="mt-8 flex items-center justify-between">
+            <span className="text-sm font-medium text-gray-500 dark:text-gray-400 flex items-center gap-2">
+              <span className="h-2 w-2 rounded-full bg-indigo-500 animate-pulse"></span>
+              Analytics overview: {timeframe === "week" ? "This week" : timeframe === "month" ? "This month" : "This year"}
+            </span>
+            <Tabs 
+              value={timeframe}
+              onValueChange={(value) => setTimeframe(value as "week" | "month" | "year")}
+              className="w-[240px]"
+            >
+              <TabsList className="grid w-full grid-cols-3 bg-white/50 dark:bg-gray-800/50 backdrop-blur-sm rounded-full p-1 border border-gray-200 dark:border-gray-700 shadow-sm">
+                <TabsTrigger value="week" className="rounded-full text-xs data-[state=active]:bg-gradient-to-r data-[state=active]:from-indigo-500 data-[state=active]:to-purple-500 data-[state=active]:text-white">Week</TabsTrigger>
+                <TabsTrigger value="month" className="rounded-full text-xs data-[state=active]:bg-gradient-to-r data-[state=active]:from-indigo-500 data-[state=active]:to-purple-500 data-[state=active]:text-white">Month</TabsTrigger>
+                <TabsTrigger value="year" className="rounded-full text-xs data-[state=active]:bg-gradient-to-r data-[state=active]:from-indigo-500 data-[state=active]:to-purple-500 data-[state=active]:text-white">Year</TabsTrigger>
+              </TabsList>
+            </Tabs>
+          </div>
         </div>
+        
+        {/* Abstract design elements */}
+        <div className="absolute top-0 right-0 w-64 h-64 bg-gradient-to-br from-indigo-500/20 to-purple-500/20 rounded-full blur-3xl -translate-y-1/2 translate-x-1/3"></div>
+        <div className="absolute bottom-0 left-0 w-40 h-40 bg-gradient-to-br from-purple-500/20 to-pink-500/20 rounded-full blur-3xl translate-y-1/3 -translate-x-1/4"></div>
       </div>
 
-      {/* Top row - Stats cards in colorful cards */}
+      {/* Top row - Stats cards with enhanced design for graphic designers */}
       <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-4">
-        {/* Contacts card */}
-        <Card className="overflow-hidden bg-gradient-to-br from-amber-50 to-amber-100 border-amber-200">
-          <CardHeader className="flex flex-row items-center justify-between pb-2">
-            <CardTitle className="text-sm font-medium text-amber-900">Clients</CardTitle>
-            <Users className="h-4 w-4 text-amber-700" />
+        {/* Clients card */}
+        <Card className="overflow-hidden border-none rounded-2xl bg-gradient-to-br from-blue-50 to-indigo-50 dark:from-gray-900 dark:to-blue-900/20 shadow-lg dark:shadow-blue-900/5 hover:shadow-xl hover:-translate-y-1 transition-all duration-300">
+          <CardHeader className="flex flex-row items-center justify-between pb-2 relative">
+            <div className="absolute top-0 right-0 w-20 h-20 bg-gradient-to-br from-blue-200 to-indigo-200 dark:from-blue-800/30 dark:to-indigo-800/30 rounded-full blur-2xl opacity-50 -translate-y-1/2 translate-x-1/3"></div>
+            <CardTitle className="text-sm font-medium z-10">Clients</CardTitle>
+            <div className="h-10 w-10 rounded-xl bg-gradient-to-br from-blue-500 to-indigo-500 flex items-center justify-center z-10 shadow-md shadow-blue-500/20">
+              <Users className="h-5 w-5 text-white" />
+            </div>
           </CardHeader>
-          <CardContent>
-            <div className="text-2xl font-bold text-amber-900">{stats.contacts}</div>
-            <div className="flex items-center mt-1">
-              <div className="text-xs text-amber-800 flex items-center">
+          <CardContent className="relative">
+            <div className="text-3xl font-semibold mb-3 text-transparent bg-clip-text bg-gradient-to-r from-blue-600 to-indigo-600 dark:from-blue-400 dark:to-indigo-400">{stats.contacts}</div>
+            <div className="flex items-center">
+              <div className="text-xs flex items-center">
               {stats.contactsChange > 0 ? (
-                  <TrendingUp className="mr-1 h-3 w-3 text-green-600" />
+                  <TrendingUp className="mr-1 h-3 w-3 text-emerald-500" />
                 ) : (
-                  <TrendingDown className="mr-1 h-3 w-3 text-red-600" />
+                  <TrendingDown className="mr-1 h-3 w-3 text-rose-500" />
                 )}
-                <span className={stats.contactsChange > 0 ? "text-green-600" : "text-red-600"}>
+                <span className={stats.contactsChange > 0 ? "text-emerald-500" : "text-rose-500"}>
                   {stats.contactsChange > 0 ? "+" : ""}{stats.contactsChange}%
                 </span>
-                <span className="ml-1 text-amber-700">from last {timeframe}</span>
+                <span className="ml-1 text-gray-400">vs last {timeframe}</span>
               </div>
             </div>
             
-            {/* Simple mini-chart visualization */}
-            <div className="mt-3 flex h-12 items-end space-x-1">
+            {/* Enhanced mini-chart visualization */}
+            <div className="mt-5 flex h-12 items-end space-x-1 relative">
+              <div className="absolute inset-0 bg-gradient-to-t from-blue-100 to-transparent dark:from-blue-900/20 dark:to-transparent rounded-md opacity-50"></div>
               {timelineData.slice(-6).map((item, i) => {
                 const maxValue = Math.max(...timelineData.slice(-6).map(d => d.contacts));
                 const height = maxValue > 0 ? (item.contacts / maxValue) * 100 : 0;
                 return (
                   <div 
                     key={i} 
-                    className="w-full bg-amber-400/60 rounded-t"
+                    className="w-full bg-gradient-to-t from-blue-500 to-indigo-500 dark:from-blue-600 dark:to-indigo-600 rounded-t-lg z-10"
                     style={{ height: `${Math.max(height, 5)}%` }}
                   />
                 );
@@ -963,37 +978,55 @@ export function DashboardOverview() {
         </Card>
 
         {/* Transactions card */}
-        <Card className="overflow-hidden bg-gradient-to-br from-rose-50 to-rose-100 border-rose-200">
-          <CardHeader className="flex flex-row items-center justify-between pb-2">
-            <CardTitle className="text-sm font-medium text-rose-900">Transactions</CardTitle>
-            <CheckCircle className="h-4 w-4 text-rose-700" />
+        <Card className="overflow-hidden border-none rounded-2xl bg-gradient-to-br from-purple-50 to-pink-50 dark:from-gray-900 dark:to-purple-900/20 shadow-lg dark:shadow-purple-900/5 hover:shadow-xl hover:-translate-y-1 transition-all duration-300">
+          <CardHeader className="flex flex-row items-center justify-between pb-2 relative">
+            <div className="absolute top-0 right-0 w-20 h-20 bg-gradient-to-br from-purple-200 to-pink-200 dark:from-purple-800/30 dark:to-pink-800/30 rounded-full blur-2xl opacity-50 -translate-y-1/2 translate-x-1/3"></div>
+            <CardTitle className="text-sm font-medium z-10">Transactions</CardTitle>
+            <div className="h-10 w-10 rounded-xl bg-gradient-to-br from-purple-500 to-pink-500 flex items-center justify-center z-10 shadow-md shadow-purple-500/20">
+              <CheckCircle className="h-5 w-5 text-white" />
+            </div>
           </CardHeader>
-          <CardContent>
-            <div className="text-2xl font-bold text-rose-900">{stats.transactions}</div>
-            <div className="flex items-center mt-1">
-              <div className="text-xs text-rose-800 flex items-center">
+          <CardContent className="relative">
+            <div className="text-3xl font-semibold mb-3 text-transparent bg-clip-text bg-gradient-to-r from-purple-600 to-pink-600 dark:from-purple-400 dark:to-pink-400">{stats.transactions}</div>
+            <div className="flex items-center">
+              <div className="text-xs flex items-center">
               {stats.transactionsChange > 0 ? (
-                  <TrendingUp className="mr-1 h-3 w-3 text-green-600" />
+                  <TrendingUp className="mr-1 h-3 w-3 text-emerald-500" />
                 ) : (
-                  <TrendingDown className="mr-1 h-3 w-3 text-red-600" />
+                  <TrendingDown className="mr-1 h-3 w-3 text-rose-500" />
                 )}
-                <span className={stats.transactionsChange > 0 ? "text-green-600" : "text-red-600"}>
+                <span className={stats.transactionsChange > 0 ? "text-emerald-500" : "text-rose-500"}>
                   {stats.transactionsChange > 0 ? "+" : ""}{stats.transactionsChange}%
                 </span>
-                <span className="ml-1 text-rose-700">from last {timeframe}</span>
+                <span className="ml-1 text-gray-400">vs last {timeframe}</span>
               </div>
             </div>
             
-            {/* Line chart visualization */}
-            <div className="mt-3 relative h-12">
-              <svg className="w-full h-full" viewBox="0 0 100 30" preserveAspectRatio="none">
+            {/* Enhanced line chart visualization */}
+            <div className="mt-5 relative h-12">
+              <div className="absolute inset-0 bg-gradient-to-t from-purple-100 to-transparent dark:from-purple-900/20 dark:to-transparent rounded-md opacity-50"></div>
+              <svg className="w-full h-full relative z-10" viewBox="0 0 100 30" preserveAspectRatio="none">
+                <defs>
+                  <linearGradient id="transactionsGradient" x1="0%" y1="0%" x2="100%" y2="0%">
+                    <stop offset="0%" stopColor="rgba(168, 85, 247, 0.8)" />
+                    <stop offset="100%" stopColor="rgba(219, 39, 119, 0.8)" />
+                  </linearGradient>
+                  <filter id="glow">
+                    <feGaussianBlur stdDeviation="2.5" result="coloredBlur"/>
+                    <feMerge>
+                      <feMergeNode in="coloredBlur"/>
+                      <feMergeNode in="SourceGraphic"/>
+                    </feMerge>
+                  </filter>
+                </defs>
                 <path
                   d={`M0,${30 - calculateYPosition(timelineData[0]?.transactions || 0, timelineData)} ${timelineData.map((item, i) => 
                     `L${(i / (timelineData.length - 1)) * 100},${30 - calculateYPosition(item.transactions, timelineData)}`).join(' ')}`}
                   fill="none"
-                  stroke="rgba(225, 29, 72, 0.5)"
-                  strokeWidth="2"
+                  stroke="url(#transactionsGradient)"
+                  strokeWidth="2.5"
                   strokeLinecap="round"
+                  filter="url(#glow)"
                 />
               </svg>
             </div>
@@ -1001,33 +1034,37 @@ export function DashboardOverview() {
         </Card>
 
         {/* Rating card */}
-        <Card className="overflow-hidden bg-gradient-to-br from-green-50 to-green-100 border-green-200">
-          <CardHeader className="flex flex-row items-center justify-between pb-2">
-            <CardTitle className="text-sm font-medium text-green-900">Rating</CardTitle>
-            <Star className="h-4 w-4 text-green-700" />
+        <Card className="overflow-hidden border-none rounded-2xl bg-gradient-to-br from-amber-50 to-yellow-50 dark:from-gray-900 dark:to-amber-900/20 shadow-lg dark:shadow-amber-900/5 hover:shadow-xl hover:-translate-y-1 transition-all duration-300">
+          <CardHeader className="flex flex-row items-center justify-between pb-2 relative">
+            <div className="absolute top-0 right-0 w-20 h-20 bg-gradient-to-br from-amber-200 to-yellow-200 dark:from-amber-800/30 dark:to-yellow-800/30 rounded-full blur-2xl opacity-50 -translate-y-1/2 translate-x-1/3"></div>
+            <CardTitle className="text-sm font-medium z-10">Rating</CardTitle>
+            <div className="h-10 w-10 rounded-xl bg-gradient-to-br from-amber-500 to-yellow-500 flex items-center justify-center z-10 shadow-md shadow-amber-500/20">
+              <Star className="h-5 w-5 text-white" />
+            </div>
           </CardHeader>
-          <CardContent>
-            <div className="text-2xl font-bold text-green-900">{stats.rating.toFixed(1)}</div>
-            <div className="flex items-center mt-1">
-              <div className="text-xs text-green-800 flex items-center">
+          <CardContent className="relative">
+            <div className="text-3xl font-semibold mb-3 text-transparent bg-clip-text bg-gradient-to-r from-amber-600 to-yellow-600 dark:from-amber-400 dark:to-yellow-400">{stats.rating.toFixed(1)}</div>
+            <div className="flex items-center">
+              <div className="text-xs flex items-center">
               {stats.ratingChange > 0 ? (
-                  <TrendingUp className="mr-1 h-3 w-3 text-green-600" />
+                  <TrendingUp className="mr-1 h-3 w-3 text-emerald-500" />
                 ) : (
-                  <TrendingDown className="mr-1 h-3 w-3 text-red-600" />
+                  <TrendingDown className="mr-1 h-3 w-3 text-rose-500" />
                 )}
-                <span className={stats.ratingChange > 0 ? "text-green-600" : "text-red-600"}>
+                <span className={stats.ratingChange > 0 ? "text-emerald-500" : "text-rose-500"}>
                   {stats.ratingChange > 0 ? "+" : ""}{stats.ratingChange}
                 </span>
-                <span className="ml-1 text-green-700">from last {timeframe}</span>
+                <span className="ml-1 text-gray-400">vs last {timeframe}</span>
               </div>
             </div>
             
-            {/* Star visualization */}
-            <div className="mt-3 flex space-x-1">
+            {/* Enhanced star visualization */}
+            <div className="mt-5 flex space-x-2 relative">
+              <div className="absolute inset-0 bg-gradient-to-t from-amber-100 to-transparent dark:from-amber-900/20 dark:to-transparent rounded-md opacity-50"></div>
               {[...Array(5)].map((_, i) => (
                 <Star 
                   key={i} 
-                  className={`h-5 w-5 ${i < Math.round(stats.rating) ? "text-yellow-500 fill-yellow-500" : "text-green-200"}`} 
+                  className={`h-6 w-6 relative z-10 ${i < Math.round(stats.rating) ? "text-yellow-400 fill-yellow-400 drop-shadow-md" : "text-gray-200 dark:text-gray-700"}`} 
                 />
               ))}
             </div>
@@ -1035,35 +1072,39 @@ export function DashboardOverview() {
         </Card>
 
         {/* Revenue card */}
-        <Card className="overflow-hidden bg-gradient-to-br from-blue-50 to-blue-100 border-blue-200">
-          <CardHeader className="flex flex-row items-center justify-between pb-2">
-            <CardTitle className="text-sm font-medium text-blue-900">Revenue</CardTitle>
-            <MessageSquare className="h-4 w-4 text-blue-700" />
+        <Card className="overflow-hidden border-none rounded-2xl bg-gradient-to-br from-emerald-50 to-teal-50 dark:from-gray-900 dark:to-emerald-900/20 shadow-lg dark:shadow-emerald-900/5 hover:shadow-xl hover:-translate-y-1 transition-all duration-300">
+          <CardHeader className="flex flex-row items-center justify-between pb-2 relative">
+            <div className="absolute top-0 right-0 w-20 h-20 bg-gradient-to-br from-emerald-200 to-teal-200 dark:from-emerald-800/30 dark:to-teal-800/30 rounded-full blur-2xl opacity-50 -translate-y-1/2 translate-x-1/3"></div>
+            <CardTitle className="text-sm font-medium z-10">Revenue</CardTitle>
+            <div className="h-10 w-10 rounded-xl bg-gradient-to-br from-emerald-500 to-teal-500 flex items-center justify-center z-10 shadow-md shadow-emerald-500/20">
+              <MessageSquare className="h-5 w-5 text-white" />
+            </div>
           </CardHeader>
-          <CardContent>
-            <div className="text-2xl font-bold text-blue-900">{formatCurrency(stats.revenue)}</div>
-            <div className="flex items-center mt-1">
-              <div className="text-xs text-blue-800 flex items-center">
+          <CardContent className="relative">
+            <div className="text-3xl font-semibold mb-3 text-transparent bg-clip-text bg-gradient-to-r from-emerald-600 to-teal-600 dark:from-emerald-400 dark:to-teal-400">{formatCurrency(stats.revenue)}</div>
+            <div className="flex items-center">
+              <div className="text-xs flex items-center">
               {stats.revenueChange > 0 ? (
-                  <TrendingUp className="mr-1 h-3 w-3 text-green-600" />
+                  <TrendingUp className="mr-1 h-3 w-3 text-emerald-500" />
                 ) : (
-                  <TrendingDown className="mr-1 h-3 w-3 text-red-600" />
+                  <TrendingDown className="mr-1 h-3 w-3 text-rose-500" />
                 )}
-                <span className={stats.revenueChange > 0 ? "text-green-600" : "text-red-600"}>
+                <span className={stats.revenueChange > 0 ? "text-emerald-500" : "text-rose-500"}>
                   {stats.revenueChange > 0 ? "+" : ""}{stats.revenueChange}%
                 </span>
-                <span className="ml-1 text-blue-700">from last {timeframe}</span>
+                <span className="ml-1 text-gray-400">vs last {timeframe}</span>
               </div>
             </div>
             
-            {/* Revenue visualization */}
-            <div className="mt-3 flex h-12 items-center">
-              <div className="h-12 w-12 rounded-full bg-blue-200 flex items-center justify-center">
-                <span className="text-blue-700 text-lg font-bold">₱</span>
+            {/* Enhanced revenue visualization */}
+            <div className="mt-5 flex h-12 items-center relative">
+              <div className="absolute inset-0 bg-gradient-to-t from-emerald-100 to-transparent dark:from-emerald-900/20 dark:to-transparent rounded-md opacity-50"></div>
+              <div className="h-12 w-12 rounded-xl bg-gradient-to-br from-emerald-500 to-teal-500 flex items-center justify-center shadow-lg shadow-emerald-500/20 relative z-10">
+                <span className="text-white text-sm font-medium">₱</span>
               </div>
-              <div className="flex-1 ml-2 h-1.5 bg-blue-200 rounded-full">
+              <div className="flex-1 ml-3 h-2.5 bg-gray-100 dark:bg-gray-800 rounded-full overflow-hidden backdrop-blur-sm z-10">
                 <div 
-                  className="h-full bg-blue-500 rounded-full" 
+                  className="h-full bg-gradient-to-r from-emerald-500 to-teal-500 rounded-full" 
                   style={{ width: `${Math.min(Math.abs(stats.revenueChange) + 30, 100)}%` }}
                 />
               </div>
@@ -1072,13 +1113,22 @@ export function DashboardOverview() {
         </Card>
       </div>
 
-      {/* Charts row */}
+      {/* Add CSS for grid pattern background */}
+      <style jsx global>{`
+        .bg-grid-pattern {
+          background-image: linear-gradient(to right, rgba(128, 128, 128, 0.1) 1px, transparent 1px),
+                            linear-gradient(to bottom, rgba(128, 128, 128, 0.1) 1px, transparent 1px);
+          background-size: 20px 20px;
+        }
+      `}</style>
+
+      {/* Charts row with refined Apple-inspired design */}
       <div className="grid gap-6 md:grid-cols-2">
         {/* Contacts by Category */}
-        <Card className="overflow-hidden bg-gradient-to-br from-green-50 to-green-100 border-green-200">
+        <Card className="overflow-hidden border-none rounded-2xl shadow-lg bg-white dark:bg-gray-900 transition-all duration-300 hover:shadow-xl">
           <CardHeader>
-            <CardTitle className="text-green-900">By category:</CardTitle>
-            <CardDescription className="text-green-700">
+            <CardTitle>By Category</CardTitle>
+            <CardDescription className="text-gray-500 dark:text-gray-400">
               Distribution of contacts across service categories
             </CardDescription>
           </CardHeader>
@@ -1087,14 +1137,14 @@ export function DashboardOverview() {
               {categoryData.length > 0 ? (
                 <div className="flex h-full flex-col justify-center space-y-3">
                 {categoryData.map((item) => (
-                  <div key={item.name} className="space-y-1">
+                  <div key={item.name} className="space-y-1.5">
                     <div className="flex items-center justify-between">
-                        <span className="text-sm text-green-900">{item.name}</span>
-                        <span className="text-sm font-medium text-green-900">{item.value}%</span>
+                        <span className="text-sm font-medium">{item.name}</span>
+                        <span className="text-sm font-medium">{item.value}%</span>
                     </div>
-                      <div className="h-2.5 w-full overflow-hidden rounded-full bg-green-200">
+                    <div className="h-2 w-full bg-gray-100 dark:bg-gray-800 rounded-full overflow-hidden">
                       <div
-                          className="h-full bg-green-600"
+                          className="h-full rounded-full bg-gradient-to-r from-emerald-500 to-emerald-400"
                         style={{ width: `${item.value}%` }}
                       ></div>
                     </div>
@@ -1103,7 +1153,7 @@ export function DashboardOverview() {
               </div>
               ) : (
                 <div className="flex h-full items-center justify-center">
-                  <p className="text-sm text-green-700">No data available</p>
+                  <p className="text-sm text-gray-500">No data available</p>
                 </div>
               )}
             </div>
@@ -1111,10 +1161,10 @@ export function DashboardOverview() {
         </Card>
 
         {/* Performance Over Time */}
-        <Card className="overflow-hidden bg-gradient-to-br from-blue-50 to-blue-100 border-blue-200">
+        <Card className="overflow-hidden border-none rounded-2xl shadow-lg bg-white dark:bg-gray-900 transition-all duration-300 hover:shadow-xl">
           <CardHeader>
-            <CardTitle className="text-blue-900">Performance Metrics</CardTitle>
-            <CardDescription className="text-blue-700">
+            <CardTitle>Performance Metrics</CardTitle>
+            <CardDescription className="text-gray-500 dark:text-gray-400">
               Contacts and transactions over time
             </CardDescription>
           </CardHeader>
@@ -1122,15 +1172,15 @@ export function DashboardOverview() {
             <div className="h-full w-full">
               {timelineData.length > 0 ? (
                 <div className="h-full pt-4">
-                  {/* Legend with standardized styling */}
+                  {/* Legend with Apple-inspired styling */}
                   <div className="mb-4 flex justify-end space-x-4">
                     <div className="flex items-center">
-                      <div className="mr-2 h-3 w-3 rounded-sm bg-blue-600"></div>
-                      <span className="text-xs font-medium text-blue-900">Transactions</span>
+                      <div className="mr-2 h-3 w-3 rounded-full bg-blue-500"></div>
+                      <span className="text-xs font-medium text-gray-600 dark:text-gray-400">Transactions</span>
                     </div>
                     <div className="flex items-center">
-                      <div className="mr-2 h-3 w-3 rounded-sm bg-blue-300"></div>
-                      <span className="text-xs font-medium text-blue-900">Contacts</span>
+                      <div className="mr-2 h-3 w-3 rounded-full bg-indigo-400"></div>
+                      <span className="text-xs font-medium text-gray-600 dark:text-gray-400">Contacts</span>
                     </div>
                   </div>
                 
@@ -1141,7 +1191,7 @@ export function DashboardOverview() {
                         const value = Math.ceil(Math.max(...timelineData.map(d => Math.max(d.contacts, d.transactions * 2))) / 4) * (4 - i);
                         return (
                           <div key={i} className="flex items-center h-8">
-                            <span className="text-[10px] text-blue-500 pr-2">{value}</span>
+                            <span className="text-[10px] text-gray-400 dark:text-gray-500 pr-2">{value}</span>
                           </div>
                         );
                       })}
@@ -1152,25 +1202,25 @@ export function DashboardOverview() {
                       {[...Array(5)].map((_, i) => (
                         <div 
                           key={i} 
-                          className="absolute w-full border-t border-blue-100" 
+                          className="absolute w-full border-t border-gray-100 dark:border-gray-800" 
                           style={{ top: `${i * 25}%` }}
                         />
                       ))}
                       
-                      {/* Chart area with cleaner styling */}
+                      {/* Chart area with refined Apple-inspired styling */}
                       <svg className="h-full w-full" viewBox="0 0 100 50" preserveAspectRatio="none">
                         {/* Area fill for contacts */}
                         <path
                           d={`M0,50 L0,${50 - (timelineData[0]?.contacts || 0)} ${timelineData.map((item, i) => 
                             `L${(i / (timelineData.length - 1)) * 100},${50 - (item.contacts)}`).join(' ')} L100,50 Z`}
-                          fill="rgba(147, 197, 253, 0.2)"
+                          fill="url(#contactsGradient)"
                         />
                         
                         {/* Area fill for transactions */}
                         <path
                           d={`M0,50 L0,${50 - (timelineData[0]?.transactions || 0) * 2} ${timelineData.map((item, i) => 
                             `L${(i / (timelineData.length - 1)) * 100},${50 - (item.transactions * 2)}`).join(' ')} L100,50 Z`}
-                          fill="rgba(37, 99, 235, 0.1)"
+                          fill="url(#transactionsAreaGradient)"
                         />
                         
                         {/* Contacts line */}
@@ -1178,7 +1228,7 @@ export function DashboardOverview() {
                           d={`M0,${50 - (timelineData[0]?.contacts || 0)} ${timelineData.map((item, i) => 
                             `L${(i / (timelineData.length - 1)) * 100},${50 - (item.contacts)}`).join(' ')}`}
                           fill="none"
-                          stroke="rgba(147, 197, 253, 0.8)"
+                          stroke="url(#contactsLineGradient)"
                           strokeWidth="1.5"
                           strokeLinecap="round"
                           strokeLinejoin="round"
@@ -1189,40 +1239,59 @@ export function DashboardOverview() {
                           d={`M0,${50 - (timelineData[0]?.transactions || 0) * 2} ${timelineData.map((item, i) => 
                             `L${(i / (timelineData.length - 1)) * 100},${50 - (item.transactions * 2)}`).join(' ')}`}
                           fill="none"
-                          stroke="rgba(37, 99, 235, 0.8)"
+                          stroke="url(#transactionsLineGradient)"
                           strokeWidth="1.5"
                           strokeLinecap="round"
                           strokeLinejoin="round"
                         />
                         
-                        {/* Data points for contacts */}
+                        {/* Gradient definitions */}
+                        <defs>
+                          <linearGradient id="contactsGradient" x1="0%" y1="0%" x2="0%" y2="100%">
+                            <stop offset="0%" stopColor="rgba(129, 140, 248, 0.2)" />
+                            <stop offset="100%" stopColor="rgba(129, 140, 248, 0)" />
+                          </linearGradient>
+                          <linearGradient id="transactionsAreaGradient" x1="0%" y1="0%" x2="0%" y2="100%">
+                            <stop offset="0%" stopColor="rgba(59, 130, 246, 0.2)" />
+                            <stop offset="100%" stopColor="rgba(59, 130, 246, 0)" />
+                          </linearGradient>
+                          <linearGradient id="contactsLineGradient" x1="0%" y1="0%" x2="100%" y2="0%">
+                            <stop offset="0%" stopColor="rgba(129, 140, 248, 0.8)" />
+                            <stop offset="100%" stopColor="rgba(129, 140, 248, 0.8)" />
+                          </linearGradient>
+                          <linearGradient id="transactionsLineGradient" x1="0%" y1="0%" x2="100%" y2="0%">
+                            <stop offset="0%" stopColor="rgba(59, 130, 246, 0.8)" />
+                            <stop offset="100%" stopColor="rgba(59, 130, 246, 0.8)" />
+                          </linearGradient>
+                        </defs>
+                        
+                        {/* Data points with refined styling */}
                         {timelineData.map((item, i) => (
                           <circle
                             key={`c-${i}`}
                             cx={`${(i / (timelineData.length - 1)) * 100}`}
                             cy={`${50 - (item.contacts)}`}
                             r="2"
-                            className="fill-blue-300 stroke-white stroke-1"
+                            className="fill-indigo-400 stroke-white dark:stroke-gray-900 stroke-1"
                           />
                         ))}
                         
-                        {/* Data points for transactions */}
                         {timelineData.map((item, i) => (
                           <circle
                             key={`t-${i}`}
                             cx={`${(i / (timelineData.length - 1)) * 100}`}
                             cy={`${50 - (item.transactions * 2)}`}
                             r="2"
-                            className="fill-blue-600 stroke-white stroke-1"
+                            className="fill-blue-500 stroke-white dark:stroke-gray-900 stroke-1"
                           />
                         ))}
                       </svg>
                     </div>
                     
-                    {/* X-axis with improved labels */}
+                    {/* X-axis with refined labels */}
                     <div className="absolute bottom-[-20px] left-6 right-0 flex justify-between">
                       {timelineData.filter((_, i) => i % Math.ceil(timelineData.length / 6) === 0 || i === timelineData.length - 1).map((item, i) => (
-                        <div key={i} className="text-xs text-blue-500">
+                        <div key={i} className="text-xs text-gray-400 dark:text-gray-500">
                           {item.date}
                         </div>
                       ))}
@@ -1231,7 +1300,7 @@ export function DashboardOverview() {
                 </div>
               ) : (
                 <div className="flex h-full items-center justify-center">
-                  <p className="text-sm text-blue-700">No data available</p>
+                  <p className="text-sm text-gray-500">No data available</p>
                 </div>
               )}
             </div>
@@ -1239,18 +1308,18 @@ export function DashboardOverview() {
         </Card>
       </div>
 
-      {/* Performance Calendar */}
-      <Card className="overflow-hidden bg-gradient-to-br from-purple-50 to-purple-100 border-purple-200">
+      {/* Performance Calendar with Apple-inspired design */}
+      <Card className="overflow-hidden border-none rounded-2xl shadow-lg bg-white dark:bg-gray-900 transition-all duration-300 hover:shadow-xl">
         <CardHeader>
           <div className="flex items-center justify-between">
             <div>
-              <CardTitle className="text-purple-900">Performance Calendar</CardTitle>
-              <CardDescription className="text-purple-700">
+              <CardTitle>Performance Calendar</CardTitle>
+              <CardDescription className="text-gray-500 dark:text-gray-400">
                 View your historical performance by date
               </CardDescription>
             </div>
             <div className="text-center">
-              <h3 className="text-lg font-bold text-purple-900">
+              <h3 className="text-lg font-medium">
                 {new Date(calendarYear, calendarMonth).toLocaleDateString('en-US', { month: 'long', year: 'numeric' })}
               </h3>
               <div className="flex items-center mt-1">
@@ -1260,21 +1329,21 @@ export function DashboardOverview() {
                     setCalendarMonth(newDate.getMonth());
                     setCalendarYear(newDate.getFullYear());
                   }} 
-                  className="p-1 text-purple-700 hover:text-purple-900 hover:bg-purple-100 rounded transition-colors" 
+                  className="p-1 text-gray-500 hover:text-gray-900 dark:hover:text-white hover:bg-gray-100 dark:hover:bg-gray-800 rounded-full transition-colors" 
                   aria-label="Previous month"
                 >
                   <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
                     <path d="M15 18l-6-6 6-6" />
                   </svg>
                 </button>
-                <span className="text-xs text-purple-700 mx-2">Change month</span>
+                <span className="text-xs text-gray-500 mx-2">Change month</span>
                 <button 
                   onClick={() => {
                     const newDate = new Date(calendarYear, calendarMonth + 1);
                     setCalendarMonth(newDate.getMonth());
                     setCalendarYear(newDate.getFullYear());
                   }} 
-                  className="p-1 text-purple-700 hover:text-purple-900 hover:bg-purple-100 rounded transition-colors" 
+                  className="p-1 text-gray-500 hover:text-gray-900 dark:hover:text-white hover:bg-gray-100 dark:hover:bg-gray-800 rounded-full transition-colors" 
                   aria-label="Next month"
                 >
                   <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
@@ -1288,7 +1357,7 @@ export function DashboardOverview() {
         <CardContent>
           <div className="grid grid-cols-7 gap-1 text-center mb-2">
             {['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'].map((day) => (
-              <div key={day} className="text-xs font-medium text-purple-900 py-1">
+              <div key={day} className="text-xs font-medium text-gray-500 py-1">
                 {day}
               </div>
             ))}

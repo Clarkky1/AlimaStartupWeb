@@ -1,6 +1,14 @@
+"use client"
+
 import Link from "next/link"
+import { useState } from "react"
+import { CookieOptionsModal } from "@/components/cookie-options-modal"
+import { useCookies } from "@/context/cookie-context"
 
 export function Footer() {
+  const { saveCookieOptions } = useCookies()
+  const [cookieOptionsOpen, setCookieOptionsOpen] = useState(false)
+  
   return (
     <footer className="border-t bg-background">
       <div className="container mx-auto px-4 py-8">
@@ -73,19 +81,22 @@ export function Footer() {
             <h3 className="mb-3 text-sm font-semibold text-center sm:text-left">Legal</h3>
             <ul className="space-y-2 text-sm text-center sm:text-left">
               <li>
-                <Link href="/terms" className="text-muted-foreground hover:text-primary">
+                <Link href="/terms-of-service" className="text-muted-foreground hover:text-primary">
                   Terms of Service
                 </Link>
               </li>
               <li>
-                <Link href="/privacy" className="text-muted-foreground hover:text-primary">
+                <Link href="/privacy-policy" className="text-muted-foreground hover:text-primary">
                   Privacy Policy
                 </Link>
               </li>
               <li>
-                <Link href="/cookies" className="text-muted-foreground hover:text-primary">
-                  Cookie Policy
-                </Link>
+                <button 
+                  onClick={() => setCookieOptionsOpen(true)}
+                  className="text-muted-foreground hover:text-primary text-left cursor-pointer"
+                >
+                  Cookie Preferences
+                </button>
               </li>
             </ul>
           </div>
@@ -95,6 +106,13 @@ export function Footer() {
           <p>&copy; {new Date().getFullYear()} Alima. All rights reserved.</p>
         </div>
       </div>
+      
+      {/* Cookie preferences modal */}
+      <CookieOptionsModal
+        open={cookieOptionsOpen}
+        onOpenChange={setCookieOptionsOpen}
+        onSave={saveCookieOptions}
+      />
     </footer>
   )
 }

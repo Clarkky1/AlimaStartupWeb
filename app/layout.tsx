@@ -17,6 +17,7 @@ import { AuthProvider } from "@/app/context/auth-context";
 import { CategoryProvider } from "@/app/context/category-context";
 import { ClientLayout } from "@/components/layout/client-layout";
 import { NetworkStatusProvider } from "@/app/context/network-status-context";
+import { CookieProvider } from "@/context/cookie-context";
 
 // Font configurations with improved fallbacks
 const poppins = Poppins({
@@ -75,21 +76,23 @@ export default function RootLayout({
         workSans.variable
       )} suppressHydrationWarning>
         <NetworkStatusProvider>
-          <AuthProvider>
-            <CategoryProvider>
-              <ThemeProvider
-                attribute="class"
-                defaultTheme="light"
-                disableTransitionOnChange
-              >
-                <ClientLayout>
-                  {children}
-                </ClientLayout>
-                <ChatButtonWrapper />
-              </ThemeProvider>
-            </CategoryProvider>
-            <Toaster />
-          </AuthProvider>
+          <CookieProvider>
+            <AuthProvider>
+              <CategoryProvider>
+                <ThemeProvider
+                  attribute="class"
+                  defaultTheme="light"
+                  disableTransitionOnChange
+                >
+                  <ClientLayout>
+                    {children}
+                  </ClientLayout>
+                  <ChatButtonWrapper />
+                </ThemeProvider>
+              </CategoryProvider>
+              <Toaster />
+            </AuthProvider>
+          </CookieProvider>
         </NetworkStatusProvider>
 
         {/* Use next/script to properly handle client-side script loading */}

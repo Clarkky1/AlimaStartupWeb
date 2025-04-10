@@ -208,8 +208,10 @@ service cloud.firestore {
       
       // Allow reading all transactions for dashboard (query-level rule)
       allow list: if isAuthenticated() &&
-         (request.query.limit <= 100 && 
-         (request.query.filters.fieldPaths.hasAny(['providerId']) || request.query.filters.fieldPaths.hasAny(['userId'])));
+         ((request.query.limit <= 100 && 
+          (request.query.filters.fieldPaths.hasAny(['providerId']) || 
+           request.query.filters.fieldPaths.hasAny(['userId']))) ||
+          request.query.filters.fieldPaths.hasAny(['paymentProofUrl']));
       
       // Users can create transactions for existing services
       allow create: if isAuthenticated() && 

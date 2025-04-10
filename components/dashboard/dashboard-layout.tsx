@@ -257,9 +257,9 @@ export function DashboardLayout({ children }: DashboardLayoutProps) {
                           <AvatarImage src={user?.avatar || "/placeholder-user.jpg"} alt={user?.name || "User"} />
                           <AvatarFallback className="rounded-full bg-gradient-to-br from-gray-100 to-white dark:from-gray-800 dark:to-gray-700">{user?.name?.[0] || "U"}</AvatarFallback>
                         </Avatar>
-                        <div>
-                          <p className="text-sm font-medium text-gray-900 dark:text-white">{user?.name || "User"}</p>
-                          <p className="text-xs text-gray-500 dark:text-gray-400">{user?.email}</p>
+                        <div className="min-w-0 flex-1">
+                          <p className="text-sm font-medium text-gray-900 dark:text-white truncate">{user?.name || "User"}</p>
+                          <p className="text-xs text-gray-500 dark:text-gray-400 truncate">{user?.email}</p>
                         </div>
                       </div>
                     </div>
@@ -289,8 +289,13 @@ export function DashboardLayout({ children }: DashboardLayoutProps) {
               </Avatar>
             </Button>
           </DropdownMenuTrigger>
-          <DropdownMenuContent align="end">
-            <DropdownMenuLabel>My Account</DropdownMenuLabel>
+          <DropdownMenuContent align="end" className="w-56">
+            <DropdownMenuLabel className="truncate">
+              {user?.name || "My Account"}
+            </DropdownMenuLabel>
+            <DropdownMenuItem disabled className="opacity-50 truncate">
+              {user?.email}
+            </DropdownMenuItem>
             <DropdownMenuSeparator />
             <DropdownMenuItem onClick={() => router.push("/dashboard/settings")}>
               <User className="mr-2 h-4 w-4" />
@@ -365,9 +370,9 @@ export function DashboardLayout({ children }: DashboardLayoutProps) {
               <AvatarImage src={user?.avatar || "/placeholder-user.jpg"} alt={user?.name || "User"} />
               <AvatarFallback className="rounded-full bg-gradient-to-br from-gray-100 to-white dark:from-gray-800 dark:to-gray-700">{user?.name?.[0] || "U"}</AvatarFallback>
             </Avatar>
-            <div>
-              <p className="text-sm font-medium text-gray-900 dark:text-white">{user?.name || "User"}</p>
-              <p className="text-xs text-gray-500 dark:text-gray-400">{user?.email}</p>
+            <div className="min-w-0 flex-1">
+              <p className="text-sm font-medium text-gray-900 dark:text-white truncate">{user?.name || "User"}</p>
+              <p className="text-xs text-gray-500 dark:text-gray-400 truncate">{user?.email}</p>
             </div>
           </div>
           <Button variant="destructive" className="w-full rounded-xl bg-gradient-to-r from-red-500 to-red-600 hover:from-red-600 hover:to-red-700 shadow-sm transition-all duration-200" onClick={handleSignOut}>

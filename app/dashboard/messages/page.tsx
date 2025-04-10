@@ -118,28 +118,8 @@ export default function MessagesPage() {
     return (
       <DashboardLayout>
         <div className="flex flex-col h-full">
-          <div className="border-b px-2 sm:px-4 py-2 sm:py-4 flex flex-col sm:flex-row justify-between items-start sm:items-center gap-3 bg-background sticky top-0 z-10">
-            <div className="flex items-center gap-3">
-              <Link href="/dashboard" className="md:hidden">
-                <Button variant="ghost" size="icon" className="h-8 w-8 sm:h-9 sm:w-9" disabled>
-                  <ChevronLeft className="h-4 w-4 sm:h-5 sm:w-5" />
-                </Button>
-              </Link>
-              <h1 className="text-lg sm:text-xl font-semibold">Messages</h1>
-            </div>
-            
-            <div className="flex items-center gap-2 w-full sm:w-auto">
-              <div className="relative flex-1 sm:max-w-[260px]">
-                <Search className="absolute left-2.5 top-2.5 h-4 w-4 text-muted-foreground" />
-                <Input
-                  placeholder="Search messages..."
-                  className="pl-9 h-9 text-xs sm:text-sm w-full"
-                  disabled
-                />
-              </div>
-            </div>
-          </div>
-
+          {/* Navigation header removed for cleaner mobile view */}
+          
           <div className="border-b px-2 sm:px-4 py-1 pb-2">
             <div className="grid w-full grid-cols-2 h-10 bg-muted rounded-md p-1 mb-2">
               <div className="flex items-center justify-center">
@@ -173,29 +153,8 @@ export default function MessagesPage() {
   return (
     <DashboardLayout>
       <div className="flex flex-col h-full">
-        <div className="border-b px-2 sm:px-4 py-2 sm:py-4 flex flex-col sm:flex-row justify-between items-start sm:items-center gap-3 bg-background sticky top-0 z-10">
-          <div className="flex items-center gap-3">
-            <Link href="/dashboard" className="md:hidden">
-              <Button variant="ghost" size="icon" className="h-8 w-8 sm:h-9 sm:w-9">
-                <ChevronLeft className="h-4 w-4 sm:h-5 sm:w-5" />
-              </Button>
-            </Link>
-            <h1 className="text-lg sm:text-xl font-semibold">Messages</h1>
-          </div>
+        {/* Navigation header removed for cleaner mobile view */}
           
-          <div className="flex items-center gap-2 w-full sm:w-auto">
-            <div className="relative flex-1 sm:max-w-[260px]">
-              <Search className="absolute left-2.5 top-2.5 h-4 w-4 text-muted-foreground" />
-              <Input
-                placeholder="Search messages..."
-                className="pl-9 h-9 text-xs sm:text-sm w-full"
-                value={searchQuery}
-                onChange={(e) => setSearchQuery(e.target.value)}
-              />
-            </div>
-          </div>
-        </div>
-
         <Tabs defaultValue="all" className="flex-1 flex flex-col" onValueChange={setSelectedTab}>
           <div className="border-b px-2 sm:px-4 py-1 pb-2">
             <TabsList className="grid w-full grid-cols-2 h-10 p-1 mb-2">

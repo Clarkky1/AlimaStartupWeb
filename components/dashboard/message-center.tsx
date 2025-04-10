@@ -1993,8 +1993,10 @@ export function MessageCenter() {
 
   return (
     <div className="h-[calc(100vh-12rem)] overflow-hidden border rounded-xl bg-background/90 backdrop-blur-md shadow-sm">
-      {/* Mobile Tab Navigation - Only visible on mobile */}
-      <div className="flex border-b md:hidden bg-white/80 backdrop-blur-sm">
+      {/* Top navigation bar - removed completely for mobile */}
+      
+      {/* Mobile Tab Navigation - Always visible on mobile */}
+      <div className="flex border-b md:hidden bg-white/80 backdrop-blur-sm sticky top-0 z-40">
         <Button 
           variant="ghost" 
           className={`flex-1 rounded-none ${activeMobileTab === 'conversations' ? 'border-b-2 border-primary font-medium' : 'text-gray-600'}`}
@@ -2114,7 +2116,7 @@ export function MessageCenter() {
                 {messages.length === 0 ? (
                   <div className="flex flex-col h-full">
                     {/* Conversation Header */}
-                    <div className="p-4 border-b flex justify-between items-center bg-white/80 backdrop-blur-md">
+                    <div className="p-4 border-b flex justify-between items-center bg-white/80 backdrop-blur-md md:sticky md:top-0 static z-5 mt-[40px] md:mt-0">
                       <div className="flex items-center space-x-3">
                         <div className="flex items-center gap-3">
                           <Avatar className="h-9 w-9 ring-2 ring-white/90 shadow-sm">
@@ -2144,7 +2146,7 @@ export function MessageCenter() {
                         </div>
                       </div>
                       <div className="flex items-center gap-1">
-                        {/* Show user info button */}
+                        {/* Show user info button - hidden on mobile */}
                         <Button 
                           variant="ghost" 
                           size="icon" 
@@ -2154,7 +2156,7 @@ export function MessageCenter() {
                               setActiveMobileTab('info');
                             }
                           }}
-                          className={cn("rounded-full", showUserInfo ? "bg-blue-50 text-blue-600" : "hover:bg-gray-100/80")}
+                          className={cn("rounded-full md:flex hidden", showUserInfo ? "bg-blue-50 text-blue-600" : "hover:bg-gray-100/80")}
                         >
                           <Info className="h-5 w-5" />
                         </Button>
@@ -2236,7 +2238,7 @@ export function MessageCenter() {
                   // Normal conversation with messages
                   <>
                     {/* Fixed Header */}
-                    <div className="border-b bg-white/90 backdrop-blur-md sticky top-0 z-10">
+                    <div className="border-b bg-white/90 backdrop-blur-md md:sticky md:top-0 static z-5 mt-[40px] md:mt-0">
                       <div className="p-4 flex justify-between items-center">
                         <div className="flex items-center space-x-3">
                           <div className="flex items-center gap-3">
@@ -2267,7 +2269,7 @@ export function MessageCenter() {
                           </div>
                         </div>
                         <div className="flex items-center gap-1">
-                          {/* Show user info button */}
+                          {/* Show user info button - hidden on mobile */}
                           <Button 
                             variant="ghost" 
                             size="icon" 
@@ -2277,7 +2279,7 @@ export function MessageCenter() {
                                 setActiveMobileTab('info');
                               }
                             }}
-                            className={cn("rounded-full", showUserInfo ? "bg-blue-50 text-blue-600" : "hover:bg-gray-100/80")}
+                            className={cn("rounded-full md:flex hidden", showUserInfo ? "bg-blue-50 text-blue-600" : "hover:bg-gray-100/80")}
                           >
                             <Info className="h-5 w-5" />
                           </Button>

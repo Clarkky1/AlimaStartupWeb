@@ -1463,12 +1463,12 @@ export default function Home() {
               {/* Text Content Area - Added justify-end to move content to the right */}
               <div className="flex flex-col justify-center space-y-8 lg:ml-auto lg:max-w-2xl" data-aos="fade-left" data-aos-delay="100">
                 <div className="space-y-6">
-                  <span className="text-sm font-medium tracking-wider uppercase text-gray-700 dark:text-gray-400">Reimagine Connections</span>
+                  <span className="text-sm font-medium tracking-wider uppercase text-gray-700 dark:text-gray-400">Why Join Alima?</span>
                   <h2 className="text-4xl font-bold tracking-tight text-gray-800 dark:text-gray-200 sm:text-5xl md:text-6xl drop-shadow-sm leading-tight">
-                    The Future of <br className="md:block hidden" /> Service Connections
+                    Your Filipino Service <br className="md:block hidden" /> Marketplace
                   </h2>
                   <p className="max-w-2xl text-lg text-gray-700 dark:text-gray-300 md:text-xl font-light leading-relaxed">
-                    Experience seamless connections with verified professionals in a space designed with intention and care. Exceptional by design.
+                    Connect with skilled Filipino professionals or showcase your services in a platform built with trust, quality, and community at its core.
                   </p>
                 </div>
                 {/* Features Grid */}

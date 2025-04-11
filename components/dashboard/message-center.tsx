@@ -1798,15 +1798,8 @@ export function MessageCenter() {
   // Modify setSelectedConversation calls to also handle mobile view
   const selectConversation = (conversation: ConversationData) => {
     setSelectedConversation(conversation);
-    
-    // On mobile, update the tab and hide the conversation list
-    if (windowWidth < 768) {
-      setActiveMobileTab('chat');
-      setShowConversationList(false);
-    }
-    
-    // Scroll to the latest messages after a short delay to ensure messages are loaded
-    setTimeout(() => scrollToBottom(), 300);
+    // Always set active tab to 'chat' when selecting a conversation
+    setActiveTab('chat');
   };
 
   // Handle sending a payment proof

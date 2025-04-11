@@ -63,6 +63,7 @@ Alima is a comprehensive web platform designed to connect Filipino service provi
 - **Icons**: Lucide React
 - **State Management**: React Context API
 - **Authentication**: Firebase Authentication
+- **Animation**: Framer Motion, AOS
 
 ### Backend
 - **Database**: Firebase Firestore
@@ -106,7 +107,7 @@ NEXT_PUBLIC_FIREBASE_APP_ID=your_app_id
 NEXT_PUBLIC_FIREBASE_MEASUREMENT_ID=your_measurement_id
 
 # Cloudinary Configuration
-NEXT_PUBLIC_CLOUDINARY_CLOUD_NAME=your_cloud_name
+CLOUDINARY_CLOUD_NAME=your_cloud_name
 CLOUDINARY_API_KEY=your_api_key
 CLOUDINARY_API_SECRET=your_api_secret
 ```
@@ -114,8 +115,8 @@ CLOUDINARY_API_SECRET=your_api_secret
 4. Run the development server
 ```bash
 npm run dev
-# or
-yarn dev
+# or with watch mode
+npm run dev:watch
 ```
 
 5. Open [http://localhost:3000](http://localhost:3000) to view the application in your browser
@@ -125,24 +126,32 @@ yarn dev
 ```
 alima-web-integration/
 ├── app/                  # Next.js app directory
-│   ├── (auth)/           # Authentication pages
-│   ├── (main)/           # Main application pages
 │   ├── api/              # API routes
 │   ├── context/          # React context providers
 │   ├── dashboard/        # Dashboard pages
 │   ├── explore/          # Service exploration pages
+│   ├── hooks/            # Custom React hooks
 │   ├── lib/              # Utility functions
+│   ├── login/            # Authentication pages
 │   ├── message/          # Messaging system
-│   ├── services/         # Service listing pages
+│   ├── popular-today/    # Popular services pages
 │   ├── profile/          # User profile pages
-│   └── notifications/    # Notification pages
 ├── components/           # React components
-│   ├── ui/               # Reusable UI components
-│   └── ...               # Other component categories
+│   ├── dashboard/        # Dashboard-specific components
+│   ├── explore/          # Exploration page components
+│   ├── home/             # Homepage components
+│   ├── layout/           # Layout components
+│   ├── messages/         # Messaging components
+│   ├── modals/           # Modal dialog components
+│   ├── navbar/           # Navigation components
+│   ├── popular/          # Popular services components
+│   └── ui/               # Reusable UI components
 ├── lib/                  # Shared utility functions
 ├── hooks/                # Custom React hooks
 ├── types/                # TypeScript type definitions
 ├── public/               # Static files
+├── styles/               # Global styles
+├── themes/               # Theme configuration
 └── ...                   # Configuration files
 ```
 
@@ -158,6 +167,29 @@ The project uses Firebase Firestore with the following main collections:
 - **notifications**: System notifications for users
 - **transactions**: Payment transaction records
 - **reviews**: Service and provider reviews with ratings
+
+## Firebase Security Rules
+
+The application uses security rules that implement the following permissions:
+
+- **Users Collection**: Public read, own profile write
+- **Services Collection**: Public read, provider-only write for own services
+- **Providers Collection**: Public read, own profile write
+- **Conversations Collection**: Read/write limited to conversation participants
+- **Messages Collection**: Read/write limited to conversation participants
+- **Notifications Collection**: Own notifications only
+- **Transactions Collection**: Read/write limited to transaction participants
+- **Reviews Collection**: Public read, own reviews write
+
+## Firebase Indexes
+
+The application uses custom indexes for:
+- Services by category and creation date
+- Services by provider and creation date
+- Transactions by provider and creation date
+- Transactions by user and creation date
+- Messages by conversation and timestamp
+- Notifications by user and creation date
 
 For more detailed information on the Firebase structure, refer to FIRESTORE_STRUCTURE.md in the project.
 

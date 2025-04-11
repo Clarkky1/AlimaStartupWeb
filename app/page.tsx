@@ -14,6 +14,11 @@ import { useNetworkStatus } from "@/app/context/network-status-context";
 import { PlaceholderImage } from "@/components/ui/placeholder-image";
 import { usePathname } from "next/navigation";
 import dynamic from "next/dynamic";
+import { useAuth } from "@/app/context/auth-context"
+import { initializeFirebase } from "@/app/lib/firebase"
+import { collection, query, where, getDocs, orderBy, limit, doc, updateDoc } from "firebase/firestore"
+import { RatingModal } from "@/components/messages/rating-modal"
+import { useToast } from "@/components/ui/use-toast"
 
 // Dynamically import the QuoteCard component to avoid styled-components SSR issues
 const QuoteCard = dynamic(() => import("@/components/home/quote-card"), { ssr: false });
@@ -314,6 +319,8 @@ export default function Home() {
   const [loadKey, setLoadKey] = useState(Date.now());
   const pathname = usePathname();
   const [currentImageIndex, setCurrentImageIndex] = useState(0);
+  const [isServerComponent, setIsServerComponent] = useState(true);
+  const { user } = useAuth();
   
   // Images for the Get In Touch section carousel
   const getInTouchImages = [
@@ -425,6 +432,79 @@ export default function Home() {
     document.body.scrollTop = 0;
     document.documentElement.scrollTop = 0;
   }, []);
+
+  // Add these states to manage rating notifications
+  const [showRatingDialog, setShowRatingDialog] = useState(false);
+  const [ratingData, setRatingData] = useState({
+    providerId: '',
+    providerName: '',
+    serviceId: '',
+    serviceTitle: '',
+    transactionId: ''
+  });
+  const { toast } = useToast();
+
+  // Add this effect to check for rating notifications
+  useEffect(() => {
+    if (!user) return;
+    
+    async function checkForRatingNotifications() {
+      try {
+        const { db } = await initializeFirebase();
+        if (!db) return;
+        
+        // Query for unread payment confirmation notifications that need rating
+        const notificationsQuery = query(
+          collection(db, "notifications"),
+          where("userId", "==", user?.uid),
+          where("type", "==", "payment_confirmed_rating"),
+          where("read", "==", false),
+          limit(1)
+        );
+        
+        const snapshot = await getDocs(notificationsQuery);
+        
+        if (!snapshot.empty) {
+          const notification = snapshot.docs[0];
+          const data = notification.data();
+          
+          // Show rating dialog if we have the necessary data
+          if (data.data && data.data.requiresRating) {
+            setRatingData({
+              providerId: data.data.providerId || "",
+              providerName: data.data.providerName || "Provider",
+              serviceId: data.data.serviceId || "",
+              serviceTitle: data.data.serviceTitle || "Service",
+              transactionId: data.data.transactionId || ""
+            });
+            setShowRatingDialog(true);
+            
+            // Mark the notification as read
+            await updateDoc(doc(db, "notifications", notification.id), {
+              read: true
+            });
+          }
+        }
+      } catch (error) {
+        console.error("Error checking for rating notifications:", error);
+        toast({
+          title: "Error",
+          description: "Failed to check for notifications",
+          variant: "destructive"
+        });
+      }
+    }
+    
+    // Check when component loads
+    checkForRatingNotifications();
+    
+    // Set up interval to periodically check (every 30 seconds)
+    const intervalId = setInterval(checkForRatingNotifications, 30000);
+    
+    return () => {
+      clearInterval(intervalId);
+    };
+  }, [user, toast]);
 
   return (
     <div className="flex min-h-screen flex-col bg-white text-black dark:bg-black dark:text-white relative overflow-hidden" key={loadKey}>
@@ -1535,5 +1615,15 @@ export default function Home() {
         </section>
       </main>
     </div>
+    {/* Rating Dialog */}
+    <RatingModal 
+      open={showRatingDialog}
+      onOpenChange={setShowRatingDialog}
+      providerId={ratingData.providerId}
+      providerName={ratingData.providerName}
+      serviceId={ratingData.serviceId}
+      serviceTitle={ratingData.serviceTitle}
+      transactionId={ratingData.transactionId}
+    />
   )
 }

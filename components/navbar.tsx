@@ -266,12 +266,12 @@ export function Navbar() {
                         </AvatarFallback>
                       </Avatar>
                     </Button>
-                    {messageCounts > 0 && (
+                    {(messageCounts > 0 || notificationCounts > 0) && (
                       <Badge 
                         className="absolute -top-1 -right-1 h-5 w-5 flex items-center justify-center p-0 bg-red-500 text-white shadow-[0_0_5px_rgba(239,68,68,0.5)]" 
                         variant="destructive"
                       >
-                        {messageCounts}
+                        {messageCounts + notificationCounts}
                       </Badge>
                     )}
                   </div>

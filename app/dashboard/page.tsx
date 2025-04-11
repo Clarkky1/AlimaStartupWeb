@@ -1,14 +1,33 @@
 "use client"
 
-import { useEffect } from "react"
+import { useEffect, useState } from "react"
 import { useRouter } from "next/navigation"
 import { useAuth } from "@/app/context/auth-context"
 import { DashboardLayout } from "@/components/dashboard/dashboard-layout"
 import { DashboardOverview } from "@/components/dashboard/dashboard-overview"
+import { Button } from "@/components/ui/button"
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
+import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from "@/components/ui/card"
+import { Collection, Building2, Users, Star, DollarSign, Settings2, Package } from "lucide-react"
+import { initializeFirebase } from "@/app/lib/firebase"
+import { collection, query, where, getDocs, orderBy, limit, doc, updateDoc, Timestamp } from "firebase/firestore"
+import { RatingModal } from "@/components/messages/rating-modal"
+import { useToast } from "@/components/ui/use-toast"
 
 export default function DashboardPage() {
   const { user, loading } = useAuth()
   const router = useRouter()
+
+  // Add these states to manage rating notifications
+  const [showRatingDialog, setShowRatingDialog] = useState(false);
+  const [ratingData, setRatingData] = useState({
+    providerId: '',
+    providerName: '',
+    serviceId: '',
+    serviceTitle: '',
+    transactionId: ''
+  });
+  const { toast } = useToast();
 
   useEffect(() => {
     if (!loading && (!user || user.role !== "provider")) {
@@ -38,6 +57,68 @@ export default function DashboardPage() {
       return () => window.removeEventListener('load', refreshDashboard)
     }
   }, [user, loading, router])
+
+  // Add this effect to check for rating notifications
+  useEffect(() => {
+    if (!user) return;
+    
+    async function checkForRatingNotifications() {
+      try {
+        const { db } = await initializeFirebase();
+        if (!db) return;
+        
+        // Query for unread payment confirmation notifications that need rating
+        const notificationsQuery = query(
+          collection(db, "notifications"),
+          where("userId", "==", user?.uid),
+          where("type", "==", "payment_confirmed_rating"),
+          where("read", "==", false),
+          limit(1)
+        );
+        
+        const snapshot = await getDocs(notificationsQuery);
+        
+        if (!snapshot.empty) {
+          const notification = snapshot.docs[0];
+          const data = notification.data();
+          
+          // Show rating dialog if we have the necessary data
+          if (data.data && data.data.requiresRating) {
+            setRatingData({
+              providerId: data.data.providerId || "",
+              providerName: data.data.providerName || "Provider",
+              serviceId: data.data.serviceId || "",
+              serviceTitle: data.data.serviceTitle || "Service",
+              transactionId: data.data.transactionId || ""
+            });
+            setShowRatingDialog(true);
+            
+            // Mark the notification as read
+            await updateDoc(doc(db, "notifications", notification.id), {
+              read: true
+            });
+          }
+        }
+      } catch (error) {
+        console.error("Error checking for rating notifications:", error);
+        toast({
+          title: "Error",
+          description: "Failed to check for notifications",
+          variant: "destructive"
+        });
+      }
+    }
+    
+    // Check when component loads
+    checkForRatingNotifications();
+    
+    // Set up interval to periodically check (every 30 seconds)
+    const intervalId = setInterval(checkForRatingNotifications, 30000);
+    
+    return () => {
+      clearInterval(intervalId);
+    };
+  }, [user, toast]);
 
   if (loading) {
     return (
@@ -285,6 +366,16 @@ export default function DashboardPage() {
   return (
     <DashboardLayout>
       <DashboardOverview />
+      {/* Rating Dialog */}
+      <RatingModal 
+        open={showRatingDialog}
+        onOpenChange={setShowRatingDialog}
+        providerId={ratingData.providerId}
+        providerName={ratingData.providerName}
+        serviceId={ratingData.serviceId}
+        serviceTitle={ratingData.serviceTitle}
+        transactionId={ratingData.transactionId}
+      />
     </DashboardLayout>
   )
 }

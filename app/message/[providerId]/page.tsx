@@ -1140,10 +1140,8 @@ export default function MessagePage({ params }: { params: { providerId: string }
                         }`}
                         onClick={() => {
                           router.push(`/message/${contact.contactId}`);
-                          // Keep on contacts tab instead of switching to chat
-                          if (window.innerWidth < 768) {
-                            setActiveMobileTab('contacts');
-                          }
+                          // Set active tab to chat when clicking a conversation
+                          setActiveMobileTab('chat');
                         }}
                       >
                         <Avatar className="h-10 w-10">

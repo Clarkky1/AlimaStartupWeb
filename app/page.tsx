@@ -1614,16 +1614,16 @@ export default function Home() {
           </div>
         </section>
       </main>
+      {/* Rating Dialog */}
+      <RatingModal 
+        open={showRatingDialog}
+        onOpenChange={setShowRatingDialog}
+        providerId={ratingData.providerId}
+        providerName={ratingData.providerName}
+        serviceId={ratingData.serviceId}
+        serviceTitle={ratingData.serviceTitle}
+        transactionId={ratingData.transactionId}
+      />
     </div>
-    {/* Rating Dialog */}
-    <RatingModal 
-      open={showRatingDialog}
-      onOpenChange={setShowRatingDialog}
-      providerId={ratingData.providerId}
-      providerName={ratingData.providerName}
-      serviceId={ratingData.serviceId}
-      serviceTitle={ratingData.serviceTitle}
-      transactionId={ratingData.transactionId}
-    />
   )
 }

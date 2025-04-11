@@ -26,6 +26,7 @@ Alima is a comprehensive web platform designed to connect Filipino service provi
 - **Featured Provider Highlights**: Showcase top-rated service providers
 - **Secure Messaging**: Built-in communication system with file sharing capabilities
 - **Responsive Design**: Fully optimized for all device sizes
+- **Notifications System**: Real-time notifications for messages, payments, and reviews
 
 ## Service Categories
 
@@ -40,8 +41,6 @@ Alima is a comprehensive web platform designed to connect Filipino service provi
 - Music
 - Education
 - Translation
-- Business
-- Lifestyle
 
 ### Local Services
 - Academic & Tutorial
@@ -57,8 +56,11 @@ Alima is a comprehensive web platform designed to connect Filipino service provi
 ## Technology Stack
 
 ### Frontend
-- **Framework**: Next.js with TypeScript
-- **UI Components**: Custom components built with Tailwind CSS
+- **Framework**: Next.js 14.1+ with TypeScript
+- **UI Components**: Radix UI primitives with Tailwind CSS
+- **Styling**: Tailwind CSS with animations and custom theming
+- **Form Handling**: React Hook Form with Zod validation
+- **Icons**: Lucide React
 - **State Management**: React Context API
 - **Authentication**: Firebase Authentication
 
@@ -71,7 +73,7 @@ Alima is a comprehensive web platform designed to connect Filipino service provi
 ## Getting Started
 
 ### Prerequisites
-- Node.js (v16 or higher)
+- Node.js (v18 or higher)
 - npm or yarn
 - Firebase account
 - Cloudinary account
@@ -94,16 +96,19 @@ yarn install
 3. Set up environment variables
 Create a `.env.local` file in the root directory and add your Firebase and Cloudinary credentials:
 ```
-NEXT_PUBLIC_FIREBASE_API_KEY=your_firebase_api_key
-NEXT_PUBLIC_FIREBASE_AUTH_DOMAIN=your_firebase_auth_domain
-NEXT_PUBLIC_FIREBASE_PROJECT_ID=your_firebase_project_id
-NEXT_PUBLIC_FIREBASE_STORAGE_BUCKET=your_firebase_storage_bucket
-NEXT_PUBLIC_FIREBASE_MESSAGING_SENDER_ID=your_firebase_messaging_sender_id
-NEXT_PUBLIC_FIREBASE_APP_ID=your_firebase_app_id
+# Firebase Configuration
+NEXT_PUBLIC_FIREBASE_API_KEY=your_api_key
+NEXT_PUBLIC_FIREBASE_AUTH_DOMAIN=your_auth_domain
+NEXT_PUBLIC_FIREBASE_PROJECT_ID=your_project_id
+NEXT_PUBLIC_FIREBASE_STORAGE_BUCKET=your_storage_bucket
+NEXT_PUBLIC_FIREBASE_MESSAGING_SENDER_ID=your_messaging_sender_id
+NEXT_PUBLIC_FIREBASE_APP_ID=your_app_id
+NEXT_PUBLIC_FIREBASE_MEASUREMENT_ID=your_measurement_id
 
-NEXT_PUBLIC_CLOUDINARY_CLOUD_NAME=your_cloudinary_cloud_name
-NEXT_PUBLIC_CLOUDINARY_API_KEY=your_cloudinary_api_key
-CLOUDINARY_API_SECRET=your_cloudinary_api_secret
+# Cloudinary Configuration
+NEXT_PUBLIC_CLOUDINARY_CLOUD_NAME=your_cloud_name
+CLOUDINARY_API_KEY=your_api_key
+CLOUDINARY_API_SECRET=your_api_secret
 ```
 
 4. Run the development server
@@ -120,18 +125,23 @@ yarn dev
 ```
 alima-web-integration/
 ├── app/                  # Next.js app directory
+│   ├── (auth)/           # Authentication pages
+│   ├── (main)/           # Main application pages
 │   ├── api/              # API routes
 │   ├── context/          # React context providers
 │   ├── dashboard/        # Dashboard pages
 │   ├── explore/          # Service exploration pages
 │   ├── lib/              # Utility functions
 │   ├── message/          # Messaging system
-│   └── ...               # Other app routes
+│   ├── services/         # Service listing pages
+│   ├── profile/          # User profile pages
+│   └── notifications/    # Notification pages
 ├── components/           # React components
-│   ├── dashboard/        # Dashboard components
-│   ├── home/             # Homepage components
 │   ├── ui/               # Reusable UI components
 │   └── ...               # Other component categories
+├── lib/                  # Shared utility functions
+├── hooks/                # Custom React hooks
+├── types/                # TypeScript type definitions
 ├── public/               # Static files
 └── ...                   # Configuration files
 ```
@@ -141,9 +151,15 @@ alima-web-integration/
 The project uses Firebase Firestore with the following main collections:
 
 - **users**: User accounts and profiles
-- **services**: Service listings
-- **messages**: Communication between clients and providers
-- **reviews**: Service reviews and ratings
+- **providers**: Provider-specific information, including profiles and payment details
+- **services**: Service listings with detailed information
+- **conversations**: Communication threads between clients and providers
+- **messages**: Individual messages within conversations
+- **notifications**: System notifications for users
+- **transactions**: Payment transaction records
+- **reviews**: Service and provider reviews with ratings
+
+For more detailed information on the Firebase structure, refer to FIRESTORE_STRUCTURE.md in the project.
 
 ## Deployment
 
@@ -159,6 +175,6 @@ This project is licensed under the MIT License - see the LICENSE file for detail
 
 ## Acknowledgments
 
-- UI components inspired by shadcn/ui
+- UI components built with Radix UI primitives
 - Icons from Lucide Icons
-- SVG illustrations from various open-source libraries
+- Form validation with Zod and React Hook Form

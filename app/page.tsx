@@ -1063,18 +1063,18 @@ export default function Home() {
             <div className="mx-auto max-w-5xl lg:max-w-6xl">
               {/* Team Section */}
               <div className="mb-24">
-                <div className="mb-12 text-center" data-aos="fade-up">
-                  <h2 className="mb-4 text-3xl font-semibold tracking-tight md:text-4xl">Meet Our Team</h2>
-                  <p className="mx-auto max-w-2xl text-lg text-neutral-600 dark:text-neutral-300 px-4">
+                <div className="mb-16 text-center" data-aos="fade-up">
+                  <h2 className="mb-4 text-4xl font-medium tracking-tight md:text-5xl bg-clip-text text-transparent bg-gradient-to-r from-neutral-950 to-neutral-500 dark:from-white dark:to-neutral-400">Meet Our Team</h2>
+                  <p className="mx-auto max-w-2xl text-lg text-neutral-600 dark:text-neutral-300 px-4 font-light">
                     The passionate individuals behind Alima who work tirelessly to create the best possible experience for our users.
                   </p>
                 </div>
 
                 {/* Lead Founder - Featured at the top */}
-                <div className="mx-auto mb-10 md:mb-16 max-w-lg px-4" data-aos="zoom-in" data-aos-delay="100">
-                  <div className="bg-white dark:bg-neutral-900 rounded-xl p-6 md:p-8 shadow-md border border-neutral-200 dark:border-neutral-800 w-full">
-                    <div className="text-center mb-6">
-                      <div className="relative mx-auto h-32 w-32 md:h-40 md:w-40 overflow-hidden rounded-full mb-4 md:mb-6">
+                <div className="mx-auto mb-16 max-w-2xl px-4" data-aos="zoom-in" data-aos-delay="100">
+                  <div className="bg-white/50 dark:bg-neutral-900/50 backdrop-blur-xl rounded-2xl p-8 shadow-[0_8px_30px_rgb(0,0,0,0.04)] border border-neutral-200/50 dark:border-neutral-800/50 w-full hover:shadow-[0_8px_30px_rgb(0,0,0,0.08)] transition-all duration-300">
+                    <div className="text-center mb-8">
+                      <div className="relative mx-auto h-40 w-40 overflow-hidden rounded-2xl mb-6 shadow-[0_8px_30px_rgb(0,0,0,0.06)]">
                         <PlaceholderImage
                           src="/team/Eduardo Empelis Jr..jpg"
                           alt="Eduardo Empelis Jr."
@@ -1083,104 +1083,98 @@ export default function Home() {
                           className="h-full w-full object-cover"
                         />
                       </div>
-                      <h3 className="text-xl md:text-2xl font-bold">Eduardo Empelis Jr.</h3>
-                      <p className="text-primary text-sm font-medium mt-1">Founder</p>
+                      <h3 className="text-2xl md:text-3xl font-bold mb-2">Eduardo Empelis Jr.</h3>
+                      <p className="text-primary text-sm md:text-base font-medium">Founder</p>
                     </div>
-                    <p className="text-center text-sm md:text-base text-neutral-600 dark:text-neutral-300 mb-6">
-                      Founded Alima with a vision to revolutionize how people connect with service providers globally and locally.</p>
-                    <div className="flex justify-center space-x-3">
-                      <a href="https://www.facebook.com/eduardo.empelisjr" className="rounded-full bg-neutral-100 p-2 text-neutral-600 hover:bg-neutral-200 dark:bg-neutral-800 dark:text-neutral-300 dark:hover:bg-neutral-700">
-                        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="h-4 w-4">
+                    <p className="text-center text-sm md:text-base text-neutral-600 dark:text-neutral-300 mb-8">
+                      Founded Alima with a vision to revolutionize how people connect with service providers globally and locally.
+                    </p>
+                    <div className="flex justify-center space-x-4">
+                      <a href="https://www.facebook.com/eduardo.empelisjr" className="rounded-xl bg-neutral-100/50 p-3 text-neutral-600 hover:bg-neutral-200/50 dark:bg-neutral-800/50 dark:text-neutral-300 dark:hover:bg-neutral-700/50 backdrop-blur-xl transition-all duration-300">
+                        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="h-5 w-5">
                           <path d="M18 2h-3a5 5 0 0 0-5 5v3H7v4h3v8h4v-8h3l1-4h-4V7a1 1 0 0 1 1-1h3z"></path>
                         </svg>
                       </a>
                     </div>
                   </div>
                 </div>
-                
+
                 {/* Team Grid - 4 members */}
                 <div className="grid gap-8 md:gap-6 grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 px-4">
-                  {/* Team Member 1 */}
-                  <div className="bg-white dark:bg-neutral-900 rounded-xl p-6 shadow-sm border border-neutral-200 dark:border-neutral-800 w-full h-full" 
+                  {/* Team Member 1 - Kin Clark */}
+                  <div className="bg-white/50 dark:bg-neutral-900/50 backdrop-blur-xl rounded-2xl p-8 shadow-[0_8px_30px_rgb(0,0,0,0.04)] border border-neutral-200/50 dark:border-neutral-800/50 w-full h-full hover:shadow-[0_8px_30px_rgb(0,0,0,0.08)] transition-all duration-300" 
                        data-aos="fade-up" data-aos-delay="150">
-                    <div className="text-center mb-6">
-                      <div className="relative mx-auto h-32 w-32 overflow-hidden rounded-full mb-4">
+                    <div className="text-center mb-8">
+                      <div className="relative mx-auto h-36 w-36 overflow-hidden rounded-2xl mb-6 shadow-[0_8px_30px_rgb(0,0,0,0.06)]">
                         <PlaceholderImage
                           src="/team/Kin Clark Perez.jpg"
                           alt="Kin Clark Perez"
-                          width={128}
-                          height={128}
+                          width={144}
+                          height={144}
                           className="h-full w-full object-cover"
                         />
                       </div>
-                      <h3 className="text-xl font-semibold">Kin Clark Perez</h3>
+                      <h3 className="text-xl md:text-2xl font-bold">Kin Clark Perez</h3>
                       <p className="text-sm text-neutral-500 dark:text-neutral-400">Co-founder & CTO</p>
                     </div>
                     <p className="text-center text-sm text-neutral-600 dark:text-neutral-300 mb-6">
                     Leads Alima's technological vision and development, driving innovation and ensuring the platform's scalability, security, and efficiency. Manages the technical team to execute the product roadmap and integrates cutting-edge technologies to align with Alima's core mission.
                     </p>
-                    <div className="flex justify-center space-x-3">
-                      <a href="https://github.com/Clarkky1" className="rounded-full bg-neutral-100 p-2 text-neutral-600 hover:bg-neutral-200 dark:bg-neutral-800 dark:text-neutral-300 dark:hover:bg-neutral-700">
-                        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="h-4 w-4">
+                    <div className="flex justify-center space-x-4">
+                      <a href="https://github.com/Clarkky1" className="rounded-xl bg-neutral-100/50 p-3 text-neutral-600 hover:bg-neutral-200/50 dark:bg-neutral-800/50 dark:text-neutral-300 dark:hover:bg-neutral-700/50 backdrop-blur-xl transition-all duration-300">
+                        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="h-5 w-5">
                           <path d="M9 19c-5 1.5-5-2.5-7-3m14 6v-3.87a3.37 3.37 0 0 0-.94-2.61c3.14-.35 6.44-1.54 6.44-7A5.44 5.44 0 0 0 20 4.77 5.07 5.07 0 0 0 19.91 1S18.73.65 16 2.48a13.38 13.38 0 0 0-7 0C6.27.65 5.09 1 5.09 1A5.07 5.07 0 0 0 5 4.77a5.44 5.44 0 0 0-1.5 3.78c0 5.42 3.3 6.61 6.44 7A3.37 3.37 0 0 0 9 18.13V22"></path>
                         </svg>
                       </a>
-                      <a href="https://www.linkedin.com/in/kin-clark-perez-164a17294/" className="rounded-full bg-neutral-100 p-2 text-neutral-600 hover:bg-neutral-200 dark:bg-neutral-800 dark:text-neutral-300 dark:hover:bg-neutral-700">
-                        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="h-4 w-4">
+                      <a href="https://www.linkedin.com/in/kin-clark-perez-164a17294/" className="rounded-xl bg-neutral-100/50 p-3 text-neutral-600 hover:bg-neutral-200/50 dark:bg-neutral-800/50 dark:text-neutral-300 dark:hover:bg-neutral-700/50 backdrop-blur-xl transition-all duration-300">
+                        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="h-5 w-5">
                           <path d="M16 8a6 6 0 0 1 6 6v7h-4v-7a2 2 0 0 0-2-2 2 2 0 0 0-2 2v7h-4v-7a6 6 0 0 1 6-6z"></path>
                           <rect x="2" y="9" width="4" height="12"></rect>
                           <circle cx="4" cy="4" r="2"></circle>
                         </svg>
                       </a>
-                      <a href="https://www.facebook.com/jsbdhxhvskaixb/" className="rounded-full bg-neutral-100 p-2 text-neutral-600 hover:bg-neutral-200 dark:bg-neutral-800 dark:text-neutral-300 dark:hover:bg-neutral-700">
-                        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="h-4 w-4">
+                      <a href="https://www.facebook.com/jsbdhxhvskaixb/" className="rounded-xl bg-neutral-100/50 p-3 text-neutral-600 hover:bg-neutral-200/50 dark:bg-neutral-800/50 dark:text-neutral-300 dark:hover:bg-neutral-700/50 backdrop-blur-xl transition-all duration-300">
+                        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="h-5 w-5">
                           <path d="M18 2h-3a5 5 0 0 0-5 5v3H7v4h3v8h4v-8h3l1-4h-4V7a1 1 0 0 1 1-1h3z"></path>
                         </svg>
                       </a>
-                      {/* <a href="https://www.instagram.com/yourboyykinn/" className="rounded-full bg-neutral-100 p-2 text-neutral-600 hover:bg-neutral-200 dark:bg-neutral-800 dark:text-neutral-300 dark:hover:bg-neutral-700">
-                        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="h-4 w-4">
-                          <rect x="2" y="2" width="20" height="20" rx="5" ry="5"></rect>
-                          <path d="M16 11.37A4 4 0 1 1 12.63 8 4 4 0 0 1 16 11.37z"></path>
-                          <line x1="17.5" y1="6.5" x2="17.51" y2="6.5"></line>
-                        </svg>
-                      </a> */}
-                    </div>  
+                    </div>
                   </div>
                   
-                  {/* Team Member 2 */}
-                  <div className="bg-white dark:bg-neutral-900 rounded-xl p-6 shadow-sm border border-neutral-200 dark:border-neutral-800 w-full h-full"
+                  {/* Team Member 2 - Kent */}
+                  <div className="bg-white/50 dark:bg-neutral-900/50 backdrop-blur-xl rounded-2xl p-8 shadow-[0_8px_30px_rgb(0,0,0,0.04)] border border-neutral-200/50 dark:border-neutral-800/50 w-full h-full hover:shadow-[0_8px_30px_rgb(0,0,0,0.08)] transition-all duration-300"
                        data-aos="fade-up" data-aos-delay="200">
-                    <div className="text-center mb-6">
-                      <div className="relative mx-auto h-32 w-32 overflow-hidden rounded-full mb-4">
+                    <div className="text-center mb-8">
+                      <div className="relative mx-auto h-36 w-36 overflow-hidden rounded-2xl mb-6 shadow-[0_8px_30px_rgb(0,0,0,0.06)]">
                         <PlaceholderImage
                           src="/team/Kent B. Veloso.png"
                           alt="Kent Veloso"
-                          width={128}
-                          height={128}
+                          width={144}
+                          height={144}
                           className="h-full w-full object-cover"
                         />
                       </div>
-                      <h3 className="text-xl font-semibold">Kent Veloso</h3>
+                      <h3 className="text-xl md:text-2xl font-bold">Kent Veloso</h3>
                       <p className="text-sm text-neutral-500 dark:text-neutral-400">Co-founder & Product Architect</p>
                     </div>
                     <p className="text-center text-sm text-neutral-600 dark:text-neutral-300 mb-6">
-                    Shapes Alima's product vision from the ground up leading the original system design while crafting a cohesive and impactful brand identity. Drives innovative product and branding strategies that align technology, design, and user experience with Alima's core mission.
+                    Shapes Alima's product vision from the ground up—leading the original system design while crafting a cohesive and impactful brand identity. Drives innovative product and branding strategies that align technology, design, and user experience with Alima's core mission.
                     </p>
-                    <div className="flex justify-center space-x-3">
-                      <a href="#" className="rounded-full bg-neutral-100 p-2 text-neutral-600 hover:bg-neutral-200 dark:bg-neutral-800 dark:text-neutral-300 dark:hover:bg-neutral-700">
-                        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="h-4 w-4">
+                    <div className="flex justify-center space-x-4">
+                      <a href="https://github.com/kentveloso" className="rounded-xl bg-neutral-100/50 p-3 text-neutral-600 hover:bg-neutral-200/50 dark:bg-neutral-800/50 dark:text-neutral-300 dark:hover:bg-neutral-700/50 backdrop-blur-xl transition-all duration-300">
+                        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="h-5 w-5">
                           <path d="M9 19c-5 1.5-5-2.5-7-3m14 6v-3.87a3.37 3.37 0 0 0-.94-2.61c3.14-.35 6.44-1.54 6.44-7A5.44 5.44 0 0 0 20 4.77 5.07 5.07 0 0 0 19.91 1S18.73.65 16 2.48a13.38 13.38 0 0 0-7 0C6.27.65 5.09 1 5.09 1A5.07 5.07 0 0 0 5 4.77a5.44 5.44 0 0 0-1.5 3.78c0 5.42 3.3 6.61 6.44 7A3.37 3.37 0 0 0 9 18.13V22"></path>
                         </svg>
                       </a>
-                      <a href="#" className="rounded-full bg-neutral-100 p-2 text-neutral-600 hover:bg-neutral-200 dark:bg-neutral-800 dark:text-neutral-300 dark:hover:bg-neutral-700">
-                        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="h-4 w-4">
+                      <a href="https://www.linkedin.com/in/kent-veloso" className="rounded-xl bg-neutral-100/50 p-3 text-neutral-600 hover:bg-neutral-200/50 dark:bg-neutral-800/50 dark:text-neutral-300 dark:hover:bg-neutral-700/50 backdrop-blur-xl transition-all duration-300">
+                        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="h-5 w-5">
                           <path d="M16 8a6 6 0 0 1 6 6v7h-4v-7a2 2 0 0 0-2-2 2 2 0 0 0-2 2v7h-4v-7a6 6 0 0 1 6-6z"></path>
                           <rect x="2" y="9" width="4" height="12"></rect>
                           <circle cx="4" cy="4" r="2"></circle>
                         </svg>
                       </a>
-                      <a href="#" className="rounded-full bg-neutral-100 p-2 text-neutral-600 hover:bg-neutral-200 dark:bg-neutral-800 dark:text-neutral-300 dark:hover:bg-neutral-700">
-                        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="h-4 w-4">
+                      <a href="https://www.facebook.com/kentbveloso" className="rounded-xl bg-neutral-100/50 p-3 text-neutral-600 hover:bg-neutral-200/50 dark:bg-neutral-800/50 dark:text-neutral-300 dark:hover:bg-neutral-700/50 backdrop-blur-xl transition-all duration-300">
+                        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="h-5 w-5">
                           <path d="M18 2h-3a5 5 0 0 0-5 5v3H7v4h3v8h4v-8h3l1-4h-4V7a1 1 0 0 1 1-1h3z"></path>
                         </svg>
                       </a>
@@ -1188,10 +1182,10 @@ export default function Home() {
                   </div>
                   
                   {/* Team Member 3 */}
-                  <div className="bg-white dark:bg-neutral-900 rounded-xl p-6 shadow-sm border border-neutral-200 dark:border-neutral-800 w-full h-full"
+                  <div className="bg-white/50 dark:bg-neutral-900/50 backdrop-blur-xl rounded-2xl p-8 shadow-[0_8px_30px_rgb(0,0,0,0.04)] border border-neutral-200/50 dark:border-neutral-800/50 w-full h-full hover:shadow-[0_8px_30px_rgb(0,0,0,0.08)] transition-all duration-300"
                        data-aos="fade-up" data-aos-delay="250">
-                    <div className="text-center mb-6">
-                      <div className="relative mx-auto h-32 w-32 overflow-hidden rounded-full mb-4">
+                    <div className="text-center mb-8">
+                      <div className="relative mx-auto h-36 w-36 overflow-hidden rounded-2xl mb-6 shadow-[0_8px_30px_rgb(0,0,0,0.06)]">
                         <PlaceholderImage
                           src="/team/Kyle Florendo.jpg"
                           alt="Kyle Florendo"
@@ -1200,27 +1194,27 @@ export default function Home() {
                           className="h-full w-full object-cover"
                         />
                       </div>
-                      <h3 className="text-xl font-semibold">Kyle Florendo</h3>
+                      <h3 className="text-xl md:text-2xl font-bold">Kyle Florendo</h3>
                       <p className="text-sm text-neutral-500 dark:text-neutral-400">Operations Assistant</p>
                     </div>
                     <p className="text-center text-sm text-neutral-600 dark:text-neutral-300 mb-6">
                     Coordinates Alima's projects and ensures smooth execution of operations. Also contributes to the design of the landing page and manages documentation to support the company's goals and enhance operational efficiency.
                     </p>
-                    <div className="flex justify-center space-x-3">
-                      <a href="#" className="rounded-full bg-neutral-100 p-2 text-neutral-600 hover:bg-neutral-200 dark:bg-neutral-800 dark:text-neutral-300 dark:hover:bg-neutral-700">
-                        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="h-4 w-4">
+                    <div className="flex justify-center space-x-4">
+                      <a href="#" className="rounded-xl bg-neutral-100/50 p-3 text-neutral-600 hover:bg-neutral-200/50 dark:bg-neutral-800/50 dark:text-neutral-300 dark:hover:bg-neutral-700/50 backdrop-blur-xl transition-all duration-300">
+                        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="h-5 w-5">
                           <path d="M9 19c-5 1.5-5-2.5-7-3m14 6v-3.87a3.37 3.37 0 0 0-.94-2.61c3.14-.35 6.44-1.54 6.44-7A5.44 5.44 0 0 0 20 4.77 5.07 5.07 0 0 0 19.91 1S18.73.65 16 2.48a13.38 13.38 0 0 0-7 0C6.27.65 5.09 1 5.09 1A5.07 5.07 0 0 0 5 4.77a5.44 5.44 0 0 0-1.5 3.78c0 5.42 3.3 6.61 6.44 7A3.37 3.37 0 0 0 9 18.13V22"></path>
                         </svg>
                       </a>
-                      <a href="#" className="rounded-full bg-neutral-100 p-2 text-neutral-600 hover:bg-neutral-200 dark:bg-neutral-800 dark:text-neutral-300 dark:hover:bg-neutral-700">
-                        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="h-4 w-4">
+                      <a href="#" className="rounded-xl bg-neutral-100/50 p-3 text-neutral-600 hover:bg-neutral-200/50 dark:bg-neutral-800/50 dark:text-neutral-300 dark:hover:bg-neutral-700/50 backdrop-blur-xl transition-all duration-300">
+                        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="h-5 w-5">
                           <path d="M16 8a6 6 0 0 1 6 6v7h-4v-7a2 2 0 0 0-2-2 2 2 0 0 0-2 2v7h-4v-7a6 6 0 0 1 6-6z"></path>
                           <rect x="2" y="9" width="4" height="12"></rect>
                           <circle cx="4" cy="4" r="2"></circle>
                         </svg>
                       </a>
-                      <a href="#" className="rounded-full bg-neutral-100 p-2 text-neutral-600 hover:bg-neutral-200 dark:bg-neutral-800 dark:text-neutral-300 dark:hover:bg-neutral-700">
-                        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="h-4 w-4">
+                      <a href="#" className="rounded-xl bg-neutral-100/50 p-3 text-neutral-600 hover:bg-neutral-200/50 dark:bg-neutral-800/50 dark:text-neutral-300 dark:hover:bg-neutral-700/50 backdrop-blur-xl transition-all duration-300">
+                        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="h-5 w-5">
                           <path d="M18 2h-3a5 5 0 0 0-5 5v3H7v4h3v8h4v-8h3l1-4h-4V7a1 1 0 0 1 1-1h3z"></path>
                         </svg>
                       </a>
@@ -1228,10 +1222,10 @@ export default function Home() {
                   </div>
                   
                   {/* Team Member 4 */}
-                  <div className="bg-white dark:bg-neutral-900 rounded-xl p-6 shadow-sm border border-neutral-200 dark:border-neutral-800 w-full h-full"
+                  <div className="bg-white/50 dark:bg-neutral-900/50 backdrop-blur-xl rounded-2xl p-8 shadow-[0_8px_30px_rgb(0,0,0,0.04)] border border-neutral-200/50 dark:border-neutral-800/50 w-full h-full hover:shadow-[0_8px_30px_rgb(0,0,0,0.08)] transition-all duration-300"
                        data-aos="fade-up" data-aos-delay="300">
-                    <div className="text-center mb-6">
-                      <div className="relative mx-auto h-32 w-32 overflow-hidden rounded-full mb-4">
+                    <div className="text-center mb-8">
+                      <div className="relative mx-auto h-36 w-36 overflow-hidden rounded-2xl mb-6 shadow-[0_8px_30px_rgb(0,0,0,0.06)]">
                         <PlaceholderImage
                           src="/team/Lorenz Aguirre.jpg"
                           alt="Lorenz  Aguirre"
@@ -1240,27 +1234,27 @@ export default function Home() {
                           className="h-full w-full object-cover"
                         />
                       </div>
-                      <h3 className="text-xl font-semibold">Lorenz  Aguirre</h3>
+                      <h3 className="text-xl md:text-2xl font-bold">Lorenz  Aguirre</h3>
                       <p className="text-sm text-neutral-500 dark:text-neutral-400">Software Developer</p>
                     </div>
                     <p className="text-center text-sm text-neutral-600 dark:text-neutral-300 mb-6">
                     Develops and implements functional front-end solutions to build and enhance Alima's user interface, ensuring seamless interactions and a smooth user experience across the platform.
                     </p>
-                    <div className="flex justify-center space-x-3">
-                      <a href="#" className="rounded-full bg-neutral-100 p-2 text-neutral-600 hover:bg-neutral-200 dark:bg-neutral-800 dark:text-neutral-300 dark:hover:bg-neutral-700">
-                        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="h-4 w-4">
+                    <div className="flex justify-center space-x-4">
+                      <a href="#" className="rounded-xl bg-neutral-100/50 p-3 text-neutral-600 hover:bg-neutral-200/50 dark:bg-neutral-800/50 dark:text-neutral-300 dark:hover:bg-neutral-700/50 backdrop-blur-xl transition-all duration-300">
+                        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="h-5 w-5">
                           <path d="M9 19c-5 1.5-5-2.5-7-3m14 6v-3.87a3.37 3.37 0 0 0-.94-2.61c3.14-.35 6.44-1.54 6.44-7A5.44 5.44 0 0 0 20 4.77 5.07 5.07 0 0 0 19.91 1S18.73.65 16 2.48a13.38 13.38 0 0 0-7 0C6.27.65 5.09 1 5.09 1A5.07 5.07 0 0 0 5 4.77a5.44 5.44 0 0 0-1.5 3.78c0 5.42 3.3 6.61 6.44 7A3.37 3.37 0 0 0 9 18.13V22"></path>
                         </svg>
                       </a>
-                      <a href="#" className="rounded-full bg-neutral-100 p-2 text-neutral-600 hover:bg-neutral-200 dark:bg-neutral-800 dark:text-neutral-300 dark:hover:bg-neutral-700">
-                        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="h-4 w-4">
+                      <a href="#" className="rounded-xl bg-neutral-100/50 p-3 text-neutral-600 hover:bg-neutral-200/50 dark:bg-neutral-800/50 dark:text-neutral-300 dark:hover:bg-neutral-700/50 backdrop-blur-xl transition-all duration-300">
+                        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="h-5 w-5">
                           <path d="M16 8a6 6 0 0 1 6 6v7h-4v-7a2 2 0 0 0-2-2 2 2 0 0 0-2 2v7h-4v-7a6 6 0 0 1 6-6z"></path>
                           <rect x="2" y="9" width="4" height="12"></rect>
                           <circle cx="4" cy="4" r="2"></circle>
                         </svg>
                       </a>
-                      <a href="#" className="rounded-full bg-neutral-100 p-2 text-neutral-600 hover:bg-neutral-200 dark:bg-neutral-800 dark:text-neutral-300 dark:hover:bg-neutral-700">
-                        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="h-4 w-4">
+                      <a href="#" className="rounded-xl bg-neutral-100/50 p-3 text-neutral-600 hover:bg-neutral-200/50 dark:bg-neutral-800/50 dark:text-neutral-300 dark:hover:bg-neutral-700/50 backdrop-blur-xl transition-all duration-300">
+                        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="h-5 w-5">
                           <path d="M18 2h-3a5 5 0 0 0-5 5v3H7v4h3v8h4v-8h3l1-4h-4V7a1 1 0 0 1 1-1h3z"></path>
                         </svg>
                       </a>

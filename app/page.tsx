@@ -1099,9 +1099,9 @@ export default function Home() {
                 </div>
                 
                 {/* Team Grid - 4 members */}
-                <div className="grid gap-4 md:gap-6 grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 place-items-center px-4">
+                <div className="grid gap-8 md:gap-6 grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 px-4">
                   {/* Team Member 1 */}
-                  <div className="bg-white dark:bg-neutral-900 rounded-xl p-6 shadow-sm border border-neutral-200 dark:border-neutral-800 w-full max-w-sm min-h-[450px]" 
+                  <div className="bg-white dark:bg-neutral-900 rounded-xl p-6 shadow-sm border border-neutral-200 dark:border-neutral-800 w-full h-full" 
                        data-aos="fade-up" data-aos-delay="150">
                     <div className="text-center mb-6">
                       <div className="relative mx-auto h-32 w-32 overflow-hidden rounded-full mb-4">
@@ -1114,10 +1114,10 @@ export default function Home() {
                         />
                       </div>
                       <h3 className="text-xl font-semibold">Kin Clark Perez</h3>
-                      <p className="text-sm text-neutral-500 dark:text-neutral-400">Lead Software Engineer</p>
+                      <p className="text-sm text-neutral-500 dark:text-neutral-400">Co-founder & CTO</p>
                     </div>
                     <p className="text-center text-sm text-neutral-600 dark:text-neutral-300 mb-6">
-                    Leads the technical development and architecture of Alima's platform, ensuring efficiency and scalability.
+                    Leads Alima's technological vision and development, driving innovation and ensuring the platform's scalability, security, and efficiency. Manages the technical team to execute the product roadmap and integrates cutting-edge technologies to align with Alima's core mission.
                     </p>
                     <div className="flex justify-center space-x-3">
                       <a href="https://github.com/Clarkky1" className="rounded-full bg-neutral-100 p-2 text-neutral-600 hover:bg-neutral-200 dark:bg-neutral-800 dark:text-neutral-300 dark:hover:bg-neutral-700">
@@ -1148,7 +1148,7 @@ export default function Home() {
                   </div>
                   
                   {/* Team Member 2 */}
-                  <div className="bg-white dark:bg-neutral-900 rounded-xl p-6 shadow-sm border border-neutral-200 dark:border-neutral-800 w-full max-w-sm min-h-[450px]"
+                  <div className="bg-white dark:bg-neutral-900 rounded-xl p-6 shadow-sm border border-neutral-200 dark:border-neutral-800 w-full h-full"
                        data-aos="fade-up" data-aos-delay="200">
                     <div className="text-center mb-6">
                       <div className="relative mx-auto h-32 w-32 overflow-hidden rounded-full mb-4">
@@ -1161,10 +1161,10 @@ export default function Home() {
                         />
                       </div>
                       <h3 className="text-xl font-semibold">Kent Veloso</h3>
-                      <p className="text-sm text-neutral-500 dark:text-neutral-400">Brand & Creative Lead</p>
+                      <p className="text-sm text-neutral-500 dark:text-neutral-400">Co-founder & Product Architect</p>
                     </div>
                     <p className="text-center text-sm text-neutral-600 dark:text-neutral-300 mb-6">
-                    Designs Alima's visual identity and drives innovative branding strategies to bring its vision to life.
+                    Shapes Alima's product vision from the ground up leading the original system design while crafting a cohesive and impactful brand identity. Drives innovative product and branding strategies that align technology, design, and user experience with Alima's core mission.
                     </p>
                     <div className="flex justify-center space-x-3">
                       <a href="#" className="rounded-full bg-neutral-100 p-2 text-neutral-600 hover:bg-neutral-200 dark:bg-neutral-800 dark:text-neutral-300 dark:hover:bg-neutral-700">
@@ -1188,7 +1188,7 @@ export default function Home() {
                   </div>
                   
                   {/* Team Member 3 */}
-                  <div className="bg-white dark:bg-neutral-900 rounded-xl p-6 shadow-sm border border-neutral-200 dark:border-neutral-800 w-full max-w-sm min-h-[450px]"
+                  <div className="bg-white dark:bg-neutral-900 rounded-xl p-6 shadow-sm border border-neutral-200 dark:border-neutral-800 w-full h-full"
                        data-aos="fade-up" data-aos-delay="250">
                     <div className="text-center mb-6">
                       <div className="relative mx-auto h-32 w-32 overflow-hidden rounded-full mb-4">
@@ -1204,7 +1204,7 @@ export default function Home() {
                       <p className="text-sm text-neutral-500 dark:text-neutral-400">Operations Assistant</p>
                     </div>
                     <p className="text-center text-sm text-neutral-600 dark:text-neutral-300 mb-6">
-                    Facilitates project coordination and supports seamless execution of Alima's operations to meet its objectives
+                    Coordinates Alima's projects and ensures smooth execution of operations. Also contributes to the design of the landing page and manages documentation to support the company's goals and enhance operational efficiency.
                     </p>
                     <div className="flex justify-center space-x-3">
                       <a href="#" className="rounded-full bg-neutral-100 p-2 text-neutral-600 hover:bg-neutral-200 dark:bg-neutral-800 dark:text-neutral-300 dark:hover:bg-neutral-700">
@@ -1228,7 +1228,7 @@ export default function Home() {
                   </div>
                   
                   {/* Team Member 4 */}
-                  <div className="bg-white dark:bg-neutral-900 rounded-xl p-6 shadow-sm border border-neutral-200 dark:border-neutral-800 w-full max-w-sm min-h-[450px]"
+                  <div className="bg-white dark:bg-neutral-900 rounded-xl p-6 shadow-sm border border-neutral-200 dark:border-neutral-800 w-full h-full"
                        data-aos="fade-up" data-aos-delay="300">
                     <div className="text-center mb-6">
                       <div className="relative mx-auto h-32 w-32 overflow-hidden rounded-full mb-4">
@@ -1244,7 +1244,7 @@ export default function Home() {
                       <p className="text-sm text-neutral-500 dark:text-neutral-400">Software Developer</p>
                     </div>
                     <p className="text-center text-sm text-neutral-600 dark:text-neutral-300 mb-6">
-                    Develops and implements functional code solutions that form the backbone of Alima's platform.
+                    Develops and implements functional front-end solutions to build and enhance Alima's user interface, ensuring seamless interactions and a smooth user experience across the platform.
                     </p>
                     <div className="flex justify-center space-x-3">
                       <a href="#" className="rounded-full bg-neutral-100 p-2 text-neutral-600 hover:bg-neutral-200 dark:bg-neutral-800 dark:text-neutral-300 dark:hover:bg-neutral-700">

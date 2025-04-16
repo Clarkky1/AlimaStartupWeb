@@ -196,7 +196,7 @@ export function Navbar() {
   };
 
   return (
-    <div className="sticky top-0 z-50 w-full py-6">
+    <div className="sticky top-0 z-50 w-full py-6 px-4 md:px-0">
       <header className="mx-auto max-w-3xl md:max-w-4xl lg:max-w-5xl rounded-2xl bg-white/5 dark:bg-black/5 backdrop-blur-md border border-white/10 dark:border-white/5 text-foreground shadow-[0_0_15px_rgba(59,130,246,0.2)] dark:shadow-[0_0_25px_rgba(59,130,246,0.25)] transition-all hover:shadow-[0_0_20px_rgba(59,130,246,0.3)] dark:hover:shadow-[0_0_30px_rgba(59,130,246,0.35)]">
         <div className="flex h-14 items-center justify-between px-6">
         {/* Logo */}
@@ -363,7 +363,7 @@ export function Navbar() {
 
       {/* Mobile menu */}
       {isMenuOpen && (
-        <div className="fixed inset-x-0 top-[5.5rem] p-2 md:hidden z-50">
+        <div className="fixed inset-x-0 top-[5.5rem] p-2 px-4 md:px-2 md:hidden z-50">
           <div className="w-full mx-auto max-w-md rounded-xl bg-white/10 dark:bg-black/10 backdrop-blur-lg border border-white/20 dark:border-white/10 shadow-lg overflow-hidden">
             <div className="px-3 py-3 sm:px-4 sm:py-4">
               <nav className="flex flex-col space-y-1.5 sm:space-y-2">

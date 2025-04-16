@@ -1251,8 +1251,8 @@ export function MessageCenter() {
         const notificationData = {
           userId: message.senderId,
           type: "payment_confirmed_rating", // Special type to trigger rating dialog
-          title: `Payment Confirmed: ${serviceTitle} - ₱${typeof paymentAmount === 'number' ? paymentAmount.toLocaleString() : paymentAmount}`,
-          description: `Your payment of ₱${typeof paymentAmount === 'number' ? paymentAmount.toLocaleString() : paymentAmount} for ${serviceTitle} has been confirmed. Please rate your experience.`,
+          title: "Payment Confirmed - Rate Service",
+          description: `Your payment of ₱${paymentAmount} for ${serviceTitle} has been confirmed. Please rate your experience.`,
           timestamp: serverTimestamp(),
           read: false,
           data: {
@@ -1276,6 +1276,25 @@ export function MessageCenter() {
       } catch (notificationError) {
         console.error("Error creating notification (non-critical):", notificationError);
         // Continue execution - notification is not critical
+      }
+      
+      // Update the service to mark it as having a client
+      try {
+        if (serviceId) {
+          try {
+            const serviceRef = doc(db, "services", serviceId);
+            await updateDoc(serviceRef, {
+              hasClient: true,
+              updatedAt: new Date().toISOString()
+            });
+            console.log("Service updated with hasClient flag");
+          } catch (error) {
+            console.error("Error updating service hasClient flag:", error);
+            // Don't throw here, continue with the flow
+          }
+        }
+      } catch (error) {
+        console.error("Error in service update block:", error);
       }
       
       toast({

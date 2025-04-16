@@ -166,6 +166,7 @@ const UploadPaymentProofDialog = ({
               <select
                 id="service"
                 value={selectedService || ''}
+                aria-label="Select service"
                 onChange={(e) => {
                   setSelectedService(e.target.value);
                   // Auto-fill amount based on selected service
@@ -1545,6 +1546,7 @@ export default function MessagePage({ params }: { params: { providerId: string }
         serviceId={ratingService?.serviceId || ""}
         serviceTitle={ratingService?.serviceTitle}
         transactionId={ratingService?.transactionId}
+        raterIsProvider={false}
       />
     </div>
   )

@@ -24,6 +24,8 @@ import { X } from "lucide-react"
 import { Button } from "@/components/ui/button"
 import Link from "next/link"
 import { ArrowRight } from "lucide-react"
+import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog"
+import { Skeleton } from "@/components/ui/skeleton"
 
 export default function ServicesPage() {
   const searchParams = useSearchParams()
@@ -50,6 +52,7 @@ export default function ServicesPage() {
     image: string;
     providerId?: string;
     location?: string;
+    hasClient?: boolean;
   }
 
   interface Provider {
@@ -58,6 +61,7 @@ export default function ServicesPage() {
   }
 
   const [services, setServices] = useState<Service[]>([])
+  const [unavailableServices, setUnavailableServices] = useState<Service[]>([])
   const [loading, setLoading] = useState(true)
   const { toast } = useToast()
 
@@ -101,6 +105,7 @@ export default function ServicesPage() {
 
         const querySnapshot = await getDocs(q)
         const servicesData: Service[] = []
+        const unavailableServicesData: Service[] = []
         const uniqueLocations = new Set<string>()
 
         for (const doc of querySnapshot.docs) {
@@ -111,7 +116,7 @@ export default function ServicesPage() {
             uniqueLocations.add(data.location)
           }
           
-          servicesData.push({
+          const serviceData = {
             id: doc.id,
             title: data.title,
             description: data.description,
@@ -124,11 +129,20 @@ export default function ServicesPage() {
             price: data.price?.toString() || "0",
             image: data.image,
             providerId: data.providerId,
-            location: data.location
-          } as Service)
+            location: data.location,
+            hasClient: data.hasClient || false
+          } as Service
+          
+          // Separate services with clients from available services
+          if (serviceData.hasClient) {
+            unavailableServicesData.push(serviceData)
+          } else {
+            servicesData.push(serviceData)
+          }
         }
 
         setServices(servicesData)
+        setUnavailableServices(unavailableServicesData)
         setLocations(Array.from(uniqueLocations))
       } catch (error) {
         console.error("Error fetching services:", error)
@@ -149,6 +163,22 @@ export default function ServicesPage() {
 
   // Apply all filters (search, price, location)
   const filteredServices = services.filter(service => {
+    // Search term filter
+    const matchesSearch = 
+      service.title.toLowerCase().includes(searchTerm.toLowerCase()) ||
+      service.description.toLowerCase().includes(searchTerm.toLowerCase());
+      
+    // Price filter
+    const servicePrice = parseInt(service.price?.replace(/[^0-9]/g, '') || "0");
+    const matchesPrice = servicePrice >= priceRange[0] && servicePrice <= priceRange[1];
+    
+    // Location filter
+    const matchesLocation = location === "all" || service.location === location;
+    
+    return matchesSearch && matchesPrice && matchesLocation;
+  });
+
+  const filteredUnavailableServices = unavailableServices.filter(service => {
     // Search term filter
     const matchesSearch = 
       service.title.toLowerCase().includes(searchTerm.toLowerCase()) ||
@@ -264,103 +294,325 @@ export default function ServicesPage() {
               </div>
             )}
 
-            <div className="grid grid-cols-1 gap-6 sm:grid-cols-2 lg:grid-cols-3">
+            <TabsContent value="global" className="pt-2">
+              {/* Display available services */}
+              <h2 className="text-2xl font-semibold mb-4">Available Services</h2>
               {loading ? (
-                // Add loading skeletons here
-                Array(6).fill(null).map((_, i) => (
-                  <div key={i} className="animate-pulse">
-                    <div className="bg-gray-200 h-48 rounded-lg mb-2"></div>
-                    <div className="bg-gray-200 h-4 rounded mb-2"></div>
-                    <div className="bg-gray-200 h-4 w-2/3 rounded"></div>
-                  </div>
-                ))
-              ) : filteredServices.length > 0 ? (
-                filteredServices.map(service => (
-                  <ServiceCard key={service.id} {...service} />
-                ))
+                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+                  {Array.from({ length: 6 }).map((_, i) => (
+                    <div key={i} className="border rounded-lg p-4 space-y-2">
+                      <Skeleton className="h-40 w-full" />
+                      <Skeleton className="h-4 w-3/4" />
+                      <Skeleton className="h-4 w-1/2" />
+                      <Skeleton className="h-4 w-full" />
+                      <Skeleton className="h-10 w-full" />
+                    </div>
+                  ))}
+                </div>
               ) : (
-                <div className="col-span-full text-center py-12">
-                  <p className="text-muted-foreground">No services found matching your criteria</p>
-                  <Button variant="outline" className="mt-4" onClick={resetFilters}>
-                    Reset Filters
-                  </Button>
+                <>
+                  {filteredServices.length > 0 ? (
+                    <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+                      {filteredServices.map((service) => (
+                        <ServiceCard 
+                          key={service.id}
+                          id={service.id}
+                          title={service.title}
+                          description={service.description}
+                          price={service.price}
+                          category={service.category}
+                          image={service.image}
+                          provider={{
+                            id: service.providerId || "unknown",
+                            name: "Service Provider",
+                            avatar: "/default-avatar.png",
+                            location: service.location || "Philippines",
+                            rating: service.rating,
+                            hasRating: service.rating > 0
+                          }}
+                          showRating={true}
+                        />
+                      ))}
+                    </div>
+                  ) : (
+                    <div className="text-center py-8">
+                      <p className="text-lg text-muted-foreground">No services found matching your criteria.</p>
+                      <Button 
+                        variant="link" 
+                        className="mt-2"
+                        onClick={resetFilters}
+                      >
+                        Reset filters
+                      </Button>
+                    </div>
+                  )}
+                </>
+              )}
+              
+              {/* Display services with clients */}
+              {filteredUnavailableServices.length > 0 && (
+                <div className="mt-12">
+                  <h2 className="text-2xl font-semibold mb-4">Services Currently Unavailable (With Active Clients)</h2>
+                  <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+                    {filteredUnavailableServices.map((service) => (
+                      <ServiceCard 
+                        key={service.id}
+                        id={service.id}
+                        title={service.title}
+                        description={service.description}
+                        price={service.price}
+                        category={service.category}
+                        image={service.image}
+                        provider={{
+                          id: service.providerId || "unknown",
+                          name: "Service Provider",
+                          avatar: "/default-avatar.png",
+                          location: service.location || "Philippines",
+                          rating: service.rating,
+                          hasRating: service.rating > 0
+                        }}
+                        showRating={true}
+                      />
+                    ))}
+                  </div>
                 </div>
               )}
-            </div>
+            </TabsContent>
+
+            <TabsContent value="local" className="pt-2">
+              {/* Same structure for local services */}
+              <h2 className="text-2xl font-semibold mb-4">Available Services</h2>
+              {loading ? (
+                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+                  {Array.from({ length: 6 }).map((_, i) => (
+                    <div key={i} className="border rounded-lg p-4 space-y-2">
+                      <Skeleton className="h-40 w-full" />
+                      <Skeleton className="h-4 w-3/4" />
+                      <Skeleton className="h-4 w-1/2" />
+                      <Skeleton className="h-4 w-full" />
+                      <Skeleton className="h-10 w-full" />
+                    </div>
+                  ))}
+                </div>
+              ) : (
+                <>
+                  {filteredServices.length > 0 ? (
+                    <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+                      {filteredServices.map((service) => (
+                        <ServiceCard 
+                          key={service.id}
+                          id={service.id}
+                          title={service.title}
+                          description={service.description}
+                          price={service.price}
+                          category={service.category}
+                          image={service.image}
+                          provider={{
+                            id: service.providerId || "unknown",
+                            name: "Service Provider",
+                            avatar: "/default-avatar.png",
+                            location: service.location || "Philippines",
+                            rating: service.rating,
+                            hasRating: service.rating > 0
+                          }}
+                          showRating={true}
+                        />
+                      ))}
+                    </div>
+                  ) : (
+                    <div className="text-center py-8">
+                      <p className="text-lg text-muted-foreground">No services found matching your criteria.</p>
+                      <Button 
+                        variant="link" 
+                        className="mt-2"
+                        onClick={resetFilters}
+                      >
+                        Reset filters
+                      </Button>
+                    </div>
+                  )}
+                </>
+              )}
+              
+              {/* Display services with clients */}
+              {filteredUnavailableServices.length > 0 && (
+                <div className="mt-12">
+                  <h2 className="text-2xl font-semibold mb-4">Services Currently Unavailable (With Active Clients)</h2>
+                  <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+                    {filteredUnavailableServices.map((service) => (
+                      <ServiceCard 
+                        key={service.id}
+                        id={service.id}
+                        title={service.title}
+                        description={service.description}
+                        price={service.price}
+                        category={service.category}
+                        image={service.image}
+                        provider={{
+                          id: service.providerId || "unknown",
+                          name: "Service Provider",
+                          avatar: "/default-avatar.png",
+                          location: service.location || "Philippines",
+                          rating: service.rating,
+                          hasRating: service.rating > 0
+                        }}
+                        showRating={true}
+                      />
+                    ))}
+                  </div>
+                </div>
+              )}
+            </TabsContent>
           </Tabs>
         </div>
         
-        {/* Filters sidebar - hidden on mobile unless showFilters is true */}
-        <div className={`w-full md:w-1/4 ${showFilters ? 'block' : 'hidden md:block'}`}>
-          <Card className="sticky top-4">
-            <CardContent className="p-6">
-              <h2 className="font-semibold text-lg mb-4">Filter Services</h2>
-              
-              {/* Category Filter */}
-              <div className="mb-6">
-                <Label htmlFor="category" className="block mb-2">Category</Label>
-                <Select value={selectedCategory} onValueChange={setSelectedCategory}>
-                  <SelectTrigger id="category" className="w-full">
-                    <SelectValue placeholder="All Categories" />
-                  </SelectTrigger>
-                  <SelectContent>
-                    <SelectItem value="all">All Categories</SelectItem>
-                    {(activeTab === "global" ? globalCategories : localCategories).map((category) => (
-                      <SelectItem key={category.slug} value={category.slug}>
-                        {category.name}
-                      </SelectItem>
-                    ))}
-                  </SelectContent>
-                </Select>
+        {/* Desktop Filter Sidebar */}
+        <div className={`md:w-1/4 hidden md:block sticky top-16 h-fit max-h-[calc(100vh-120px)] overflow-y-auto pb-8 space-y-8`}>
+          <div className="rounded-lg border p-4 space-y-6">
+            <div>
+              <h3 className="font-semibold mb-3">Categories</h3>
+              <div className="space-y-1.5">
+                <Button 
+                  variant={selectedCategory === "all" ? "default" : "outline"} 
+                  className="w-full justify-start"
+                  onClick={() => setSelectedCategory("all")}
+                >
+                  All Categories
+                </Button>
+                {(activeTab === "global" ? globalCategories : localCategories).map((category) => (
+                  <Button 
+                    key={category.slug}
+                    variant={selectedCategory === category.slug ? "default" : "outline"} 
+                    className="w-full justify-start"
+                    onClick={() => setSelectedCategory(category.slug)}
+                  >
+                    {category.name}
+                  </Button>
+                ))}
               </div>
-              
-              {/* Price Range Filter */}
-              <div className="mb-6">
-                <Label className="block mb-2">Price Range (₱)</Label>
-                <Slider
-                  value={priceRange}
-                  min={0}
-                  max={10000}
-                  step={500}
+            </div>
+            
+            <div>
+              <h3 className="font-semibold mb-3">Price Range</h3>
+              <div className="space-y-3">
+                <Slider 
+                  value={priceRange} 
+                  min={0} 
+                  max={10000} 
+                  step={500} 
                   onValueChange={setPriceRange}
-                  className="my-6"
                 />
-                <div className="flex justify-between text-sm text-muted-foreground">
+                <div className="flex justify-between">
                   <span>₱{priceRange[0]}</span>
                   <span>₱{priceRange[1]}</span>
                 </div>
               </div>
-              
-              {/* Location Filter */}
-              <div className="mb-6">
-                <Label htmlFor="location" className="block mb-2">Location</Label>
+            </div>
+            
+            {locations.length > 0 && (
+              <div>
+                <h3 className="font-semibold mb-3">Location</h3>
                 <Select value={location} onValueChange={setLocation}>
-                  <SelectTrigger id="location" className="w-full">
-                    <SelectValue placeholder="All Locations" />
+                  <SelectTrigger>
+                    <SelectValue placeholder="Select location" />
                   </SelectTrigger>
                   <SelectContent>
                     <SelectItem value="all">All Locations</SelectItem>
-                    {locations
-                      .filter(loc => loc !== "Philippines")
-                      .sort()
-                      .map((loc) => (
-                        <SelectItem key={loc} value={loc}>{loc}</SelectItem>
-                      ))}
+                    {locations.map((loc) => (
+                      <SelectItem key={loc} value={loc}>{loc}</SelectItem>
+                    ))}
                   </SelectContent>
                 </Select>
               </div>
+            )}
+            
+            <Button 
+              variant="outline" 
+              className="w-full"
+              onClick={resetFilters}
+            >
+              Reset Filters
+            </Button>
+          </div>
+        </div>
+        
+        {/* Mobile Filter Dialog */}
+        <Dialog open={showFilters} onOpenChange={setShowFilters}>
+          <DialogContent className="sm:max-w-md">
+            <DialogHeader>
+              <DialogTitle>Filters</DialogTitle>
+            </DialogHeader>
+            <div className="space-y-6">
+              <div>
+                <h3 className="font-semibold mb-3">Categories</h3>
+                <div className="space-y-1.5">
+                  <Button 
+                    variant={selectedCategory === "all" ? "default" : "outline"} 
+                    className="w-full justify-start"
+                    onClick={() => setSelectedCategory("all")}
+                  >
+                    All Categories
+                  </Button>
+                  {(activeTab === "global" ? globalCategories : localCategories).map((category) => (
+                    <Button 
+                      key={category.slug}
+                      variant={selectedCategory === category.slug ? "default" : "outline"} 
+                      className="w-full justify-start"
+                      onClick={() => setSelectedCategory(category.slug)}
+                    >
+                      {category.name}
+                    </Button>
+                  ))}
+                </div>
+              </div>
               
-              {/* Reset Filters Button */}
+              <div>
+                <h3 className="font-semibold mb-3">Price Range</h3>
+                <div className="space-y-3">
+                  <Slider 
+                    value={priceRange} 
+                    min={0} 
+                    max={10000} 
+                    step={500} 
+                    onValueChange={setPriceRange}
+                  />
+                  <div className="flex justify-between">
+                    <span>₱{priceRange[0]}</span>
+                    <span>₱{priceRange[1]}</span>
+                  </div>
+                </div>
+              </div>
+              
+              {locations.length > 0 && (
+                <div>
+                  <h3 className="font-semibold mb-3">Location</h3>
+                  <Select value={location} onValueChange={setLocation}>
+                    <SelectTrigger>
+                      <SelectValue placeholder="Select location" />
+                    </SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="all">All Locations</SelectItem>
+                      {locations.map((loc) => (
+                        <SelectItem key={loc} value={loc}>{loc}</SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
+                </div>
+              )}
+              
               <Button 
                 variant="outline" 
                 className="w-full"
-                onClick={resetFilters}
+                onClick={() => {
+                  resetFilters()
+                  setShowFilters(false)
+                }}
               >
                 Reset Filters
               </Button>
-            </CardContent>
-          </Card>
-        </div>
+            </div>
+          </DialogContent>
+        </Dialog>
       </div>
     </div>
   )

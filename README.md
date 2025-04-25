@@ -28,6 +28,20 @@ Alima is a comprehensive web platform designed to connect Filipino service provi
 - **Responsive Design**: Fully optimized for all device sizes
 - **Notifications System**: Real-time notifications for messages, payments, and reviews
 
+## Security Features
+
+Alima implements multiple security measures to protect against common web vulnerabilities:
+
+- **NoSQL Injection Protection**: Input validation and sanitization for all database operations
+- **Content Security Policy (CSP)**: Restricts resource loading to trusted sources
+- **Cross-Site Scripting (XSS) Prevention**: Input sanitization and output encoding
+- **File Upload Security**: Content-type validation, size restrictions, and randomized filenames
+- **Secure Database Rules**: Role-based access control through Firestore security rules
+- **Input Validation**: Schema-based validation using Zod for all user inputs
+- **Directory Traversal Prevention**: Path sanitization for file operations
+- **Secure Headers**: X-XSS-Protection, X-Frame-Options, X-Content-Type-Options
+- **Permissions Policy**: Limits browser feature access for additional security
+
 ## Service Categories
 
 ### Global Services
@@ -87,11 +101,15 @@ git clone https://github.com/yourusername/alima-web-integration.git
 cd alima-web-integration
 ```
 
-2. Install dependencies
+2. Install all dependencies (one command)
+```bash
+npm ci
+```
+This command installs all dependencies exactly as specified in the package-lock.json, ensuring consistency across different environments.
+
+Alternatively, you can use:
 ```bash
 npm install
-# or
-yarn install
 ```
 
 3. Set up environment variables

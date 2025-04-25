@@ -17,6 +17,8 @@ import { Loading } from "@/components/loading"
 import { Label } from "@/components/ui/label"
 import { Input } from "@/components/ui/input"
 import { RatingModal } from "@/components/messages/rating-modal"
+import { sanitizeBasicInput } from "@/app/lib/validation"
+import { MessageSchema, PaymentProofSchema } from "@/app/lib/validation"
 
 // Add a new UploadPaymentProofDialog component
 const UploadPaymentProofDialog = ({ 
@@ -608,8 +610,11 @@ export default function MessagePage({ params }: { params: { providerId: string }
     }
 
     try {
+      // Sanitize the message content to prevent injection
+      const sanitizedMessage = sanitizeBasicInput(message.trim());
+      
       // Collect the message data before sending to use for optimistic UI update
-      const newMessageText = message.trim();
+      const newMessageText = sanitizedMessage;
       
       // Clear the message input immediately for better UX
       setMessage("");
@@ -643,7 +648,7 @@ export default function MessagePage({ params }: { params: { providerId: string }
       // Create/update conversation data with service information if available
       const conversationData: any = {
         participants,
-        lastMessage: paymentProofUrl ? "Payment proof attached" : message,
+        lastMessage: paymentProofUrl ? "Payment proof attached" : sanitizedMessage,
         lastMessageTime: timestamp,
         lastSenderId: user.uid,
         lastSenderName: userName,
@@ -659,6 +664,32 @@ export default function MessagePage({ params }: { params: { providerId: string }
       
       await setDoc(doc(db, "conversations", conversationId), conversationData, { merge: true })
 
+      // Validate the message data
+      try {
+        // For regular text messages
+        if (sanitizedMessage) {
+          const messageValidation = MessageSchema.safeParse({
+            text: sanitizedMessage,
+            conversationId,
+            senderId: user.uid,
+            receiverId: providerId
+          });
+  
+          if (!messageValidation.success) {
+            console.error("Message validation failed:", messageValidation.error);
+            toast({
+              title: "Error",
+              description: "Message format is invalid",
+              variant: "destructive",
+            });
+            return;
+          }
+        }
+      } catch (validationError) {
+        console.error("Validation error:", validationError);
+        // Continue with sending the message even if validation fails as a fallback
+      }
+
       // Add the message
       const messageData: any = {
         conversationId,
@@ -666,7 +697,7 @@ export default function MessagePage({ params }: { params: { providerId: string }
         senderName: userName,
         senderAvatar: user.photoURL || userData?.profilePicture || userData?.avatar || null,
         receiverId: providerId,
-        text: message.trim() ? message : "Payment proof attached",
+        text: sanitizedMessage ? sanitizedMessage : "Payment proof attached",
         timestamp,
         read: false,
       }
@@ -689,7 +720,7 @@ export default function MessagePage({ params }: { params: { providerId: string }
         title: paymentProofUrl ? "Payment Proof Received" : "New Message",
         description: paymentProofUrl 
           ? `${userName} sent you a payment proof`
-          : `${userName}: ${message.length > 50 ? message.substring(0, 50) + '...' : message}`,
+          : `${userName}: ${sanitizedMessage.length > 50 ? sanitizedMessage.substring(0, 50) + '...' : sanitizedMessage}`,
         timestamp,
         read: false,
         data: {
@@ -697,7 +728,7 @@ export default function MessagePage({ params }: { params: { providerId: string }
           senderId: user.uid,
           senderName: userName,
           senderAvatar: user.photoURL || userData?.profilePicture || userData?.avatar || null,
-          messageText: message,
+          messageText: sanitizedMessage,
         }
       }
       
@@ -717,8 +748,6 @@ export default function MessagePage({ params }: { params: { providerId: string }
         description: "Your message has been sent successfully",
       })
 
-      // Remove the router.push to stay on the current page
-      // router.push("/dashboard/messages") // This line should be removed
     } catch (error) {
       console.error("Error sending message:", error)
       toast({
@@ -781,6 +810,26 @@ export default function MessagePage({ params }: { params: { providerId: string }
     }
 
     try {
+      // Validate the payment proof data
+      try {
+        const paymentProofValidation = PaymentProofSchema.safeParse(paymentInfo);
+        if (!paymentProofValidation.success) {
+          console.error("Payment proof validation failed:", paymentProofValidation.error);
+          toast({
+            title: "Error",
+            description: "Payment information format is invalid",
+            variant: "destructive",
+          });
+          return;
+        }
+      } catch (validationError) {
+        console.error("Validation error:", validationError);
+        // Continue with sending the payment proof even if validation fails as a fallback
+      }
+
+      // Sanitize text content
+      const sanitizedText = sanitizeBasicInput(paymentInfo.text || "Payment proof attached");
+
       const { db } = await initializeFirebase();
       if (!db) {
         toast({
@@ -849,7 +898,7 @@ export default function MessagePage({ params }: { params: { providerId: string }
         senderName: userName,
         senderAvatar: user.photoURL || userData?.profilePicture || userData?.avatar || null,
         receiverId: providerId,
-        text: paymentInfo.text || "Payment proof attached",
+        text: sanitizedText,
         timestamp,
         read: false,
         paymentProof: paymentInfo.paymentProof,
@@ -881,7 +930,7 @@ export default function MessagePage({ params }: { params: { providerId: string }
           senderId: user.uid,
           senderName: userName,
           senderAvatar: user.photoURL || userData?.profilePicture || userData?.avatar || null,
-          messageText: paymentInfo.text || "Payment proof attached",
+          messageText: sanitizedText,
           paymentProofUrl: paymentInfo.paymentProof,
           paymentAmount: paymentInfo.paymentAmount || 0
         }

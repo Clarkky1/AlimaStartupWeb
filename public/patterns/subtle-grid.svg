@@ -1,0 +1,5 @@
+<svg width="40" height="40" xmlns="http://www.w3.org/2000/svg">
+  <path d="M0 0h40v40H0z" fill="none"/>
+  <path d="M0 0h1v40H0zM39 0h1v40h-1zM0 0h40v1H0zM0 39h40v1H0z" fill="currentColor" fill-opacity="0.05"/>
+  <path d="M20 0h1v40h-1zM0 20h40v1H0z" fill="currentColor" fill-opacity="0.08"/>
+</svg> 

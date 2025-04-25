@@ -1,20 +1,19 @@
-// Font loading fallback script
+// Handle Google Fonts loading failure gracefully
 (function() {
-  // Function to check if Google Fonts loaded
-  function checkGoogleFontsLoaded() {
-    const fontFamily = window.getComputedStyle(document.body).fontFamily;
-    return fontFamily.includes('Poppins') || fontFamily.includes('Work Sans');
+  // Check if the fonts have already been loaded
+  if (document.fonts && document.fonts.check) {
+    // Set a timeout to check if the fonts have loaded
+    setTimeout(function() {
+      const fontLoaded = document.fonts.check('1em Poppins') && document.fonts.check('1em Work Sans');
+      
+      // If the fonts haven't loaded, apply fallback fonts
+      if (!fontLoaded) {
+        console.log('Applying font fallbacks due to loading failure');
+        
+        // Apply system fonts as fallbacks
+        document.documentElement.style.setProperty('--font-heading', 'system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif');
+        document.documentElement.style.setProperty('--font-sans', 'system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif');
+      }
+    }, 3000); // Check after 3 seconds
   }
-
-  // Check after a delay to allow fonts to load
-  setTimeout(function() {
-    // If Google Fonts failed to load, add the fallback CSS
-    if (!checkGoogleFontsLoaded()) {
-      const link = document.createElement('link');
-      link.rel = 'stylesheet';
-      link.href = '/fallback-fonts.css';
-      document.head.appendChild(link);
-      console.log('Applied font fallbacks due to Google Fonts loading failure');
-    }
-  }, 2000); // 2 second timeout
 })(); 

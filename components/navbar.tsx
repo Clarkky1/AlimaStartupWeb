@@ -335,13 +335,13 @@ export function Navbar() {
                 <Button 
                   variant="ghost" 
                   onClick={() => router.push('/login')}
-                  className="text-sm font-medium text-foreground/80 hover:text-foreground/95 hover:bg-white/10"
+                  className="hidden md:inline-flex text-sm font-medium text-foreground/80 hover:text-foreground/95 hover:bg-white/10"
                 >
                   Log in
                 </Button>
                 <Button
                   onClick={() => router.push('/signup')}
-                  className="text-sm bg-primary/80 hover:bg-primary/90 shadow-[0_0_10px_rgba(59,130,246,0.3)]"
+                  className="hidden md:inline-flex text-sm bg-primary/80 hover:bg-primary/90 shadow-[0_0_10px_rgba(59,130,246,0.3)]"
                 >
                   Sign up
                 </Button>

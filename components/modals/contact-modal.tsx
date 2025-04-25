@@ -356,6 +356,7 @@ export function ContactModal({ isOpen, onClose, provider, service }: ContactModa
                     id="payment-proof"
                     accept="image/*"
                     className="hidden"
+                    aria-label="Upload payment proof"
                     onChange={(e) => {
                       const file = e.target.files?.[0]
                       if (file) {

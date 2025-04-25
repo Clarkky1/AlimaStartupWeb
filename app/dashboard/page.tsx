@@ -8,7 +8,7 @@ import { DashboardOverview } from "@/components/dashboard/dashboard-overview"
 import { Button } from "@/components/ui/button"
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from "@/components/ui/card"
-import { Collection, Building2, Users, Star, DollarSign, Settings2, Package } from "lucide-react"
+import { Building2, Users, Star, DollarSign, Settings2, Package } from "lucide-react"
 import { initializeFirebase } from "@/app/lib/firebase"
 import { collection, query, where, getDocs, orderBy, limit, doc, updateDoc, Timestamp } from "firebase/firestore"
 import { RatingModal } from "@/components/messages/rating-modal"
@@ -30,7 +30,7 @@ export default function DashboardPage() {
   const { toast } = useToast();
 
   useEffect(() => {
-    if (!loading && (!user || user.role !== "provider")) {
+    if (!loading && !user) {
       router.push("/login")
     }
     
@@ -359,7 +359,7 @@ export default function DashboardPage() {
     )
   }
 
-  if (!user || user.role !== "provider") {
+  if (!user) {
     return null
   }
 

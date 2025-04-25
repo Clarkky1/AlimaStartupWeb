@@ -925,11 +925,10 @@ export default function MessagePage({ params }: { params: { providerId: string }
   const [paymentProofOpen, setPaymentProofOpen] = useState(false);
 
   // Add this effect to check for rating notifications
-  useEffectState(() => {
+  useEffect(() => {
     if (!user) return;
     
     async function checkForRatingNotifications() {
-      console.log("Checking for rating notifications...");
       try {
         const { db } = await initializeFirebase();
         if (!db) {
@@ -937,7 +936,7 @@ export default function MessagePage({ params }: { params: { providerId: string }
           return;
         }
         
-        const { collection, query, where, getDocs, limit, doc, updateDoc } = await import("firebase/firestore");
+        const { collection, query, where, getDocs, limit, doc, updateDoc, onSnapshot } = await import("firebase/firestore");
         
         // Find unread payment confirmation notifications
         const notificationsQuery = query(
@@ -948,62 +947,49 @@ export default function MessagePage({ params }: { params: { providerId: string }
           limit(1)
         );
         
-        console.log("Looking for notifications for user:", user?.uid);
-        const snapshot = await getDocs(notificationsQuery);
-        
-        console.log("Found notifications:", snapshot.size);
-        
-        if (!snapshot.empty) {
-          const notification = snapshot.docs[0];
-          const data = notification.data();
-          console.log("Notification data:", JSON.stringify(data, null, 2));
-          
-          // Check if the data structure is as expected
-          if (data && data.data) {
-            console.log("Found data object with properties:", Object.keys(data.data).join(", "));
+        // Set up real-time listener for payment confirmation notifications
+        const unsubscribe = onSnapshot(notificationsQuery, (snapshot) => {
+          if (!snapshot.empty) {
+            const notification = snapshot.docs[0];
+            const data = notification.data();
             
             // Show rating dialog
-            const serviceInfo = {
-              serviceId: data.data.serviceId || "",
-              serviceTitle: data.data.serviceTitle || "Service",
-              providerId: data.data.providerId || providerId,
-              providerName: data.data.providerName || (provider?.name || provider?.displayName || "Provider"),
-              transactionId: data.data.transactionId || ""
-            };
-            
-            console.log("Setting rating service data:", JSON.stringify(serviceInfo, null, 2));
-            setRatingService(serviceInfo);
-            setRatingDialogOpen(true);
-            
-            // Mark the notification as read
-            await updateDoc(doc(db, "notifications", notification.id), {
-              read: true
-            });
-            console.log("Marked notification as read");
-          } else {
-            console.log("Notification missing required data structure");
+            if (data && data.data) {
+              const serviceInfo = {
+                serviceId: data.data.serviceId || "",
+                serviceTitle: data.data.serviceTitle || "Service",
+                providerId: data.data.providerId || providerId,
+                providerName: data.data.providerName || (provider?.name || provider?.displayName || "Provider"),
+                transactionId: data.data.transactionId || ""
+              };
+              
+              // Display toast notification
+              toast({
+                title: "Payment Confirmed",
+                description: `Your payment for ${serviceInfo.serviceTitle} has been confirmed. Please rate the provider.`,
+              });
+              
+              // Set rating service data and show the dialog
+              setRatingService(serviceInfo);
+              setRatingDialogOpen(true);
+              
+              // Mark the notification as read
+              updateDoc(doc(db, "notifications", notification.id), {
+                read: true
+              });
+            }
           }
-        } else {
-          console.log("No unread rating notifications found");
-        }
+        });
+        
+        return () => unsubscribe();
       } catch (error) {
         console.error("Error checking for rating notifications:", error);
       }
     }
     
     // Check when component loads
-    console.log("Initial check for rating notifications");
     checkForRatingNotifications();
-    
-    // Set up interval to periodically check (every 10 seconds for faster checking)
-    console.log("Setting up notification check interval");
-    const intervalId = setInterval(checkForRatingNotifications, 10000);
-    
-    return () => {
-      console.log("Clearing notification check interval");
-      clearInterval(intervalId);
-    };
-  }, [user, provider, providerId]);
+  }, [user, provider, providerId, toast]);
 
   if (loading || authLoading) {
     return <Loading />

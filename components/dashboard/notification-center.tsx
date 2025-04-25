@@ -54,6 +54,8 @@ export function NotificationCenter({ userOnly = false, onNotificationRead }: Not
     providerId: string;
     providerName: string;
     serviceId: string;
+    serviceTitle?: string;
+    transactionId?: string;
     raterIsProvider?: boolean;
   }>({
     providerId: '',
@@ -278,6 +280,8 @@ export function NotificationCenter({ userOnly = false, onNotificationRead }: Not
             providerId: notification.data.providerId,
             providerName: notification.data.providerName || 'Service Provider',
             serviceId: notification.data.serviceId,
+            serviceTitle: notification.data.serviceTitle,
+            transactionId: notification.data.transactionId,
             raterIsProvider: false
           })
           setShowRatingDialog(true)
@@ -426,6 +430,8 @@ export function NotificationCenter({ userOnly = false, onNotificationRead }: Not
         providerId={ratingData.providerId}
         providerName={ratingData.providerName}
         serviceId={ratingData.serviceId}
+        serviceTitle={ratingData.serviceTitle}
+        transactionId={ratingData.transactionId}
         raterIsProvider={ratingData.raterIsProvider}
       />
     </>

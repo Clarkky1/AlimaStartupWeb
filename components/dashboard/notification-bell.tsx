@@ -30,6 +30,8 @@ export function NotificationBell() {
     providerId: string;
     providerName: string;
     serviceId: string;
+    serviceTitle?: string;
+    transactionId?: string;
   }>({
     providerId: '',
     providerName: '',
@@ -202,7 +204,9 @@ export function NotificationBell() {
           setRatingData({
             providerId: notification.data.providerId,
             providerName: notification.data.providerName || 'Service Provider',
-            serviceId: notification.data.serviceId
+            serviceId: notification.data.serviceId,
+            serviceTitle: notification.data.serviceTitle,
+            transactionId: notification.data.transactionId
           })
           setShowRatingDialog(true)
         } else {
@@ -341,6 +345,8 @@ export function NotificationBell() {
         providerId={ratingData.providerId}
         providerName={ratingData.providerName}
         serviceId={ratingData.serviceId}
+        serviceTitle={ratingData.serviceTitle}
+        transactionId={ratingData.transactionId}
       />
     </>
   )

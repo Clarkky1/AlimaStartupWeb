@@ -616,6 +616,20 @@ const ConversationInfo = ({
                   </div>
                 )}
 
+                {/* Client-to-Provider Rating Feature */}
+                {!isCurrentUserProvider && isUserProvider && currentUser?.uid !== user.id && (
+                  <div className="border-t pt-3">
+                    <Button 
+                      variant="outline" 
+                      className="w-full flex items-center justify-center gap-2"
+                      onClick={() => onRateProvider?.(user.id, user.name || user.displayName || "Provider")}
+                    >
+                      <Star className="h-4 w-4 text-yellow-400" />
+                      <span>Rate this Provider</span>
+                    </Button>
+                  </div>
+                )}
+
                 {user.location && (
                   <div className="border-t pt-3">
                     <h4 className="text-sm font-semibold mb-1">Location</h4>
@@ -932,6 +946,8 @@ const RatingDialog = ({
 
 export function MessageCenter() {
   const { user, loading: authLoading } = useAuth()
+  const router = useRouter()
+  const { toast } = useToast()
   const [loading, setLoading] = useState(true)
   const [conversations, setConversations] = useState<ConversationData[]>([])
   const [selectedConversation, setSelectedConversation] = useState<ConversationData | null>(null)
@@ -941,8 +957,6 @@ export function MessageCenter() {
   const messagesEndRef = useRef<HTMLDivElement>(null)
   const [unsubscribeMessages, setUnsubscribeMessages] = useState<any>(null)
   const [showUserInfo, setShowUserInfo] = useState(false)
-  const { toast } = useToast()
-  const router = useRouter()
   const [previewImage, setPreviewImage] = useState<string | null>(null)
   const [isProvider, setIsProvider] = useState(false)
   const [showConversationList, setShowConversationList] = useState(true)
@@ -1252,7 +1266,7 @@ export function MessageCenter() {
           userId: message.senderId,
           type: "payment_confirmed_rating", // Special type to trigger rating dialog
           title: "Payment Confirmed - Rate Service",
-          description: `Your payment of ₱${paymentAmount} for ${serviceTitle} has been confirmed. Please rate your experience.`,
+          description: `Your payment of ₱${paymentAmount} for ${serviceTitle} has been confirmed. You can now rate the provider.`,
           timestamp: serverTimestamp(),
           read: false,
           data: {
@@ -1322,7 +1336,7 @@ export function MessageCenter() {
         const { db } = await initializeFirebase();
         if (!db) return;
         
-        const { collection, query, where, getDocs, limit } = await import("firebase/firestore");
+        const { collection, query, where, onSnapshot, limit, doc } = await import("firebase/firestore");
         
         // Find recent unread payment confirmation notifications
         const notificationsQuery = query(
@@ -1333,30 +1347,35 @@ export function MessageCenter() {
           limit(1)
         );
         
-        const snapshot = await getDocs(notificationsQuery);
-        
-        if (!snapshot.empty) {
-          const notification = snapshot.docs[0];
-          const data = notification.data();
-          
-          // Show rating dialog
-          if (data.data && data.data.requiresRating) {
-            setRatingService({
-              serviceId: data.data.serviceId || "",
-              serviceTitle: data.data.serviceTitle || "Service",
-              providerId: data.data.providerId || "",
-              providerName: data.data.providerName || "Provider",
-              transactionId: data.data.transactionId || ""
-            });
-            setRatingDialogOpen(true);
+        // Set up real-time listener for payment confirmation notifications
+        const unsubscribe = onSnapshot(notificationsQuery, async (snapshot) => {
+          if (!snapshot.empty) {
+            const notification = snapshot.docs[0];
+            const data = notification.data();
             
-            // Mark the notification as read
-            const { updateDoc, doc } = await import("firebase/firestore");
-            await updateDoc(doc(db, "notifications", notification.id), {
-              read: true
-            });
+            // Show rating dialog
+            if (data.data && data.data.requiresRating) {
+              setRatingService({
+                serviceId: data.data.serviceId || "",
+                serviceTitle: data.data.serviceTitle || "Service",
+                providerId: data.data.providerId || "",
+                providerName: data.data.providerName || "Provider",
+                transactionId: data.data.transactionId || ""
+              });
+              setRatingDialogOpen(true);
+              
+              // Mark the notification as read
+              const { updateDoc } = await import("firebase/firestore");
+              await updateDoc(doc(db, "notifications", notification.id), {
+                read: true
+              });
+            }
           }
-        }
+        }, (error) => {
+          console.error("Error in notification snapshot:", error);
+        });
+        
+        return () => unsubscribe();
       } catch (error) {
         console.error("Error checking for rating notifications:", error);
       }
@@ -2110,6 +2129,16 @@ export function MessageCenter() {
   
   // Handle provider rating
   const handleRateProvider = (providerId: string, providerName: string) => {
+    // Only allow clients to rate providers
+    if (user?.role === 'provider') {
+      toast({
+        title: "Not available",
+        description: "Only clients can rate providers",
+        variant: "destructive",
+      });
+      return;
+    }
+    
     setProviderToRate({
       providerId,
       providerName
@@ -2581,20 +2610,9 @@ export function MessageCenter() {
         />
       )}
       
-      {/* Provider-to-Provider Rating Dialog */}
-      <RatingDialog
-        isOpen={providerRatingDialogOpen}
-        onClose={() => {
-          setProviderRatingDialogOpen(false);
-          setProviderToRate({
-            providerId: "",
-            providerName: ""
-          });
-        }}
-        providerId={providerToRate.providerId}
-        providerName={providerToRate.providerName}
-        raterIsProvider={true}
-      />
+      {/* Provider-to-Provider Rating Dialog - Removed to ensure only clients can rate providers */}
+      
+      {/* Rating functionality modified - only clients can rate providers now */}
     </div>
   )
 }

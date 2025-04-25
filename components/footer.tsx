@@ -48,16 +48,6 @@ export function Footer() {
                   Marketing
                 </Link>
               </li>
-              <li>
-                <span className="text-muted-foreground cursor-default opacity-60">
-                  Terms of Service
-                </span>
-              </li>
-              <li>
-                <span className="text-muted-foreground cursor-default opacity-60">
-                  Privacy Policy
-                </span>
-              </li>
             </ul>
           </div>
 

@@ -51,7 +51,7 @@ export default function RootLayout({
         <title>Alima - Find and Offer Services</title>
         <meta name="description" content="Connect with service providers and clients in your area" />
         <link rel="icon" href="/AlimaLOGO.svg" sizes="any" type="image/svg+xml" />
-        <link rel="apple-touch-icon" href="/AlimaLOGO.svg" type="image/svg+xml" />
+        <meta name="apple-touch-icon" content="/AlimaLOGO.svg" />
         <link rel="manifest" href="/site.webmanifest" />
         
         {/* Add preload hint for critical JavaScript */}

@@ -8,10 +8,10 @@ import { Button } from "@/components/ui/button"
 import { Textarea } from "@/components/ui/textarea"
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from "@/components/ui/card"
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar"
-import { Send, ArrowLeft, Upload, X, Phone, Mail, MapPin, Star, Info, SendHorizontal } from "lucide-react"
+import { Send, ArrowLeft, Upload, X, Phone, Mail, MapPin, Star, Info, SendHorizontal, CheckCircle, XCircle } from "lucide-react"
 import { useToast } from "@/components/ui/use-toast"
 import { initializeFirebase } from "@/app/lib/firebase"
-import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription, DialogTrigger } from "@/components/ui/dialog"
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription, DialogTrigger, DialogFooter } from "@/components/ui/dialog"
 import { Badge } from "@/components/ui/badge"
 import { Loading } from "@/components/loading"
 import { Label } from "@/components/ui/label"
@@ -19,6 +19,217 @@ import { Input } from "@/components/ui/input"
 import { RatingModal } from "@/components/messages/rating-modal"
 import { sanitizeBasicInput } from "@/app/lib/validation"
 import { MessageSchema, PaymentProofSchema } from "@/app/lib/validation"
+
+// Add a ServiceNotificationCard component
+const ServiceNotificationCard = ({ 
+  message, 
+  isProvider, 
+  onAccept, 
+  onDecline, 
+  serviceAccepted 
+}: { 
+  message: any; 
+  isProvider: boolean; 
+  onAccept: () => void; 
+  onDecline: () => void; 
+  serviceAccepted: boolean;
+}) => {
+  if (!message.isSystemMessage || !message.serviceId) return null;
+  
+  return (
+    <div className="w-full flex justify-center my-4">
+      <div className="bg-muted/60 rounded-lg p-4 max-w-md w-full">
+        <div className="flex items-center gap-2 mb-2">
+          <Info className="h-5 w-5 text-primary" />
+          <span className="font-medium">Service Request</span>
+        </div>
+        <p className="text-sm mb-3">{message.text}</p>
+        
+        {isProvider && !serviceAccepted && (
+          <div className="flex gap-2 mt-3">
+            <Button 
+              onClick={onAccept} 
+              size="sm" 
+              className="bg-green-600 hover:bg-green-700 text-white flex-1"
+            >
+              <CheckCircle className="mr-1 h-4 w-4" />
+              Accept
+            </Button>
+            <Button 
+              onClick={onDecline} 
+              size="sm" 
+              variant="outline" 
+              className="border-red-500 text-red-500 hover:bg-red-50 hover:text-red-600 flex-1"
+            >
+              <XCircle className="mr-1 h-4 w-4" />
+              Decline
+            </Button>
+          </div>
+        )}
+        
+        {serviceAccepted && (
+          <Badge className="bg-green-500 text-white">
+            Service Accepted
+          </Badge>
+        )}
+      </div>
+    </div>
+  );
+};
+
+// Add a PaymentProofCard component with confirmation button
+const PaymentProofCard = ({
+  message,
+  isProvider,
+  onConfirm,
+  onImageLoaded
+}: {
+  message: any;
+  isProvider: boolean;
+  onConfirm: () => void;
+  onImageLoaded?: () => void;
+}) => {
+  if (!message.paymentProof) return null;
+  
+  return (
+    <div
+      className={`mb-4 flex ${message.senderId === "current_user" ? 'justify-end' : 'justify-start'}`}
+    >
+      <div className={`max-w-[85%] sm:max-w-[70%] ${
+        message.senderId === "current_user" && message.paymentProof 
+          ? 'bg-blue-500 text-white' 
+          : message.senderId === "current_user" 
+            ? 'bg-primary text-primary-foreground' 
+            : 'bg-muted'
+      } rounded-lg p-3`}>
+        <div className="flex items-center gap-2 mb-1">
+          <Avatar className="h-6 w-6">
+            <AvatarImage src={message.senderAvatar || "/person-male-1.svg"} />
+            <AvatarFallback>{message.senderName?.[0]}</AvatarFallback>
+          </Avatar>
+          <span className="text-sm font-medium">{message.senderName}</span>
+        </div>
+        
+        <div className="space-y-2">
+          <p className="text-sm font-medium">I've sent the payment.</p>
+          
+          <div className="space-y-1 mt-1">
+            <div className="flex justify-between items-center">
+              <span className="text-xs font-semibold">Payment Proof:</span>
+              {message.paymentConfirmed && (
+                <Badge className="bg-green-500 text-white text-xs">Confirmed</Badge>
+              )}
+            </div>
+            
+            {message.serviceTitle && (
+              <div className="flex items-center text-xs">
+                <span className="font-semibold mr-1">Service:</span>
+                <span>{message.serviceTitle}</span>
+              </div>
+            )}
+            
+            {message.paymentAmount > 0 && (
+              <div className="flex items-center text-xs">
+                <span className="font-semibold mr-1">Amount:</span>
+                <span>₱{message.paymentAmount.toLocaleString()}</span>
+              </div>
+            )}
+          </div>
+          
+          <img 
+            src={message.paymentProof} 
+            alt="Payment Proof" 
+            className="mt-2 max-h-40 w-full object-contain rounded-md border border-white/20 bg-white/10"
+            onLoad={onImageLoaded}
+          />
+          
+          {isProvider && !message.paymentConfirmed && (
+            <div className="mt-2">
+              <Button 
+                onClick={onConfirm}
+                size="sm" 
+                className="w-full bg-green-600 hover:bg-green-700 text-white"
+              >
+                <CheckCircle className="mr-1 h-4 w-4" />
+                Confirm Payment
+              </Button>
+            </div>
+          )}
+          
+          {message.paymentConfirmed && (
+            <div className="flex items-center gap-1 text-xs mt-1">
+              <CheckCircle className="h-3.5 w-3.5 text-green-500" />
+              <span>Payment confirmed!</span>
+            </div>
+          )}
+        </div>
+        
+        <span className="text-xs opacity-70 block mt-1">
+          {message.timestamp?.toLocaleTimeString()}
+        </span>
+      </div>
+    </div>
+  );
+};
+
+// Add a ServiceVisibilityDialog component
+const ServiceVisibilityDialog = ({
+  open,
+  onOpenChange,
+  serviceId,
+  serviceTitle,
+  onMakeAvailable,
+  onCreateNew
+}: {
+  open: boolean;
+  onOpenChange: (open: boolean) => void;
+  serviceId: string;
+  serviceTitle: string;
+  onMakeAvailable: () => void;
+  onCreateNew: () => void;
+}) => {
+  return (
+    <Dialog open={open} onOpenChange={onOpenChange}>
+      <DialogContent>
+        <DialogHeader>
+          <DialogTitle>Service Completed</DialogTitle>
+          <DialogDescription>
+            Your service '{serviceTitle}' has been completed and payment confirmed.
+            What would you like to do with this service listing?
+          </DialogDescription>
+        </DialogHeader>
+        
+        <div className="space-y-4 my-4">
+          <div className="flex flex-col gap-2 p-3 border rounded-md hover:bg-muted/30 cursor-pointer" onClick={onMakeAvailable}>
+            <div className="flex items-center gap-2">
+              <CheckCircle className="h-5 w-5 text-green-500" />
+              <h3 className="font-medium">Make Available Again</h3>
+            </div>
+            <p className="text-sm text-muted-foreground pl-7">
+              Return this service to your active listings for other clients to book.
+            </p>
+          </div>
+          
+          <div className="flex flex-col gap-2 p-3 border rounded-md hover:bg-muted/30 cursor-pointer" onClick={onCreateNew}>
+            <div className="flex items-center gap-2">
+              <div className="h-5 w-5 flex items-center justify-center text-primary-foreground bg-primary rounded-full text-xs">+</div>
+              <h3 className="font-medium">Create New Service</h3>
+            </div>
+            <p className="text-sm text-muted-foreground pl-7">
+              Hide this service and create a new one with updated information.
+            </p>
+          </div>
+        </div>
+        
+        <DialogFooter>
+          <Button variant="outline" onClick={() => onOpenChange(false)}>
+            Decide Later
+          </Button>
+        </DialogFooter>
+      </DialogContent>
+    </Dialog>
+  );
+};
 
 // Add a new UploadPaymentProofDialog component
 const UploadPaymentProofDialog = ({ 
@@ -286,6 +497,12 @@ export default function MessagePage({ params }: { params: { providerId: string }
     transactionId?: string;
   } | null>(null);
 
+  // Add states for service acceptance and visibility
+  const [pendingService, setPendingService] = useState<any>(null);
+  const [serviceAccepted, setServiceAccepted] = useState(false);
+  const [serviceCompleted, setServiceCompleted] = useState(false);
+  const [showServiceVisibilityDialog, setShowServiceVisibilityDialog] = useState(false);
+
   const messagesEndRef = useRef<HTMLDivElement>(null)
 
   // Add state for mobile navigation
@@ -441,11 +658,41 @@ export default function MessagePage({ params }: { params: { providerId: string }
         const { db } = await initializeFirebase();
         if (!db) throw new Error("Failed to initialize Firebase");
         
-        const { collection, query, where, orderBy, onSnapshot, doc, getDoc } = await import("firebase/firestore");
+        const { collection, query, where, orderBy, onSnapshot, doc, getDoc, getDocs } = await import("firebase/firestore");
 
         const participants = [user.uid, providerId].sort();
         const conversationId = participants.join('_');
         
+        // Check for reserved services (indicating service acceptance)
+        try {
+          const servicesQuery = query(
+            collection(db, "services"),
+            where("providerId", "==", providerId),
+            where("isReserved", "==", true),
+            where("reservedBy", "==", user.uid)
+          );
+          
+          const servicesSnapshot = await getDocs(servicesQuery);
+          if (!servicesSnapshot.empty) {
+            // Found a reserved service
+            setServiceAccepted(true);
+            
+            // Get the first reserved service
+            const reservedServiceDoc = servicesSnapshot.docs[0];
+            const reservedServiceData = reservedServiceDoc.data();
+            
+            // Find matching service in providerServices
+            const matchingService = providerServices.find(s => s.id === reservedServiceDoc.id);
+            if (matchingService) {
+              setSelectedService(matchingService);
+              setPendingService(matchingService);
+            }
+          }
+        } catch (error) {
+          console.error("Error checking reserved services:", error);
+        }
+        
+        // Set up messages listener
         const messagesQuery = query(
           collection(db, "messages"),
           where("conversationId", "==", conversationId),
@@ -454,28 +701,58 @@ export default function MessagePage({ params }: { params: { providerId: string }
 
         const unsubscribe = onSnapshot(messagesQuery, async (snapshot) => {
           const messagesList: any[] = [];
+          let hasCompletedPayment = false;
+          
           for (const messageDoc of snapshot.docs) {
             const messageData = messageDoc.data();
             const senderId = messageData.senderId;
             
-            // Get sender's profile data
-            const senderDocRef = doc(db, "users", senderId);
-            const senderDoc = await getDoc(senderDocRef);
-            const senderData = senderDoc.data() || {};
+            // Skip processing for system messages with no sender
+            if (senderId === "system") {
+              messagesList.push({
+                id: messageDoc.id,
+                ...messageData,
+                timestamp: messageData.timestamp?.toDate(),
+              });
+              continue;
+            }
             
-            // Determine if sender is provider or client
-            const isProvider = senderData.role === 'provider';
-            
-            messagesList.push({
-              id: messageDoc.id,
-              ...messageData,
-              timestamp: messageData.timestamp?.toDate(),
-              senderName: isProvider ? 
-                (senderData.name || senderData.displayName || "Provider") : 
-                (senderData.name || senderData.displayName || "Client"),
-              senderAvatar: senderData.profilePicture || senderData.avatar || null
-            });
+            try {
+              // Get sender's profile data
+              const senderDocRef = doc(db, "users", senderId);
+              const senderDoc = await getDoc(senderDocRef);
+              const senderData = senderDoc.data() || {};
+              
+              // Determine if sender is provider or client
+              const isProvider = senderData.role === 'provider';
+              
+              // Check if this is a confirmed payment
+              if (messageData.paymentProof && messageData.paymentConfirmed) {
+                hasCompletedPayment = true;
+                setServiceCompleted(true);
+              }
+              
+              messagesList.push({
+                id: messageDoc.id,
+                ...messageData,
+                timestamp: messageData.timestamp?.toDate(),
+                senderName: isProvider ? 
+                  (senderData.name || senderData.displayName || "Provider") : 
+                  (senderData.name || senderData.displayName || "Client"),
+                senderAvatar: senderData.profilePicture || senderData.avatar || null
+              });
+            } catch (error) {
+              console.error("Error processing message:", error);
+              // Add message with minimal processing if we couldn't get sender data
+              messagesList.push({
+                id: messageDoc.id,
+                ...messageData,
+                timestamp: messageData.timestamp?.toDate(),
+                senderName: "User",
+              });
+            }
           }
+          
           setMessages(messagesList);
           setMessagesLoading(false); // End loading messages
           scrollToBottom();
@@ -494,7 +771,7 @@ export default function MessagePage({ params }: { params: { providerId: string }
     }
 
     fetchMessages();
-  }, [user, providerId, authLoading]);
+  }, [user, providerId, authLoading, providerServices]);
 
   // Add effect to mark messages as read when viewing them
   useEffectState(() => {
@@ -973,7 +1250,434 @@ export default function MessagePage({ params }: { params: { providerId: string }
   // Add state for dialog visibility
   const [paymentProofOpen, setPaymentProofOpen] = useState(false);
 
-  // Add this effect to check for rating notifications
+  // Function to handle service selection and notify provider
+  const handleServiceSelection = async (service: any) => {
+    if (!user || !providerId || !service) return;
+    
+    try {
+      const { db } = await initializeFirebase();
+      if (!db) {
+        toast({
+          title: "Error",
+          description: "Failed to initialize Firebase",
+          variant: "destructive",
+        });
+        return;
+      }
+      
+      const { collection, addDoc, serverTimestamp, doc, getDoc } = await import("firebase/firestore");
+      
+      // Get user profile data
+      const userDoc = await getDoc(doc(db, "users", user.uid));
+      const userData = userDoc.data() || {};
+      const userName = userData?.displayName || userData?.name || user.displayName || "Anonymous";
+      
+      // Create notification for the provider
+      const notificationData = {
+        userId: providerId,
+        type: "service_selected",
+        title: "Service Selected",
+        description: `${userName} has selected your service: ${service.title}`,
+        timestamp: serverTimestamp(),
+        read: false,
+        data: {
+          serviceId: service.id,
+          serviceTitle: service.title,
+          clientId: user.uid,
+          clientName: userName,
+          clientAvatar: user.photoURL || userData?.profilePicture || userData?.avatar || null,
+        }
+      };
+      
+      await addDoc(collection(db, "notifications"), notificationData);
+      
+      // Set the selected service
+      setSelectedService(service);
+      setPendingService(service);
+      
+      // Send a system message about service selection
+      const participants = [user.uid, providerId].sort();
+      const conversationId = participants.join('_');
+      
+      const systemMessageData = {
+        conversationId,
+        senderId: "system",
+        senderName: "System",
+        receiverId: providerId,
+        text: `${userName} has selected the service: ${service.title}`,
+        timestamp: serverTimestamp(),
+        read: false,
+        isSystemMessage: true,
+        serviceId: service.id,
+        serviceTitle: service.title,
+      };
+      
+      await addDoc(collection(db, "messages"), systemMessageData);
+      
+      toast({
+        title: "Service Selected",
+        description: `You've selected ${service.title}. The provider has been notified.`,
+      });
+      
+    } catch (error) {
+      console.error("Error selecting service:", error);
+      toast({
+        title: "Error",
+        description: "Failed to select service",
+        variant: "destructive",
+      });
+    }
+  };
+
+  // Function for provider to accept or decline a service
+  const handleServiceResponse = async (serviceId: string, accept: boolean) => {
+    if (!user || !providerId || !serviceId) return;
+    
+    // Ensure user is the provider
+    if (user.uid !== providerId) {
+      toast({
+        title: "Not Authorized",
+        description: "Only the service provider can accept or decline services",
+        variant: "destructive",
+      });
+      return;
+    }
+    
+    try {
+      const { db } = await initializeFirebase();
+      if (!db) {
+        toast({
+          title: "Error",
+          description: "Failed to initialize Firebase",
+          variant: "destructive",
+        });
+        return;
+      }
+      
+      const { collection, addDoc, serverTimestamp, doc, getDoc, updateDoc, query, where, getDocs } = await import("firebase/firestore");
+      
+      // Find the conversation with this service
+      const conversations = query(
+        collection(db, "conversations"),
+        where("serviceId", "==", serviceId)
+      );
+      
+      const conversationSnapshot = await getDocs(conversations);
+      if (conversationSnapshot.empty) {
+        toast({
+          title: "Error",
+          description: "Conversation not found",
+          variant: "destructive",
+        });
+        return;
+      }
+      
+      const conversationDoc = conversationSnapshot.docs[0];
+      const conversationData = conversationDoc.data();
+      const clientId = conversationData.participants.find((id: string) => id !== providerId);
+      
+      if (!clientId) {
+        toast({
+          title: "Error",
+          description: "Client not found",
+          variant: "destructive",
+        });
+        return;
+      }
+      
+      // Get service details
+      const serviceDoc = await getDoc(doc(db, "services", serviceId));
+      if (!serviceDoc.exists()) {
+        toast({
+          title: "Error",
+          description: "Service not found",
+          variant: "destructive",
+        });
+        return;
+      }
+      
+      const serviceData = serviceDoc.data();
+      
+      // Get provider details
+      const providerDoc = await getDoc(doc(db, "users", providerId));
+      const providerData = providerDoc.data() || {};
+      const providerName = providerData?.displayName || providerData?.name || "Provider";
+      
+      // Update the service visibility if accepted
+      if (accept) {
+        await updateDoc(doc(db, "services", serviceId), {
+          isReserved: true,
+          reservedBy: clientId,
+          reservedAt: serverTimestamp()
+        });
+        
+        setServiceAccepted(true);
+      }
+      
+      // Create notification for the client
+      const notificationData = {
+        userId: clientId,
+        type: accept ? "service_accepted" : "service_declined",
+        title: accept ? "Service Request Accepted" : "Service Request Declined",
+        description: accept 
+          ? `${providerName} has accepted your service request for ${serviceData.title}`
+          : `${providerName} has declined your service request for ${serviceData.title}`,
+        timestamp: serverTimestamp(),
+        read: false,
+        data: {
+          serviceId,
+          serviceTitle: serviceData.title,
+          providerId,
+          providerName
+        }
+      };
+      
+      await addDoc(collection(db, "notifications"), notificationData);
+      
+      // Send a system message
+      const systemMessageData = {
+        conversationId: conversationDoc.id,
+        senderId: "system",
+        senderName: "System",
+        receiverId: clientId,
+        text: accept 
+          ? `${providerName} has accepted your service request for ${serviceData.title}. Please proceed with payment.`
+          : `${providerName} has declined your service request for ${serviceData.title}.`,
+        timestamp: serverTimestamp(),
+        read: false,
+        isSystemMessage: true,
+        serviceId,
+        serviceTitle: serviceData.title,
+      };
+      
+      await addDoc(collection(db, "messages"), systemMessageData);
+      
+      toast({
+        title: accept ? "Service Accepted" : "Service Declined",
+        description: accept 
+          ? "You've accepted the service request. The client has been notified."
+          : "You've declined the service request. The client has been notified.",
+      });
+      
+    } catch (error) {
+      console.error("Error handling service response:", error);
+      toast({
+        title: "Error",
+        description: `Failed to ${accept ? "accept" : "decline"} service`,
+        variant: "destructive",
+      });
+    }
+  };
+
+  // Function to handle payment confirmation by a provider
+  const handlePaymentConfirmation = async (messageId: string, serviceId: string, clientId: string) => {
+    if (!user || user.uid !== providerId) {
+      toast({
+        title: "Not Authorized",
+        description: "Only the service provider can confirm payments",
+        variant: "destructive",
+      });
+      return;
+    }
+    
+    try {
+      const { db } = await initializeFirebase();
+      if (!db) {
+        toast({
+          title: "Error",
+          description: "Failed to initialize Firebase",
+          variant: "destructive",
+        });
+        return;
+      }
+      
+      const { collection, addDoc, serverTimestamp, doc, getDoc, updateDoc } = await import("firebase/firestore");
+      
+      // Get message data
+      const messageDoc = await getDoc(doc(db, "messages", messageId));
+      if (!messageDoc.exists()) {
+        toast({
+          title: "Error",
+          description: "Message not found",
+          variant: "destructive",
+        });
+        return;
+      }
+      
+      const messageData = messageDoc.data();
+      
+      // Get service data
+      const serviceDoc = await getDoc(doc(db, "services", serviceId));
+      if (!serviceDoc.exists()) {
+        toast({
+          title: "Error",
+          description: "Service not found",
+          variant: "destructive",
+        });
+        return;
+      }
+      
+      const serviceData = serviceDoc.data();
+      
+      // Get provider details
+      const providerDoc = await getDoc(doc(db, "users", providerId));
+      const providerData = providerDoc.data() || {};
+      const providerName = providerData?.displayName || providerData?.name || "Provider";
+      
+      // Mark the payment as confirmed in the message
+      await updateDoc(doc(db, "messages", messageId), {
+        paymentConfirmed: true,
+        paymentConfirmedAt: serverTimestamp(),
+        paymentConfirmedBy: providerId
+      });
+      
+      // Record the transaction
+      const transactionData = {
+        serviceId,
+        serviceTitle: serviceData.title,
+        providerId,
+        providerName,
+        clientId,
+        amount: messageData.paymentAmount || serviceData.price || 0,
+        timestamp: serverTimestamp(),
+        status: "completed",
+        paymentProofUrl: messageData.paymentProof,
+        paymentMessageId: messageId,
+      };
+      
+      const transactionRef = await addDoc(collection(db, "transactions"), transactionData);
+      
+      // Mark service as completed
+      await updateDoc(doc(db, "services", serviceId), {
+        lastCompletedAt: serverTimestamp(),
+        totalCompletions: (serviceData.totalCompletions || 0) + 1
+      });
+      
+      setServiceCompleted(true);
+      
+      // Create notification for the client to rate the service
+      const notificationData = {
+        userId: clientId,
+        type: "payment_confirmed_rating",
+        title: "Payment Confirmed",
+        description: `Your payment for ${serviceData.title} has been confirmed. Please rate the provider.`,
+        timestamp: serverTimestamp(),
+        read: false,
+        data: {
+          serviceId,
+          serviceTitle: serviceData.title,
+          providerId,
+          providerName,
+          transactionId: transactionRef.id
+        }
+      };
+      
+      await addDoc(collection(db, "notifications"), notificationData);
+      
+      // Send a system message
+      const participants = [clientId, providerId].sort();
+      const conversationId = participants.join('_');
+      
+      const systemMessageData = {
+        conversationId,
+        senderId: "system",
+        senderName: "System",
+        receiverId: clientId,
+        text: `Payment confirmed for ${serviceData.title}. Please rate the service provider.`,
+        timestamp: serverTimestamp(),
+        read: false,
+        isSystemMessage: true,
+        serviceId,
+        serviceTitle: serviceData.title,
+      };
+      
+      await addDoc(collection(db, "messages"), systemMessageData);
+      
+      toast({
+        title: "Payment Confirmed",
+        description: "You've confirmed the payment. The client has been asked to rate your service.",
+      });
+      
+      // Show service visibility dialog after a short delay
+      setTimeout(() => {
+        setShowServiceVisibilityDialog(true);
+      }, 1500);
+      
+    } catch (error) {
+      console.error("Error confirming payment:", error);
+      toast({
+        title: "Error",
+        description: "Failed to confirm payment",
+        variant: "destructive",
+      });
+    }
+  };
+
+  // Function to handle service visibility after completion
+  const handleServiceVisibility = async (serviceId: string, makeAvailable: boolean) => {
+    if (!user || user.uid !== providerId) {
+      toast({
+        title: "Not Authorized",
+        description: "Only the service provider can update service visibility",
+        variant: "destructive",
+      });
+      return;
+    }
+    
+    try {
+      const { db } = await initializeFirebase();
+      if (!db) {
+        toast({
+          title: "Error",
+          description: "Failed to initialize Firebase",
+          variant: "destructive",
+        });
+        return;
+      }
+      
+      const { doc, updateDoc, serverTimestamp } = await import("firebase/firestore");
+      
+      if (makeAvailable) {
+        // Make the service available again
+        await updateDoc(doc(db, "services", serviceId), {
+          isReserved: false,
+          reservedBy: null,
+          reservedAt: null,
+          active: true,
+          lastUpdated: serverTimestamp()
+        });
+        
+        toast({
+          title: "Service Available",
+          description: "Your service has been made available again",
+        });
+      } else {
+        // Create a duplicate service dialog logic would go here or in a separate function
+        // For now, just make the service unavailable
+        await updateDoc(doc(db, "services", serviceId), {
+          active: false,
+          lastUpdated: serverTimestamp()
+        });
+        
+        toast({
+          title: "Service Hidden",
+          description: "Your service has been hidden from listings",
+        });
+      }
+      
+      setShowServiceVisibilityDialog(false);
+      
+    } catch (error) {
+      console.error("Error updating service visibility:", error);
+      toast({
+        title: "Error",
+        description: "Failed to update service visibility",
+        variant: "destructive",
+      });
+    }
+  };
+
+  // Add effect to check for rating notifications
   useEffect(() => {
     if (!user) return;
     
@@ -1254,79 +1958,44 @@ export default function MessagePage({ params }: { params: { providerId: string }
                     </div>
                   </div>
                 ) : messages.map((msg) => (
-                  <div
-                    key={msg.id}
-                    className={`mb-4 flex ${msg.senderId === user?.uid ? 'justify-end' : 'justify-start'}`}
-                  >
-                    <div className={`max-w-[85%] sm:max-w-[70%] ${
-                      // Special styling for payment proofs from the current user
-                      msg.senderId === user?.uid && msg.paymentProof 
-                        ? 'bg-blue-500 text-white' 
-                        : msg.senderId === user?.uid 
-                          ? 'bg-primary text-primary-foreground' 
-                          : 'bg-muted'
-                    } rounded-lg p-3`}>
-                      <div className="flex items-center gap-2 mb-1">
-                        <Avatar className="h-6 w-6">
-                          <AvatarImage src={msg.senderAvatar || "/person-male-1.svg"} />
-                          <AvatarFallback>{msg.senderName?.[0]}</AvatarFallback>
-                        </Avatar>
-                        <span className="text-sm font-medium">{msg.senderName}</span>
-                      </div>
-                      
-                      {/* Special formatting for payment proofs */}
-                      {msg.paymentProof ? (
-                        <div className="space-y-2">
-                          <p className="text-sm font-medium">I've sent the payment.</p>
-                          
-                          <div className="space-y-1 mt-1">
-                            <div className="flex justify-between items-center">
-                              <span className="text-xs font-semibold">Payment Proof:</span>
-                              {msg.paymentConfirmed && (
-                                <Badge className="bg-green-500 text-white text-xs">Confirmed</Badge>
-                              )}
-                            </div>
-                            
-                            {msg.serviceTitle && (
-                              <div className="flex items-center text-xs">
-                                <span className="font-semibold mr-1">Service:</span>
-                                <span>{msg.serviceTitle}</span>
-                              </div>
-                            )}
-                            
-                            {msg.paymentAmount > 0 && (
-                              <div className="flex items-center text-xs">
-                                <span className="font-semibold mr-1">Amount:</span>
-                                <span>₱{msg.paymentAmount.toLocaleString()}</span>
-                              </div>
-                            )}
+                  <div key={msg.id}>
+                    {/* Check if it's a system message with service info */}
+                    {msg.isSystemMessage && msg.serviceId ? (
+                      <ServiceNotificationCard
+                        message={msg}
+                        isProvider={user?.uid === providerId}
+                        onAccept={() => handleServiceResponse(msg.serviceId, true)}
+                        onDecline={() => handleServiceResponse(msg.serviceId, false)}
+                        serviceAccepted={serviceAccepted}
+                      />
+                    ) : msg.paymentProof ? (
+                      <PaymentProofCard
+                        message={msg}
+                        isProvider={user?.uid === providerId}
+                        onConfirm={() => handlePaymentConfirmation(msg.id, msg.serviceId || selectedService?.id, msg.senderId)}
+                        onImageLoaded={handleImageLoaded}
+                      />
+                    ) : (
+                      <div
+                        className={`mb-4 flex ${msg.senderId === user?.uid ? 'justify-end' : 'justify-start'}`}
+                      >
+                        <div className={`max-w-[85%] sm:max-w-[70%] ${
+                          msg.senderId === user?.uid ? 'bg-primary text-primary-foreground' : 'bg-muted'
+                        } rounded-lg p-3`}>
+                          <div className="flex items-center gap-2 mb-1">
+                            <Avatar className="h-6 w-6">
+                              <AvatarImage src={msg.senderAvatar || "/person-male-1.svg"} />
+                              <AvatarFallback>{msg.senderName?.[0]}</AvatarFallback>
+                            </Avatar>
+                            <span className="text-sm font-medium">{msg.senderName}</span>
                           </div>
-                          
-                          <img 
-                            src={msg.paymentProof} 
-                            alt="Payment Proof" 
-                            className="mt-2 max-h-40 w-full object-contain rounded-md border border-white/20 bg-white/10"
-                            onLoad={handleImageLoaded}
-                          />
-                          
-                          {msg.paymentConfirmed && (
-                            <div className="flex items-center gap-1 text-xs mt-1">
-                              <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="h-3.5 w-3.5">
-                                <path d="M12 22c5.523 0 10-4.477 10-10S17.523 2 12 2 2 6.477 2 12s4.477 10 10 10z"></path>
-                                <path d="m9 12 2 2 4-4"></path>
-                              </svg>
-                              <span>Your payment was confirmed!</span>
-                            </div>
-                          )}
+                          <p className="text-sm break-words">{msg.text}</p>
+                          <span className="text-xs opacity-70 block mt-1">
+                            {msg.timestamp?.toLocaleTimeString()}
+                          </span>
                         </div>
-                      ) : (
-                        <p className="text-sm break-words">{msg.text}</p>
-                      )}
-                      
-                      <span className="text-xs opacity-70 block mt-1">
-                        {msg.timestamp?.toLocaleTimeString()}
-                      </span>
-                    </div>
+                      </div>
+                    )}
                   </div>
                 ))}
                 <div ref={messagesEndRef} />
@@ -1340,12 +2009,19 @@ export default function MessagePage({ params }: { params: { providerId: string }
                         <Badge
                           key={service.id}
                           variant={selectedService?.id === service.id ? "default" : "outline"}
-                          className="cursor-pointer"
+                          className={`cursor-pointer ${service.isReserved && 'opacity-50'}`}
                           onClick={() => {
-                            setSelectedService(service);
-                            // Keep on 'contacts' tab instead of switching to chat
-                            if (window.innerWidth < 768) {
-                              setActiveMobileTab('contacts');
+                            if (!service.isReserved) {
+                              handleServiceSelection(service);
+                              // Keep on 'contacts' tab instead of switching to chat
+                              if (window.innerWidth < 768) {
+                                setActiveMobileTab('contacts');
+                              }
+                            } else {
+                              toast({
+                                title: "Service Unavailable",
+                                description: "This service is currently reserved or unavailable.",
+                              });
                             }
                           }}
                         >
@@ -1532,7 +2208,7 @@ export default function MessagePage({ params }: { params: { providerId: string }
                               key={service.id} 
                               className="p-2 rounded-md border cursor-pointer hover:bg-muted"
                               onClick={() => {
-                                setSelectedService(service);
+                                handleServiceSelection(service);
                                 // Keep on 'contacts' tab instead of switching to chat
                                 if (window.innerWidth < 768) {
                                   setActiveMobileTab('contacts');
@@ -1583,6 +2259,22 @@ export default function MessagePage({ params }: { params: { providerId: string }
         transactionId={ratingService?.transactionId}
         raterIsProvider={false}
       />
+
+      {/* Add Service Visibility Dialog */}
+      {selectedService && (
+        <ServiceVisibilityDialog
+          open={showServiceVisibilityDialog}
+          onOpenChange={setShowServiceVisibilityDialog}
+          serviceId={selectedService.id}
+          serviceTitle={selectedService.title}
+          onMakeAvailable={() => handleServiceVisibility(selectedService.id, true)}
+          onCreateNew={() => {
+            handleServiceVisibility(selectedService.id, false);
+            // Navigate to create service page
+            router.push('/dashboard/services/create');
+          }}
+        />
+      )}
     </div>
   )
 }

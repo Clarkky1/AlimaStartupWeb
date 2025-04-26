@@ -204,6 +204,7 @@ h1, h2, h3, h4, h5, h6 {
   body {
     touch-action: manipulation;
     -webkit-text-size-adjust: 100%;
+    text-size-adjust: 100%;
   }
   
   /* Remove highlight on tap for iOS */

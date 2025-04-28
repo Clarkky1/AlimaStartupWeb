@@ -510,13 +510,24 @@ const ConversationInfo = ({
         const userDoc = await getDoc(doc(db, "users", userId))
         if (userDoc.exists()) {
           const userData = userDoc.data()
-          setUser({
-            ...userData,
-            id: userId
-          })
           
           // Check if user is a provider
-          setIsUserProvider(userData.role === "provider")
+          const isProvider = userData.role === "provider"
+          setIsUserProvider(isProvider)
+          
+          // For non-providers (clients), remove the rating info to prevent display
+          if (!isProvider && 'rating' in userData) {
+            const { rating, ...userDataWithoutRating } = userData
+            setUser({
+              ...userDataWithoutRating,
+              id: userId
+            })
+          } else {
+            setUser({
+              ...userData,
+              id: userId
+            })
+          }
         }
         
         // Get service data if available
@@ -543,6 +554,27 @@ const ConversationInfo = ({
     
     fetchUserAndService()
   }, [userId, serviceId, toast])
+  
+  // This effect ensures no ratings are shown for clients through direct DOM manipulation
+  useEffect(() => {
+    if (isVisible && user && user.role !== 'provider' && typeof window !== 'undefined') {
+      // Use a timeout to let the DOM render first
+      const timeout = setTimeout(() => {
+        // Find and remove any rating elements
+        const ratingElements = document.querySelectorAll('.flex.items-center.justify-center.gap-1.text-sm.my-2');
+        ratingElements.forEach(element => {
+          // Check if this is a rating element by looking for star icons or rating text
+          if (element.textContent?.includes('2.0') || 
+              element.innerHTML.includes('star') || 
+              element.innerHTML.includes('Star')) {
+            element.remove(); // Completely remove the element
+          }
+        });
+      }, 300);
+      
+      return () => clearTimeout(timeout);
+    }
+  }, [isVisible, user]);
   
   if (!isVisible) return null
   
@@ -580,20 +612,6 @@ const ConversationInfo = ({
                     </Badge>
                   )}
                 </div>
-
-                {user.rating && (
-                  <div className="flex items-center justify-center gap-1 text-sm my-2">
-                    <div className="flex items-center">
-                      {[1, 2, 3, 4, 5].map((star) => (
-                        <Star
-                          key={star}
-                          className={`h-4 w-4 ${star <= Math.round(user.rating) ? "text-yellow-400 fill-yellow-400" : "text-gray-300"}`}
-                        />
-                      ))}
-                    </div>
-                    <span className="ml-1">{user.rating.toFixed(1)}</span>
-                  </div>
-                )}
 
                 {user.bio && (
                   <div className="border-t pt-3">

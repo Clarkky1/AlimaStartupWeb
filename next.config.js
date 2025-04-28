@@ -50,7 +50,6 @@ const nextConfig = {
     ];
   },
   images: {
-    domains: ['firebasestorage.googleapis.com', 'placehold.co', 'res.cloudinary.com'],
     remotePatterns: [
       {
         protocol: 'https',

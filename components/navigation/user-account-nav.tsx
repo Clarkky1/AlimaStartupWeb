@@ -419,7 +419,8 @@ const ConversationInfo = ({ userId, serviceId, isVisible, onClose }: {
                 )}
               </div>
 
-              {user.rating && (
+              {/* Only show rating for providers */}
+              {user.rating && user.role === 'provider' && (
                 <div className="flex items-center justify-center gap-1 text-sm my-2">
                   <div className="flex items-center">
                     {[1, 2, 3, 4, 5].map((star) => (

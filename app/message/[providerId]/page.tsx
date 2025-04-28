@@ -1933,19 +1933,7 @@ export default function MessagePage({ params }: { params: { providerId: string }
                   </Avatar>
                   <div className="flex-1 min-w-0">
                     <CardTitle className="truncate">{provider?.name || provider?.displayName || "User"}</CardTitle>
-                    {/* Add rating component - only for providers */}
-                    {isChatUserProvider && (
-                      <div className="flex items-center gap-1 text-sm my-2">
-                        <div className="flex items-center">
-                          <Star className="h-4 w-4 text-yellow-400 fill-yellow-400" />
-                          <Star className="h-4 w-4 text-yellow-400 fill-yellow-400" />
-                          <Star className="h-4 w-4 text-gray-300" />
-                          <Star className="h-4 w-4 text-gray-300" />
-                          <Star className="h-4 w-4 text-gray-300" />
-                        </div>
-                        <span className="ml-1">2.0</span>
-                      </div>
-                    )}
+                    {/* Rating component removed from here - will only be shown in info section */}
                     <CardDescription className="truncate">{provider?.title || provider?.bio?.substring(0, 60) || roleText.roleLabel}</CardDescription>
                   </div>
                 </div>
@@ -2115,19 +2103,7 @@ export default function MessagePage({ params }: { params: { providerId: string }
                   <div className="text-2xl font-semibold leading-none tracking-tight mt-4">{roleText.title}</div>
                 </div>
 
-                {/* Only show rating for providers */}
-                {isChatUserProvider && (
-                  <div className="flex items-center justify-center gap-1 text-sm my-2">
-                    <div className="flex items-center">
-                      <Star className="h-4 w-4 text-yellow-400 fill-yellow-400" />
-                      <Star className="h-4 w-4 text-yellow-400 fill-yellow-400" />
-                      <Star className="h-4 w-4 text-gray-300" />
-                      <Star className="h-4 w-4 text-gray-300" />
-                      <Star className="h-4 w-4 text-gray-300" />
-                    </div>
-                    <span className="ml-1">2.0</span>
-                  </div>
-                )}
+                {/* Rating section removed */}
 
                 {provider?.bio && (
                   <div className="border-t pt-3">

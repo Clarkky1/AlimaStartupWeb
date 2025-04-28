@@ -30,7 +30,7 @@ export function HeroSection() {
   }
   
   return (
-    <section className="relative overflow-hidden pt-4 pb-16 md:pt-12 md:pb-28">
+    <section className="relative overflow-hidden pt-4 pb-16 md:pt-6 md:pb-28">
       <div className="absolute inset-0 -z-10">
         <div className="absolute inset-0 bg-white dark:bg-black"></div>
         {/* Decorative elements */}

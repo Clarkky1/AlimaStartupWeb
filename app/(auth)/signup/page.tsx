@@ -141,16 +141,16 @@ export default function SignupPage() {
             <CardContent className="p-0">
               {/* Updated Tabs */}
               <Tabs defaultValue="user" className="mb-3 sm:mb-4" onValueChange={setRole}>
-                <TabsList className="grid w-full grid-cols-2 bg-gray-800 p-1 rounded-lg">
+                <TabsList className="grid w-full grid-cols-2 bg-white-800 p-1 rounded-lg">
                   <TabsTrigger 
                     value="user" 
-                    className="text-sm sm:text-base text-white bg-transparent data-[state=active]:bg-white data-[state=active]:text-black rounded-md py-1"
+                    className="text-sm sm:text-base text-green bg-transparent data-[state=active]:bg-white data-[state=active]:text-black rounded-md py-1"
                   >
                     User
                   </TabsTrigger>
                   <TabsTrigger 
                     value="provider" 
-                    className="text-sm sm:text-base text-white bg-transparent data-[state=active]:bg-white data-[state=active]:text-black rounded-md py-1"
+                    className="text-sm sm:text-base text-green bg-transparent data-[state=active]:bg-white data-[state=active]:text-black rounded-md py-1"
                   >
                     Service Provider
                   </TabsTrigger>
@@ -167,7 +167,7 @@ export default function SignupPage() {
                       value={name}
                       onChange={(e) => setName(e.target.value)}
                       required
-                      className="bg-gray-800 text-white border-gray-600 h-10 sm:h-11"
+                      className="bg-white-800 text-gray border-gray-600 h-10 sm:h-11"
                     />
                   </div>
                   <div className="space-y-1.5 sm:space-y-2">
@@ -179,7 +179,7 @@ export default function SignupPage() {
                       value={email}
                       onChange={(e) => setEmail(e.target.value)}
                       required
-                      className="bg-gray-800 text-white border-gray-600 h-10 sm:h-11"
+                      className="bg-white-800 text-gray border-gray-600 h-10 sm:h-11"
                     />
                   </div>
                   <div className="space-y-1.5 sm:space-y-2">
@@ -191,7 +191,7 @@ export default function SignupPage() {
                       value={password}
                       onChange={(e) => setPassword(e.target.value)}
                       required
-                      className="bg-gray-800 text-white border-gray-600 h-10 sm:h-11"
+                      className="bg-white-800 text-gray border-gray-600 h-10 sm:h-11"
                     />
                   </div>
                   <div className="space-y-1.5 sm:space-y-2">
@@ -203,7 +203,7 @@ export default function SignupPage() {
                       value={confirmPassword}
                       onChange={(e) => setConfirmPassword(e.target.value)}
                       required
-                      className="bg-gray-800 text-white border-gray-600 h-10 sm:h-11"
+                      className="bg-white-800 text-gray border-gray-600 h-10 sm:h-11"
                     />
                   </div>
 

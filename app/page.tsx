@@ -562,7 +562,7 @@ export default function Home() {
         {/* 1. HEADLINE - Hero Section (acts as main headline/tagline) */}
         <Suspense fallback={<div className="h-[600px] w-full bg-neutral-100 dark:bg-neutral-900" />}>
           <div className="mx-auto max-w-7xl px-6 sm:px-8 lg:px-10">
-            <section className="pt-16 md:pt-24 pb-16 md:pb-24 bg-transparent" id="home">
+            <section className="pt-5 md:pt-10 pb-10 md:pb-24 bg-transparent" id="home">
               <div className="grid grid-cols-1 gap-10 lg:grid-cols-2 lg:gap-20 items-center">
                 <div className="order-2 lg:order-1" data-aos="fade-right" data-aos-delay="200">
                   <div className="relative">
@@ -753,7 +753,7 @@ export default function Home() {
         </Suspense>
         
         {/* 4. PROBLEM WE SOLVE */}
-        <div id="problem" className="py-32 relative scroll-mt-40 bg-gradient-to-b from-white via-white to-transparent dark:from-black dark:via-black dark:to-transparent overflow-hidden">
+        <div id="problem" className="py-12 relative scroll-mt-40 bg-gradient-to-b from-white via-white to-transparent dark:from-black dark:via-black dark:to-transparent overflow-hidden">
           {/* Decorative elements */}
           <div className="absolute w-[500px] h-[500px] -top-64 -right-64 bg-pink-100/30 dark:bg-pink-900/10 rounded-full blur-3xl"></div>
           <div className="absolute w-[500px] h-[500px] -bottom-64 -left-64 bg-indigo-100/30 dark:bg-indigo-900/10 rounded-full blur-3xl"></div>
@@ -905,7 +905,7 @@ export default function Home() {
                     <div className="flex items-center mb-6">
                       <div className="h-14 w-14 rounded-full bg-white/20 dark:bg-white/10 mr-4 overflow-hidden">
                       <PlaceholderImage
-                        src="/testimonial-1.jpg"
+                        src="/Wavy Buddies - Avatar.png"
                         alt="User" 
                           width={56}
                           height={56}
@@ -913,7 +913,7 @@ export default function Home() {
                       />
                     </div>
                     <div>
-                        <h4 className="font-semibold text-neutral-800 dark:text-white">Sarah Johnson</h4>
+                        <h4 className="font-semibold text-neutral-800 dark:text-white">Desiree</h4>
                         <p className="text-sm text-neutral-600 dark:text-neutral-300">Business Owner</p>
                     </div>
                   </div>
@@ -937,7 +937,7 @@ export default function Home() {
                     <div className="flex items-center mb-6">
                       <div className="h-14 w-14 rounded-full bg-white/20 dark:bg-white/10 mr-4 overflow-hidden">
                       <PlaceholderImage
-                        src="/testimonial-2.jpg"
+                        src="/Wavy Buddies - Avatar.png 1.png"
                         alt="User"
                           width={56}
                           height={56}
@@ -945,7 +945,7 @@ export default function Home() {
                       />
                     </div>
                     <div>
-                        <h4 className="font-semibold text-neutral-800 dark:text-white">Michael Torres</h4>
+                        <h4 className="font-semibold text-neutral-800 dark:text-white">Torres</h4>
                         <p className="text-sm text-neutral-600 dark:text-neutral-300">Freelance Designer</p>
                     </div>
                   </div>
@@ -969,7 +969,7 @@ export default function Home() {
                     <div className="flex items-center mb-6">
                       <div className="h-14 w-14 rounded-full bg-white/20 dark:bg-white/10 mr-4 overflow-hidden">
                       <PlaceholderImage
-                        src="/testimonial-3.jpg"
+                        src="/Wavy Buddies - Avatar.png 2.png"
                         alt="User"
                           width={56}
                           height={56}
@@ -977,7 +977,7 @@ export default function Home() {
                       />
                     </div>
                     <div>
-                        <h4 className="font-semibold text-neutral-800 dark:text-white">Leila Amado</h4>
+                        <h4 className="font-semibold text-neutral-800 dark:text-white">Amado</h4>
                         <p className="text-sm text-neutral-600 dark:text-neutral-300">Small Business Owner</p>
                     </div>
                   </div>
@@ -997,7 +997,7 @@ export default function Home() {
         </div>
         
         {/* Our Mission Section - Moved after testimonials */}
-        <div id="mission" className="py-32 relative scroll-mt-40 bg-gradient-to-b from-transparent via-white to-transparent dark:from-transparent dark:via-gray-900/80 dark:to-transparent">
+        <div id="mission" className="py-12 relative scroll-mt-40 bg-gradient-to-b from-transparent via-white to-transparent dark:from-transparent dark:via-gray-900/80 dark:to-transparent">
           {/* Decorative elements */}
           <div className="absolute top-0 inset-x-0 h-40 bg-gradient-to-b from-white/0 dark:from-black/0 to-transparent"></div>
           <div className="absolute w-[600px] h-[600px] left-[10%] top-[20%] bg-blue-100/40 dark:bg-blue-900/10 rounded-full blur-3xl"></div>
@@ -1013,7 +1013,7 @@ export default function Home() {
             <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
               <div className="bg-white dark:bg-gray-900/60 backdrop-blur-lg rounded-3xl p-8 shadow-lg ring-1 ring-gray-200/50 dark:ring-white/10 transition-all duration-300 hover:shadow-xl hover:-translate-y-1" data-aos="fade-up" data-aos-delay="150">
                 <div className="w-16 h-16 mb-6 rounded-2xl bg-gradient-to-br from-indigo-100 to-blue-50 dark:from-indigo-900/30 dark:to-blue-900/20 flex items-center justify-center">
-                  <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" className="w-8 h-8 text-indigo-600 dark:text-indigo-400">
+                  <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="w-8 h-8 text-indigo-600 dark:text-indigo-400">
                     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M15 19.128a9.38 9.38 0 002.625.372 9.337 9.337 0 004.121-.952 4.125 4.125 0 00-7.533-2.493M15 19.128v-.003c0-1.113-.285-2.16-.786-3.07M15 19.128v.106A12.318 12.318 0 018.624 21c-2.331 0-4.512-.645-6.374-1.766l-.001-.109a6.375 6.375 0 0111.964-3.07M12 6.375a3.375 3.375 0 11-6.75 0 3.375 3.375 0 016.75 0zm8.25 2.25a2.625 2.625 0 11-5.25 0 2.625 2.625 0 015.25 0z" />
                   </svg>
                 </div>
@@ -1025,7 +1025,7 @@ export default function Home() {
 
               <div className="bg-white dark:bg-gray-900/60 backdrop-blur-lg rounded-3xl p-8 shadow-lg ring-1 ring-gray-200/50 dark:ring-white/10 transition-all duration-300 hover:shadow-xl hover:-translate-y-1" data-aos="fade-up" data-aos-delay="200">
                 <div className="w-16 h-16 mb-6 rounded-2xl bg-gradient-to-br from-purple-100 to-indigo-50 dark:from-purple-900/30 dark:to-indigo-900/20 flex items-center justify-center">
-                  <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" className="w-8 h-8 text-purple-600 dark:text-purple-400">
+                  <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="w-8 h-8 text-purple-600 dark:text-purple-400">
                     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M20.25 14.15v4.25c0 1.094-.787 2.036-1.872 2.18-2.087.277-4.216.42-6.378.42s-4.291-.143-6.378-.42c-1.085-.144-1.872-1.086-1.872-2.18v-4.25m16.5 0a2.18 2.18 0 00.75-1.661V8.706c0-1.081-.768-2.015-1.837-2.175a48.114 48.114 0 00-3.413-.387m4.5 8.006c-.194.165-.42.295-.673.38A23.978 23.978 0 0112 15.75c-2.648 0-5.195-.429-7.577-1.22a2.016 2.016 0 01-.673-.38m0 0A2.18 2.18 0 013 12.489V8.706c0-1.081.768-2.015 1.837-2.175a48.111 48.111 0 013.413-.387m7.5 0V5.25A2.25 2.25 0 0013.5 3h-3a2.25 2.25 0 00-2.25 2.25v.894m7.5 0a48.667 48.667 0 00-7.5 0M12 12.75h.008v.008H12v-.008z" />
                   </svg>
                   </div>
@@ -1037,8 +1037,8 @@ export default function Home() {
 
               <div className="bg-white dark:bg-gray-900/60 backdrop-blur-lg rounded-3xl p-8 shadow-lg ring-1 ring-gray-200/50 dark:ring-white/10 transition-all duration-300 hover:shadow-xl hover:-translate-y-1" data-aos="fade-up" data-aos-delay="250">
                 <div className="w-16 h-16 mb-6 rounded-2xl bg-gradient-to-br from-blue-100 to-cyan-50 dark:from-blue-900/30 dark:to-cyan-900/20 flex items-center justify-center">
-                  <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" className="w-8 h-8 text-blue-600 dark:text-blue-400">
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M21 8.25c0-2.485-2.099-4.5-4.688-4.5-1.935 0-3.597 1.126-4.312 2.733-.715-1.607-2.377-2.733-4.313-2.733C5.1 3.75 3 5.765 3 8.25c0 7.22 9 12 9 12s9-4.78 9-12z" />
+                  <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="w-8 h-8 text-blue-600 dark:text-blue-400">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M21 8.25c0-2.485-2.099-4.5-4.688-4.5-1.935 0-3.597 1.126-4.312 2.733-.715-1.607-2.377-2.733-4.313-2.733C5.1 3.75 3 5.765 3 8.25c0 7.22 9 12 9 12s9-4.78 9-12z" />
                   </svg>
                 </div>
                 <h3 className="text-xl font-medium mb-4">For Communities</h3>
@@ -1058,7 +1058,7 @@ export default function Home() {
         </div>
         
         {/* 6. ABOUT US */}
-        <div id="about" className="py-24 bg-gradient-to-b from-transparent via-white to-transparent dark:from-transparent dark:via-black dark:to-transparent relative scroll-mt-40">
+        <div id="about" className="py-12 bg-gradient-to-b from-transparent via-white to-transparent dark:from-transparent dark:via-black dark:to-transparent relative scroll-mt-40">
           <div className="container mx-auto px-4 relative z-10">
             <div className="mx-auto max-w-5xl lg:max-w-6xl">
               {/* Team Section */}
@@ -1267,7 +1267,7 @@ export default function Home() {
         </div>
         
         {/* 7. FAQ */}
-        <div id="faq" className="py-24 relative scroll-mt-40 overflow-hidden bg-gradient-to-b from-transparent via-gray-50 to-transparent dark:from-transparent dark:via-gray-950 dark:to-transparent">
+        <div id="faq" className="py-12 relative scroll-mt-40 overflow-hidden bg-gradient-to-b from-transparent via-gray-50 to-transparent dark:from-transparent dark:via-gray-950 dark:to-transparent">
           {/* Apple-inspired glassmorphism background */}
           <div className="absolute inset-0 bg-[url('/patterns/subtle-grid.svg')] opacity-[0.03] pointer-events-none"></div>
           <div className="absolute -top-[20%] -left-[10%] w-[40%] h-[40%] bg-gradient-to-br from-blue-100/30 via-indigo-100/20 to-purple-100/10 dark:from-blue-900/20 dark:via-indigo-900/15 dark:to-purple-900/10 rounded-full blur-3xl"></div>
@@ -1289,7 +1289,7 @@ export default function Home() {
                     <div className="flex items-start justify-between">
                       <h3 className="text-xl font-medium mb-4 text-gray-900 dark:text-white">How do I find the right service provider?</h3>
                       <div className="ml-4 flex-shrink-0 flex items-center justify-center w-8 h-8 rounded-full bg-gray-100 dark:bg-gray-800 group-hover:bg-primary/10 dark:group-hover:bg-primary/20 transition-colors duration-300">
-                        <svg className="w-5 h-5 text-gray-500 dark:text-gray-400 group-hover:text-primary dark:group-hover:text-primary transition-colors duration-300" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+                        <svg className="w-5 h-5 text-gray-500 dark:text-gray-400 group-hover:text-primary dark:group-hover:text-primary transition-colors duration-300" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
                           <path d="M12 5v14M5 12h14" strokeLinecap="round" strokeLinejoin="round"/>
                         </svg>
                       </div>
@@ -1304,7 +1304,7 @@ export default function Home() {
                     <div className="flex items-start justify-between">
                       <h3 className="text-xl font-medium mb-4 text-gray-900 dark:text-white">How much does it cost to join Alima?</h3>
                       <div className="ml-4 flex-shrink-0 flex items-center justify-center w-8 h-8 rounded-full bg-gray-100 dark:bg-gray-800 group-hover:bg-primary/10 dark:group-hover:bg-primary/20 transition-colors duration-300">
-                        <svg className="w-5 h-5 text-gray-500 dark:text-gray-400 group-hover:text-primary dark:group-hover:text-primary transition-colors duration-300" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+                        <svg className="w-5 h-5 text-gray-500 dark:text-gray-400 group-hover:text-primary dark:group-hover:text-primary transition-colors duration-300" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
                           <path d="M12 5v14M5 12h14" strokeLinecap="round" strokeLinejoin="round"/>
                         </svg>
                       </div>
@@ -1319,7 +1319,7 @@ export default function Home() {
                     <div className="flex items-start justify-between">
                       <h3 className="text-xl font-medium mb-4 text-gray-900 dark:text-white">How are payments handled?</h3>
                       <div className="ml-4 flex-shrink-0 flex items-center justify-center w-8 h-8 rounded-full bg-gray-100 dark:bg-gray-800 group-hover:bg-primary/10 dark:group-hover:bg-primary/20 transition-colors duration-300">
-                        <svg className="w-5 h-5 text-gray-500 dark:text-gray-400 group-hover:text-primary dark:group-hover:text-primary transition-colors duration-300" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+                        <svg className="w-5 h-5 text-gray-500 dark:text-gray-400 group-hover:text-primary dark:group-hover:text-primary transition-colors duration-300" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
                           <path d="M12 5v14M5 12h14" strokeLinecap="round" strokeLinejoin="round"/>
                         </svg>
                       </div>
@@ -1334,11 +1334,11 @@ export default function Home() {
                     <div className="flex items-start justify-between">
                       <h3 className="text-xl font-medium mb-4 text-gray-900 dark:text-white">What if I'm not satisfied with the service?</h3>
                       <div className="ml-4 flex-shrink-0 flex items-center justify-center w-8 h-8 rounded-full bg-gray-100 dark:bg-gray-800 group-hover:bg-primary/10 dark:group-hover:bg-primary/20 transition-colors duration-300">
-                        <svg className="w-5 h-5 text-gray-500 dark:text-gray-400 group-hover:text-primary dark:group-hover:text-primary transition-colors duration-300" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+                        <svg className="w-5 h-5 text-gray-500 dark:text-gray-400 group-hover:text-primary dark:group-hover:text-primary transition-colors duration-300" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
                           <path d="M12 5v14M5 12h14" strokeLinecap="round" strokeLinejoin="round"/>
                         </svg>
-                </div>
-              </div>
+                      </div>
+                    </div>
                     <p className="text-gray-600 dark:text-gray-300 text-base leading-relaxed">Our satisfaction guarantee ensures you only pay for work that meets your requirements. If issues arise, our dispute resolution team will help mediate and find a fair solution.</p>
                   </div>
                 </div>
@@ -1349,7 +1349,7 @@ export default function Home() {
                     <div className="flex items-start justify-between">
                       <h3 className="text-xl font-medium mb-4 text-gray-900 dark:text-white">Can I offer multiple services as a provider?</h3>
                       <div className="ml-4 flex-shrink-0 flex items-center justify-center w-8 h-8 rounded-full bg-gray-100 dark:bg-gray-800 group-hover:bg-primary/10 dark:group-hover:bg-primary/20 transition-colors duration-300">
-                        <svg className="w-5 h-5 text-gray-500 dark:text-gray-400 group-hover:text-primary dark:group-hover:text-primary transition-colors duration-300" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+                        <svg className="w-5 h-5 text-gray-500 dark:text-gray-400 group-hover:text-primary dark:group-hover:text-primary transition-colors duration-300" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
                           <path d="M12 5v14M5 12h14" strokeLinecap="round" strokeLinejoin="round"/>
                         </svg>
                       </div>
@@ -1373,7 +1373,7 @@ export default function Home() {
         </div>
         
         {/* 8. CALL TO ACTION with Contact Section */}
-        <div id="contact" className="relative py-36 overflow-hidden bg-gradient-to-b from-transparent via-white to-transparent dark:from-transparent dark:via-black dark:to-transparent scroll-mt-40">
+        <div id="contact" className="relative py-20 overflow-hidden bg-gradient-to-b from-transparent via-white to-transparent dark:from-transparent dark:via-black dark:to-transparent scroll-mt-40">
           <div className="container mx-auto px-4 relative z-10">
             {/* Get In Touch Section with modern design */}
             <div className="rounded-[32px] text-center mb-40 relative overflow-hidden shadow-2xl" 

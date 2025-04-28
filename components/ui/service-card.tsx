@@ -123,14 +123,7 @@ export function ServiceCard({
             <p className="text-xs sm:text-sm text-muted-foreground/80 line-clamp-2 flex-grow">{description}</p>
 
             <div className="flex items-center justify-between mt-auto pt-2">
-              {showRating && provider.hasRating ? (
-                <div className="flex items-center gap-1.5">
-                  <StarIcon className="h-4 w-4 fill-yellow-400 text-yellow-400" />
-                  <span className="text-xs sm:text-sm font-medium">{provider.rating}</span>
-                </div>
-              ) : (
-                <div className="flex-1"></div>
-              )}
+              <div className="flex-1"></div>
               <div className="flex justify-end w-full mr-1">
                 <span className="text-base sm:text-lg font-bold text-blue-500">{formatPrice(price)}</span>
               </div>

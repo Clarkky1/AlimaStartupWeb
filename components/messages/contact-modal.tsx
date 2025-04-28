@@ -6,7 +6,7 @@ import { Textarea } from "@/components/ui/textarea"
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar"
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription, DialogTrigger, DialogFooter } from "@/components/ui/dialog"
 import { DialogClose } from "@radix-ui/react-dialog"
-import { Send, AlertCircle, Upload, X } from "lucide-react"
+import { Send, AlertCircle, Upload, X, Star } from "lucide-react"
 import { useToast } from "@/components/ui/use-toast"
 import { useAuth } from "@/app/context/auth-context"
 import { useRouter } from "next/navigation"
@@ -48,6 +48,7 @@ export function ContactModal({
   const [showConfirmation, setShowConfirmation] = useState(false)
   const [services, setServices] = useState<any[]>([])
   const [loading, setLoading] = useState(true)
+  const [providerRating, setProviderRating] = useState<number | null>(null)
   const { toast } = useToast()
   const { user, loading: authLoading } = useAuth()
   const router = useRouter()
@@ -81,7 +82,59 @@ export function ContactModal({
     }
 
     fetchServices()
+    fetchProviderRating() // Fetch provider rating
   }, [providerId, toast])
+
+  // Fetch provider rating
+  const fetchProviderRating = async () => {
+    try {
+      const { db } = await initializeFirebase(); // Use initializeFirebase instead of just getFirestoreDB
+      if (!db) throw new Error("Failed to initialize database");
+
+      // Get provider document to check for rating
+      const providerDoc = await getDoc(doc(db, "users", providerId));
+      
+      if (providerDoc.exists()) {
+        const providerData = providerDoc.data();
+        // If the provider has a rating field, use it
+        if (providerData.rating) {
+          setProviderRating(providerData.rating);
+        } else {
+          // Otherwise, try to calculate from ratings collection if we have access
+          try {
+            const ratingsRef = collection(db, "ratings");
+            const q = query(ratingsRef, where("providerId", "==", providerId));
+            const querySnapshot = await getDocs(q);
+            
+            if (!querySnapshot.empty) {
+              // Calculate average rating
+              let totalRating = 0;
+              querySnapshot.forEach(doc => {
+                const ratingData = doc.data();
+                totalRating += ratingData.rating || 0;
+              });
+              const averageRating = totalRating / querySnapshot.size;
+              setProviderRating(Number(averageRating.toFixed(1)));
+            } else {
+              // Default to 0 if no ratings
+              setProviderRating(0);
+            }
+          } catch (ratingError) {
+            // If permissions error, set a default rating
+            console.log("Could not access ratings collection, using default");
+            setProviderRating(2.0); // Default rating of 2.0
+          }
+        }
+      } else {
+        // Default to 2.0 if provider document doesn't exist
+        setProviderRating(2.0);
+      }
+    } catch (error) {
+      console.error("Error fetching provider data:", error);
+      // Set a default rating on error
+      setProviderRating(2.0);
+    }
+  };
 
   // Clear form when dialog is opened/closed
   useEffect(() => {
@@ -371,6 +424,25 @@ export function ContactModal({
                   <img className="aspect-square h-full w-full" alt={providerName} src={providerAvatar || "/person-male-1.svg"} />
                 </span>
                 <h3 className="font-semibold mt-2">{providerName}</h3>
+                
+                {/* Display provider rating */}
+                {providerRating !== null && (
+                  <div className="flex items-center justify-center gap-1 text-sm mt-1">
+                    <div className="flex items-center">
+                      {[1, 2, 3, 4, 5].map((star) => (
+                        <Star 
+                          key={star}
+                          className={`h-4 w-4 ${
+                            star <= Math.round(providerRating) 
+                              ? "text-yellow-400 fill-yellow-400" 
+                              : "text-gray-300"
+                          }`}
+                        />
+                      ))}
+                    </div>
+                    <span className="ml-1">{providerRating}</span>
+                  </div>
+                )}
               </div>
               <div className="border-t pt-3">
                 <h4 className="text-sm font-semibold mb-1">Bio</h4>

@@ -184,15 +184,9 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         if (typeof window !== "undefined") {
           const { setPersistence, browserLocalPersistence } = await import("firebase/auth");
           
-          // Check for stored persistence preference
-          const deviceId = localStorage.getItem('alima_device_id');
-          const rememberMe = deviceId ? localStorage.getItem(`rememberMe_${deviceId}`) : null;
-          
-          // Only set LOCAL persistence if user chose "Remember me"
-          if (rememberMe === 'true') {
-            await setPersistence(authInstance, browserLocalPersistence);
-            console.log("Firebase persistence set to LOCAL");
-          }
+          // Always use LOCAL persistence to prevent logout on refresh
+          await setPersistence(authInstance, browserLocalPersistence);
+          console.log("Firebase persistence set to LOCAL");
         }
       } catch (error) {
         console.error("Error setting auth persistence:", error);
@@ -294,53 +288,11 @@ export function AuthProvider({ children }: { children: ReactNode }) {
           // Check if this was a manual refresh
           const wasManualRefresh = sessionStorage.getItem('manual_refresh') === 'true';
           
-          // Get the page load count (already initialized in the component mount effect)
-          const pageLoadCount = sessionStorage.getItem('page_load_count') || '1';
-          const currentPageLoadCount = parseInt(pageLoadCount);
+          // Store the login timestamp to avoid refreshing on navigation
+          localStorage.setItem('last_login_refresh', Date.now().toString());
           
-          // Debug info
-          console.log("Login state check: ", {
-            isNewLogin,
-            storedUserId,
-            currentUserId: firebaseUser.uid,
-            pageLoadCount: currentPageLoadCount,
-            wasManualRefresh
-          });
-          
-          // Only allow refresh on the first load or specific conditions
-          // This prevents double refreshes
-          const currentPath = window.location.pathname;
-          
-          // Get the last refresh timestamp to prevent refresh loops
-          const lastRefreshTime = localStorage.getItem('last_login_refresh');
-          const currentTime = Date.now();
-          const pageInitialLoad = currentPageLoadCount <= 1;
-          
-          // Never refresh if this was a manual refresh
-          // Only refresh if:
-          // 1. This was NOT a manual refresh AND
-          // 2. More than 5 seconds since last refresh AND 
-          // 3. Either it's the initial page load OR the user ID has actually changed
-          const shouldRefresh = !wasManualRefresh && 
-                               (!lastRefreshTime || (currentTime - parseInt(lastRefreshTime)) > 5000) && 
-                               (pageInitialLoad || (storedUserId !== firebaseUser.uid));
-          
-          if (shouldRefresh) {
-            // Store the login timestamp to avoid refreshing on navigation
-            localStorage.setItem('last_login_refresh', currentTime.toString());
-            
-            // Only refresh if we're on the homepage or dashboard to avoid disrupting other flows
-            if (currentPath === '/' || currentPath.includes('/dashboard') || currentPath === '/popular-today') {
-              console.log("New login detected, refreshing page to update UI state");
-              window.location.reload();
-            }
-          } else {
-            console.log("Prevented refresh: " + (wasManualRefresh ? "was manual refresh" : "already refreshed or not needed"), {
-              timeSinceLastRefresh: lastRefreshTime ? (currentTime - parseInt(lastRefreshTime)) : 'never refreshed',
-              pageLoadCount: currentPageLoadCount,
-              wasManualRefresh
-            });
-          }
+          // Log the login but don't force refresh - this can cause issues
+          console.log("Auth state change detected, user logged in:", userData.uid);
         }
       } catch (error) {
         console.error("Error fetching user data:", error);

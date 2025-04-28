@@ -1751,7 +1751,7 @@ export default function MessagePage({ params }: { params: { providerId: string }
   if (!user) {
     return (
       <div className="container mx-auto px-4 py-8">
-        <Button variant="ghost" className="h-8 px-2 mb-4 flex items-center" onClick={() => router.back()}>
+        <Button variant="ghost" className="h-8 px-2 mb-4 flex items-center" onClick={() => router.push('/popular-today')}>
           <ArrowLeft className="mr-1 h-3 w-3" />
           Back
         </Button>
@@ -1812,7 +1812,7 @@ export default function MessagePage({ params }: { params: { providerId: string }
   return (
     <div className="container mx-auto px-4 sm:px-6 py-4 sm:py-6 max-h-screen flex flex-col">
       <div className="flex justify-start mb-3 mt-0 sm:mt-2 -ml-2">
-        <Button variant="ghost" className="h-8 px-2 flex items-center" onClick={() => router.back()}>
+        <Button variant="ghost" className="h-8 px-2 flex items-center" onClick={() => router.push('/popular-today')}>
           <ArrowLeft className="mr-1 h-4 w-4" />
           Back
         </Button>
@@ -1933,6 +1933,19 @@ export default function MessagePage({ params }: { params: { providerId: string }
                   </Avatar>
                   <div className="flex-1 min-w-0">
                     <CardTitle className="truncate">{provider?.name || provider?.displayName || "User"}</CardTitle>
+                    {/* Add rating component - only for providers */}
+                    {isChatUserProvider && (
+                      <div className="flex items-center gap-1 text-sm my-2">
+                        <div className="flex items-center">
+                          <Star className="h-4 w-4 text-yellow-400 fill-yellow-400" />
+                          <Star className="h-4 w-4 text-yellow-400 fill-yellow-400" />
+                          <Star className="h-4 w-4 text-gray-300" />
+                          <Star className="h-4 w-4 text-gray-300" />
+                          <Star className="h-4 w-4 text-gray-300" />
+                        </div>
+                        <span className="ml-1">2.0</span>
+                      </div>
+                    )}
                     <CardDescription className="truncate">{provider?.title || provider?.bio?.substring(0, 60) || roleText.roleLabel}</CardDescription>
                   </div>
                 </div>
@@ -2099,20 +2112,20 @@ export default function MessagePage({ params }: { params: { providerId: string }
                     {roleText.roleLabel}
                   </Badge>
                   
-                  <div className="text-2xl font-semibold leading-none tracking-tight mt-4">About Provider</div>
+                  <div className="text-2xl font-semibold leading-none tracking-tight mt-4">{roleText.title}</div>
                 </div>
 
-                {provider?.rating && (
+                {/* Only show rating for providers */}
+                {isChatUserProvider && (
                   <div className="flex items-center justify-center gap-1 text-sm my-2">
                     <div className="flex items-center">
-                      {[1, 2, 3, 4, 5].map((star) => (
-                        <Star
-                          key={star}
-                          className={`h-4 w-4 ${star <= Math.round(provider.rating) ? "text-yellow-400 fill-yellow-400" : "text-gray-300"}`}
-                        />
-                      ))}
+                      <Star className="h-4 w-4 text-yellow-400 fill-yellow-400" />
+                      <Star className="h-4 w-4 text-yellow-400 fill-yellow-400" />
+                      <Star className="h-4 w-4 text-gray-300" />
+                      <Star className="h-4 w-4 text-gray-300" />
+                      <Star className="h-4 w-4 text-gray-300" />
                     </div>
-                    <span className="ml-1">{provider.rating.toFixed(1)}</span>
+                    <span className="ml-1">2.0</span>
                   </div>
                 )}
 

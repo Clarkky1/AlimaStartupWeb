@@ -3,15 +3,18 @@ const nextConfig = {
   reactStrictMode: false,
   optimizeFonts: false,
   experimental: {
-    missingSuspenseWithCSRBailout: false
+    missingSuspenseWithCSRBailout: false,
+    optimizeCss: true,
+    scrollRestoration: true,
+    webVitalsAttribution: ['CLS', 'LCP'],
   },
   // Add redirects configuration
   async redirects() {
     return [
       {
-        source: '/services',
-        destination: '/popular-today',
-        permanent: false,
+        source: '/popular-today',
+        destination: '/services',
+        permanent: true,
       },
     ];
   },
@@ -66,6 +69,32 @@ const nextConfig = {
     ],
     dangerouslyAllowSVG: true,
     contentSecurityPolicy: "default-src 'self'; script-src 'none'; sandbox;",
+  },
+  webpack: (config, { dev, isServer }) => {
+    config.optimization = {
+      ...config.optimization,
+      splitChunks: {
+        chunks: 'all',
+        minSize: 20000,
+        maxSize: 244000,
+        minChunks: 1,
+        maxAsyncRequests: 30,
+        maxInitialRequests: 30,
+        cacheGroups: {
+          defaultVendors: {
+            test: /[\\/]node_modules[\\/]/,
+            priority: -10,
+            reuseExistingChunk: true,
+          },
+          default: {
+            minChunks: 2,
+            priority: -20,
+            reuseExistingChunk: true,
+          },
+        },
+      },
+    };
+    return config;
   },
 }
 

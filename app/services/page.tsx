@@ -195,17 +195,11 @@ export default function ServicesPage() {
   });
 
   return (
-    <div className="container py-8">
+    <div className="container mx-auto px-6 md:px-8 lg:px-12 py-8">
       <h1 className="text-4xl font-bold mb-2">Browse Services</h1>
-      <div className="mb-8">
-        <Link href="/popular-today" className="text-primary hover:underline inline-flex items-center">
-          <span>View popular services</span>
-          <ArrowRight className="ml-1 h-4 w-4" />
-        </Link>
-      </div>
-      
-      <div className="flex flex-col md:flex-row gap-8">
-        <div className="w-full md:w-3/4">
+      {/* Filters and Sort By */}
+      <div className="flex flex-col md:flex-row justify-between items-start md:items-center mb-6 space-y-4 md:space-y-0 md:space-x-4">
+        <div className="relative flex-grow w-full md:w-auto">
           <Tabs defaultValue={activeTab} onValueChange={setActiveTab}>
             <TabsList className="mb-8">
               <TabsTrigger value="global">Global Services</TabsTrigger>

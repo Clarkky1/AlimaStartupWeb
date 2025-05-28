@@ -582,21 +582,10 @@ export default function Home() {
                     
                     <div className="flex flex-wrap gap-4 relative">
                       <Button asChild size="lg" className="rounded-full px-8 w-full sm:w-auto min-w-[180px] bg-gradient-to-r from-blue-600 to-indigo-600 hover:from-blue-700 hover:to-indigo-700 border-0 shadow-[0_8px_30px_rgba(59,130,246,0.2)] hover:shadow-[0_8px_20px_rgba(59,130,246,0.3)] transition-all duration-300">
-                        <Link href="/popular-today">Browse Services</Link>
+                        <Link href="/services">Browse Services</Link>
                       </Button>
-                      <Button asChild size="lg" variant="outline" className="rounded-full px-8 w-full sm:w-auto min-w-[180px] border-2 border-gray-200 dark:border-gray-800 bg-white/80 dark:bg-black/40 backdrop-blur-sm text-gray-800 dark:text-gray-200 hover:bg-white hover:text-blue-600 dark:hover:bg-black/60 dark:hover:text-blue-400 shadow-[0_8px_30px_rgba(0,0,0,0.05)] hover:shadow-[0_8px_20px_rgba(0,0,0,0.1)] dark:shadow-[0_8px_30px_rgba(255,255,255,0.03)] dark:hover:shadow-[0_8px_20px_rgba(255,255,255,0.05)] transition-all duration-300">
-                        <a 
-                          href="#how-it-works"
-                          onClick={(e) => {
-                            e.preventDefault();
-                            const element = document.getElementById("how-it-works");
-                            if (element) {
-                              element.scrollIntoView({ behavior: "smooth" });
-                            }
-                          }}
-                        >
-                          How It Works
-                        </a>
+                      <Button asChild size="lg" variant="secondary" className="rounded-full px-8 w-full sm:w-auto min-w-[180px] bg-gradient-to-r from-emerald-500 to-blue-500 text-white border-0 shadow-[0_8px_30px_rgba(16,185,129,0.15)] hover:from-emerald-600 hover:to-blue-600 transition-all duration-300">
+                        <Link href="/services/apply">Apply for Services</Link>
                       </Button>
                     </div>
                   </div>
@@ -701,48 +690,37 @@ export default function Home() {
                     </div>
                     
                     {/* User Statistics - Premium Apple 2025 Style */}
-                    <div className="flex items-center justify-between mt-8 backdrop-blur-xl bg-white/15 dark:bg-black/15 border border-white/20 dark:border-white/10 rounded-2xl p-6 shadow-[0_10px_40px_-15px_rgba(0,0,0,0.15)] dark:shadow-[0_10px_40px_-15px_rgba(255,255,255,0.05)] overflow-hidden relative group transition-all duration-300 hover:shadow-[0_15px_60px_-15px_rgba(0,0,0,0.2)] dark:hover:shadow-[0_15px_60px_-15px_rgba(255,255,255,0.07)]">
-                      {/* Premium glass background effects */}
-                      <div className="absolute inset-0 bg-gradient-to-br from-white/5 via-white/10 to-white/5 dark:from-white/5 dark:via-white/2 dark:to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-500"></div>
-                      <div className="absolute -inset-1 bg-gradient-to-r from-blue-500/10 via-purple-500/10 to-pink-500/10 dark:from-blue-500/5 dark:via-purple-500/5 dark:to-pink-500/5 blur-xl opacity-0 group-hover:opacity-100 transition-opacity duration-500 rounded-3xl"></div>
-                      
-                      {/* Active Users */}
-                      <div className="text-center px-5 relative z-10 flex flex-col items-center">
-                        <p className="text-3xl md:text-4xl font-bold bg-gradient-to-r from-blue-600 to-blue-400 dark:from-blue-400 dark:to-blue-300 inline-block text-transparent bg-clip-text">
-                          {isLoading ? (
-                            <span className="inline-block h-8 w-16 bg-gray-200/50 dark:bg-gray-700/50 animate-pulse rounded-md"></span>
-                          ) : (
-                            formatStatNumber(userCount)
-                          )}
-                        </p>
-                        <div className="h-1 w-8 bg-blue-500/50 rounded-full mt-2 mb-1"></div>
-                        <p className="text-sm font-medium text-neutral-700 dark:text-neutral-300">Active Users</p>
-                      </div>
-                      
-                      {/* Services */}
-                      <div className="text-center px-5 relative z-10 flex flex-col items-center">
-                        <p className="text-3xl md:text-4xl font-bold bg-gradient-to-r from-purple-600 to-purple-400 dark:from-purple-400 dark:to-purple-300 inline-block text-transparent bg-clip-text">
-                          {isLoading ? (
-                            <span className="inline-block h-8 w-16 bg-gray-200/50 dark:bg-gray-700/50 animate-pulse rounded-md"></span>
-                          ) : (
-                            formatStatNumber(serviceCount)
-                          )}
-                        </p>
-                        <div className="h-1 w-8 bg-purple-500/50 rounded-full mt-2 mb-1"></div>
-                        <p className="text-sm font-medium text-neutral-700 dark:text-neutral-300">Services</p>
-                      </div>
-                      
-                      {/* Providers */}
-                      <div className="text-center px-5 relative z-10 flex flex-col items-center">
-                        <p className="text-3xl md:text-4xl font-bold bg-gradient-to-r from-emerald-600 to-emerald-400 dark:from-emerald-400 dark:to-emerald-300 inline-block text-transparent bg-clip-text">
-                          {isLoading ? (
-                            <span className="inline-block h-8 w-16 bg-gray-200/50 dark:bg-gray-700/50 animate-pulse rounded-md"></span>
-                          ) : (
-                            formatStatNumber(providerCount)
-                          )}
-                        </p>
-                        <div className="h-1 w-8 bg-emerald-500/50 rounded-full mt-2 mb-1"></div>
-                        <p className="text-sm font-medium text-neutral-700 dark:text-neutral-300">Providers</p>
+                    <div className="flex justify-center w-full mt-8">
+                      <div className="flex gap-x-8 max-w-xs w-full backdrop-blur-xl bg-white/15 dark:bg-black/15 border border-white/20 dark:border-white/10 rounded-2xl p-6 shadow-[0_10px_40px_-15px_rgba(0,0,0,0.15)] dark:shadow-[0_10px_40px_-15px_rgba(255,255,255,0.05)] overflow-hidden relative group transition-all duration-300 hover:shadow-[0_15px_60px_-15px_rgba(0,0,0,0.2)] dark:hover:shadow-[0_15px_60px_-15px_rgba(255,255,255,0.07)]">
+                        {/* Premium glass background effects */}
+                        <div className="absolute inset-0 bg-gradient-to-br from-white/5 via-white/10 to-white/5 dark:from-white/5 dark:via-white/2 dark:to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-500"></div>
+                        <div className="absolute -inset-1 bg-gradient-to-r from-blue-500/10 via-purple-500/10 to-pink-500/10 dark:from-blue-500/5 dark:via-purple-500/5 dark:to-pink-500/5 blur-xl opacity-0 group-hover:opacity-100 transition-opacity duration-500 rounded-3xl"></div>
+                        
+                        {/* Active Users */}
+                        <div className="text-center px-5 relative z-10 flex flex-col items-center">
+                          <p className="text-3xl md:text-4xl font-bold bg-gradient-to-r from-blue-600 to-blue-400 dark:from-blue-400 dark:to-blue-300 inline-block text-transparent bg-clip-text">
+                            {isLoading ? (
+                              <span className="inline-block h-8 w-16 bg-gray-200/50 dark:bg-gray-700/50 animate-pulse rounded-md"></span>
+                            ) : (
+                              formatStatNumber(userCount)
+                            )}
+                          </p>
+                          <div className="h-1 w-8 bg-blue-500/50 rounded-full mt-2 mb-1"></div>
+                          <p className="text-sm font-medium text-neutral-700 dark:text-neutral-300">Active Users</p>
+                        </div>
+                        
+                        {/* Services */}
+                        <div className="text-center px-5 relative z-10 flex flex-col items-center">
+                          <p className="text-3xl md:text-4xl font-bold bg-gradient-to-r from-purple-600 to-purple-400 dark:from-purple-400 dark:to-purple-300 inline-block text-transparent bg-clip-text">
+                            {isLoading ? (
+                              <span className="inline-block h-8 w-16 bg-gray-200/50 dark:bg-gray-700/50 animate-pulse rounded-md"></span>
+                            ) : (
+                              formatStatNumber(serviceCount)
+                            )}
+                          </p>
+                          <div className="h-1 w-8 bg-purple-500/50 rounded-full mt-2 mb-1"></div>
+                          <p className="text-sm font-medium text-neutral-700 dark:text-neutral-300">Services</p>
+                        </div>
                       </div>
                     </div>
                   </div>
@@ -753,18 +731,16 @@ export default function Home() {
         </Suspense>
         
         {/* 4. PROBLEM WE SOLVE */}
-        <div id="problem" className="py-12 relative scroll-mt-40 bg-gradient-to-b from-white via-white to-transparent dark:from-black dark:via-black dark:to-transparent overflow-hidden">
+        <div id="problem" className="py-12 relative scroll-mt-40 bg-white dark:bg-neutral-900 overflow-hidden">
           {/* Decorative elements */}
-          <div className="absolute w-[500px] h-[500px] -top-64 -right-64 bg-pink-100/30 dark:bg-pink-900/10 rounded-full blur-3xl"></div>
-          <div className="absolute w-[500px] h-[500px] -bottom-64 -left-64 bg-indigo-100/30 dark:bg-indigo-900/10 rounded-full blur-3xl"></div>
           
-          <div className="container mx-auto px-6 sm:px-8 relative z-10">
+          <div className="container mx-auto px-6 md:px-8 lg:px-12 relative z-10">
             <div className="mx-auto max-w-5xl lg:max-w-6xl">
               <div className="grid grid-cols-1 lg:grid-cols-2 gap-16 items-center">
                 <div className="order-2 lg:order-1" data-aos="fade-right">
-                  <h2 className="text-3xl font-semibold md:text-4xl mb-6 bg-clip-text text-transparent bg-gradient-to-r from-gray-900 to-gray-600 dark:from-white dark:to-gray-300">The Problem We Solve</h2>
+                  <h2 className="text-3xl font-semibold md:text-4xl mb-6 text-gray-900 dark:text-gray-100">The Problem We Solve</h2>
                   <p className="text-gray-600 dark:text-gray-300 text-lg mb-8">
-                    Finding reliable service providers locally and globally can be challenging. Alima bridges this gap by connecting you with verified professionals for any job.
+                    Finding trustworthy professionals and ensuring safe transactions can be difficult. Alima solves this by verifying every user, requiring providers to apply, and handling all payments securely through our platform. No more risky direct payments or unverified service providers.
                   </p>
 
                   <div className="space-y-6">
@@ -830,14 +806,14 @@ export default function Home() {
         </div>
         
         {/* 3. HOW IT WORKS */}
-        <div id="how-it-works" className="py-24 relative scroll-mt-40 overflow-hidden bg-gradient-to-b from-transparent via-slate-50 to-transparent dark:from-transparent dark:via-slate-950 dark:to-transparent">
+        <div id="how-it-works" className="py-24 relative scroll-mt-40 bg-white dark:bg-neutral-900 overflow-hidden">
           {/* Subtle background pattern */}
           <div className="absolute inset-0 bg-[url('/patterns/grid.svg')] opacity-[0.02] pointer-events-none"></div>
           <div className="absolute -top-[20%] -right-[10%] w-[40%] h-[40%] bg-gradient-to-br from-blue-100/20 via-indigo-100/15 to-purple-100/10 dark:from-blue-900/10 dark:via-indigo-900/8 dark:to-purple-900/5 rounded-full blur-3xl"></div>
           
-          <div className="container mx-auto px-4 relative z-10">
+          <div className="container mx-auto px-6 md:px-8 lg:px-12 relative z-10">
             <div className="text-center mb-16 max-w-3xl mx-auto" data-aos="fade-up">
-              <h2 className="text-3xl font-semibold tracking-tight md:text-4xl lg:text-5xl mb-6 bg-clip-text text-transparent bg-gradient-to-r from-gray-900 to-gray-700 dark:from-white dark:to-gray-300">How Alima Works</h2>
+              <h2 className="text-3xl font-semibold tracking-tight md:text-4xl lg:text-5xl mb-6 text-gray-900 dark:text-gray-100">How Alima Works</h2>
               <p className="text-gray-600 dark:text-gray-300 text-lg">
                 Our platform makes it easy to connect with talented professionals for both digital services and local physical work
               </p>
@@ -850,9 +826,9 @@ export default function Home() {
                   <div className="w-16 h-16 mb-6 rounded-full flex items-center justify-center bg-gradient-to-br from-blue-500/10 to-purple-500/10 dark:from-blue-500/20 dark:to-purple-500/20">
                     <UserRoundSearch className="w-8 h-8 text-blue-600 dark:text-blue-400" />
                   </div>
-                  <h3 className="text-xl font-medium mb-3">Search for Services</h3>
+                  <h3 className="text-xl font-medium mb-3">1. Sign Up or Apply</h3>
                   <p className="text-gray-600 dark:text-gray-400">
-                    Browse through our extensive catalog of professional services and find what suits your needs
+                    Users can sign up quickly with required details and a profile picture. Service providers must apply and be approved before offering services.
                   </p>
                 </div>
                 </div>
@@ -863,9 +839,9 @@ export default function Home() {
                   <div className="w-16 h-16 mb-6 rounded-full flex items-center justify-center bg-gradient-to-br from-green-500/10 to-teal-500/10 dark:from-green-500/20 dark:to-teal-500/20">
                     <MessagesSquare className="w-8 h-8 text-green-600 dark:text-green-400" />
                   </div>
-                  <h3 className="text-xl font-medium mb-3">Connect and Discuss</h3>
+                  <h3 className="text-xl font-medium mb-3">2. Connect & Book</h3>
                   <p className="text-gray-600 dark:text-gray-400">
-                    Communicate directly with service providers to discuss your specific requirements and get quotes
+                    Browse or search for services, connect with verified providers, and discuss your needs securely on Alima.
                   </p>
                 </div>
                 </div>
@@ -876,9 +852,9 @@ export default function Home() {
                   <div className="w-16 h-16 mb-6 rounded-full flex items-center justify-center bg-gradient-to-br from-amber-500/10 to-orange-500/10 dark:from-amber-500/20 dark:to-orange-500/20">
                     <CheckCircle className="w-8 h-8 text-amber-600 dark:text-amber-400" />
                   </div>
-                  <h3 className="text-xl font-medium mb-3">Hire and Review</h3>
+                  <h3 className="text-xl font-medium mb-3">3. Pay & Review</h3>
                   <p className="text-gray-600 dark:text-gray-400">
-                    Select the ideal service provider, receive the service, and share your experience through reviews
+                    Make payments safely through Alima. The platform holds funds until the service is complete, then releases payment to the provider. Leave a review to help others!
                   </p>
                 </div>
               </div>
@@ -891,7 +867,7 @@ export default function Home() {
 
         {/* 5. PROOF/TESTIMONIALS */}
         <div id="testimonials" className="py-24 bg-gradient-to-b from-transparent via-neutral-50 to-transparent dark:from-transparent dark:via-neutral-950 dark:to-transparent relative scroll-mt-40">
-          <div className="container mx-auto px-4 relative z-10">
+          <div className="container mx-auto px-6 md:px-8 lg:px-12 relative z-10">
             <div className="mx-auto max-w-5xl lg:max-w-6xl">
               <h2 className="text-3xl font-semibold tracking-tight md:text-4xl mb-8 text-center" data-aos="fade-up">What Our Users Say</h2>
               
@@ -997,16 +973,17 @@ export default function Home() {
         </div>
         
         {/* Our Mission Section - Moved after testimonials */}
-        <div id="mission" className="py-12 relative scroll-mt-40 bg-gradient-to-b from-transparent via-white to-transparent dark:from-transparent dark:via-gray-900/80 dark:to-transparent">
+        <div id="mission" className="py-12 relative scroll-mt-40 bg-white dark:bg-neutral-900">
           {/* Decorative elements */}
           <div className="absolute top-0 inset-x-0 h-40 bg-gradient-to-b from-white/0 dark:from-black/0 to-transparent"></div>
           <div className="absolute w-[600px] h-[600px] left-[10%] top-[20%] bg-blue-100/40 dark:bg-blue-900/10 rounded-full blur-3xl"></div>
           
-          <div className="container mx-auto px-6 sm:px-8 relative z-10">
+          <div className="container mx-auto px-6 md:px-8 lg:px-12 relative z-10">
             <div className="mx-auto max-w-3xl text-center mb-20">
-              <h2 className="text-3xl font-semibold md:text-5xl mb-6 bg-clip-text text-transparent bg-gradient-to-r from-indigo-600 to-purple-600 dark:from-indigo-400 dark:to-purple-400" data-aos="fade-up">Our Mission</h2>
+              <h2 className="text-3xl font-semibold md:text-5xl mb-6 text-neutral-950 dark:text-gray-100">Our Mission</h2>
+              
               <p className="text-xl text-gray-600 dark:text-gray-300" data-aos="fade-up" data-aos-delay="100">
-                To create a trusted community that connects people with the exceptional services they need, while empowering skilled professionals to grow their businesses.
+                To build a trusted, secure, and empowering platform where users can confidently find services and providers can grow their business—knowing every transaction is safe and every user is verified.
               </p>
             </div>
 
@@ -1059,14 +1036,14 @@ export default function Home() {
         
         {/* 6. ABOUT US */}
         <div id="about" className="py-12 bg-gradient-to-b from-transparent via-white to-transparent dark:from-transparent dark:via-black dark:to-transparent relative scroll-mt-40">
-          <div className="container mx-auto px-4 relative z-10">
+          <div className="container mx-auto px-6 md:px-8 lg:px-12 relative z-10">
             <div className="mx-auto max-w-5xl lg:max-w-6xl">
               {/* Team Section */}
               <div className="mb-24">
                 <div className="mb-16 text-center" data-aos="fade-up">
-                  <h2 className="mb-4 text-4xl font-medium tracking-tight md:text-5xl bg-clip-text text-transparent bg-gradient-to-r from-neutral-950 to-neutral-500 dark:from-white dark:to-neutral-400">Meet Our Team</h2>
+                  <h2 className="mb-4 text-4xl font-medium tracking-tight md:text-5xl text-neutral-950 dark:text-gray-100">Meet Our Team</h2>
                   <p className="mx-auto max-w-2xl text-lg text-neutral-600 dark:text-neutral-300 px-4 font-light">
-                    The passionate individuals behind Alima who work tirelessly to create the best possible experience for our users.
+                    The passionate individuals behind Alima who work tirelessly to create the best possible experience for our users. We are committed to security, user verification, and safe payments for everyone.
                   </p>
                 </div>
 
@@ -1267,16 +1244,14 @@ export default function Home() {
         </div>
         
         {/* 7. FAQ */}
-        <div id="faq" className="py-12 relative scroll-mt-40 overflow-hidden bg-gradient-to-b from-transparent via-gray-50 to-transparent dark:from-transparent dark:via-gray-950 dark:to-transparent">
+        <div id="faq" className="py-12 relative scroll-mt-40 bg-white dark:bg-neutral-900 overflow-hidden">
           {/* Apple-inspired glassmorphism background */}
-          <div className="absolute inset-0 bg-[url('/patterns/subtle-grid.svg')] opacity-[0.03] pointer-events-none"></div>
-          <div className="absolute -top-[20%] -left-[10%] w-[40%] h-[40%] bg-gradient-to-br from-blue-100/30 via-indigo-100/20 to-purple-100/10 dark:from-blue-900/20 dark:via-indigo-900/15 dark:to-purple-900/10 rounded-full blur-3xl"></div>
-          <div className="absolute -bottom-[20%] -right-[10%] w-[40%] h-[40%] bg-gradient-to-br from-teal-100/20 via-emerald-100/15 to-green-100/10 dark:from-teal-900/15 dark:via-emerald-900/10 dark:to-green-900/5 rounded-full blur-3xl"></div>
           
-          <div className="container mx-auto px-4 relative z-10">
+          <div className="container mx-auto px-6 md:px-8 lg:px-12 relative z-10">
             <div className="mx-auto max-w-5xl lg:max-w-6xl">
               <div className="text-center mb-16" data-aos="fade-up">
-                <h2 className="text-3xl font-semibold tracking-tight md:text-4xl lg:text-5xl mb-6 bg-clip-text text-transparent bg-gradient-to-r from-gray-900 to-gray-700 dark:from-white dark:to-gray-300">Frequently Asked Questions</h2>
+                <h2 className="text-3xl font-semibold tracking-tight md:text-4xl lg:text-5xl mb-6 text-gray-900 dark:text-gray-100">Frequently Asked Questions</h2>
+              
                 <p className="text-gray-600 dark:text-gray-300 mb-0 max-w-2xl mx-auto text-lg">
                   Everything you need to know about using Alima
                 </p>
@@ -1324,7 +1299,7 @@ export default function Home() {
                         </svg>
                       </div>
                     </div>
-                    <p className="text-gray-600 dark:text-gray-300 text-base leading-relaxed">We provide a secure payment system that protects both clients and service providers. Funds are held in escrow until the work is completed and approved, ensuring satisfaction for all parties.</p>
+                    <p className="text-gray-600 dark:text-gray-300 text-base leading-relaxed">All payments are processed securely through Alima. Funds are held until the service is completed and approved, protecting both users and providers.</p>
                   </div>
                 </div>
                 
@@ -1357,6 +1332,32 @@ export default function Home() {
                     <p className="text-gray-600 dark:text-gray-300 text-base leading-relaxed">Yes, service providers can list multiple services under different categories. This allows you to showcase your diverse skill set and attract a wider range of clients.</p>
                   </div>
                 </div>
+                <div className="group">
+                  <div className="backdrop-blur-xl bg-white/80 dark:bg-black/50 border border-gray-200/50 dark:border-white/5 p-8 rounded-2xl shadow-sm transition-all duration-300 hover:shadow-md hover:translate-y-[-2px]">
+                    <div className="flex items-start justify-between">
+                      <h3 className="text-xl font-medium mb-4 text-gray-900 dark:text-white">How does Alima verify providers?</h3>
+                      <div className="ml-4 flex-shrink-0 flex items-center justify-center w-8 h-8 rounded-full bg-gray-100 dark:bg-gray-800 group-hover:bg-primary/10 dark:group-hover:bg-primary/20 transition-colors duration-300">
+                        <svg className="w-5 h-5 text-gray-500 dark:text-gray-400 group-hover:text-primary dark:group-hover:text-primary transition-colors duration-300" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                          <path d="M12 5v14M5 12h14" strokeLinecap="round" strokeLinejoin="round"/>
+                        </svg>
+                      </div>
+                    </div>
+                    <p className="text-gray-600 dark:text-gray-300 text-base leading-relaxed">All providers must submit an application and are reviewed by the Alima team before being approved to offer services. This ensures only trusted professionals are on the platform.</p>
+                  </div>
+                </div>
+                <div className="group">
+                  <div className="backdrop-blur-xl bg-white/80 dark:bg-black/50 border border-gray-200/50 dark:border-white/5 p-8 rounded-2xl shadow-sm transition-all duration-300 hover:shadow-md hover:translate-y-[-2px]">
+                    <div className="flex items-start justify-between">
+                      <h3 className="text-xl font-medium mb-4 text-gray-900 dark:text-white">Why does Alima handle all payments?</h3>
+                      <div className="ml-4 flex-shrink-0 flex items-center justify-center w-8 h-8 rounded-full bg-gray-100 dark:bg-gray-800 group-hover:bg-primary/10 dark:group-hover:bg-primary/20 transition-colors duration-300">
+                        <svg className="w-5 h-5 text-gray-500 dark:text-gray-400 group-hover:text-primary dark:group-hover:text-primary transition-colors duration-300" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                          <path d="M12 5v14M5 12h14" strokeLinecap="round" strokeLinejoin="round"/>
+                        </svg>
+                      </div>
+                    </div>
+                    <p className="text-gray-600 dark:text-gray-300 text-base leading-relaxed">Handling payments through Alima protects both users and providers. Funds are only released when the service is complete, reducing risk and ensuring satisfaction for everyone.</p>
+                  </div>
+                </div>
               </div>
               
               {/* More questions button - Hidden */}
@@ -1373,97 +1374,9 @@ export default function Home() {
         </div>
         
         {/* 8. CALL TO ACTION with Contact Section */}
-        <div id="contact" className="relative py-20 overflow-hidden bg-gradient-to-b from-transparent via-white to-transparent dark:from-transparent dark:via-black dark:to-transparent scroll-mt-40">
-          <div className="container mx-auto px-4 relative z-10">
-            {/* Get In Touch Section with modern design */}
-            <div className="rounded-[32px] text-center mb-40 relative overflow-hidden shadow-2xl" 
-                data-aos="fade-up" 
-                data-aos-delay="100">
-              <div className="absolute inset-0 bg-gradient-to-br from-emerald-500 to-blue-600 opacity-90"></div>
-              <div className="absolute inset-0 bg-[url('/patterns/dot-pattern.svg')] opacity-10"></div>
-              
-              {/* Image Carousel */}
-              <div className="absolute inset-0 overflow-hidden">
-                {getInTouchImages.map((image, index) => (
-                  <div 
-                    key={image} 
-                    className="absolute inset-0 transition-opacity duration-1000 ease-in-out"
-                    style={{ 
-                      opacity: index === currentImageIndex ? 0.15 : 0,
-                      backgroundImage: `url(${image})`,
-                      backgroundSize: 'cover',
-                      backgroundPosition: 'center',
-                    }}
-                  />
-                ))}
-              </div>
-              
-              {/* Decorative elements */}
-              <div className="absolute top-0 left-0 w-full h-full overflow-hidden pointer-events-none">
-                <div className="absolute -top-[10%] -left-[10%] w-[50%] h-[50%] bg-white/10 rounded-full blur-3xl"></div>
-                <div className="absolute -bottom-[10%] -right-[10%] w-[50%] h-[50%] bg-white/10 rounded-full blur-3xl"></div>
-              </div>
+        <div id="contact" className="relative py-20 overflow-hidden bg-white dark:bg-neutral-900 scroll-mt-40">
+          <div className="container mx-auto px-6 md:px-8 lg:px-12 relative z-10">
 
-              {/* Blobs with random movement patterns */}
-              <div className="absolute top-0 left-0 w-full h-full overflow-hidden pointer-events-none">
-                {/* Pink blob - random path 1 */}
-                <div className="absolute top-[15%] left-[20%] w-[230px] h-[230px] rounded-full blur-xl" style={{
-                  background: 'radial-gradient(circle, rgba(255,105,180,0.8) 0%, rgba(255,20,147,0.6) 70%)',
-                  animation: 'random-path-1 28s ease-in-out infinite'
-                }}></div>
-                
-                {/* Blue blob - random path 2 */}
-                <div className="absolute top-[70%] left-[75%] w-[250px] h-[250px] rounded-full blur-xl" style={{
-                  background: 'radial-gradient(circle, rgba(70,130,255,0.8) 0%, rgba(50,100,235,0.6) 70%)',
-                  animation: 'random-path-2 16s ease-in-out infinite'
-                }}></div>
-                
-                {/* Green blob - random path 3 */}
-                <div className="absolute top-[25%] left-[70%] w-[260px] h-[260px] rounded-full blur-xl" style={{
-                  background: 'radial-gradient(circle, rgba(50,220,150,0.8) 0%, rgba(30,180,120,0.6) 70%)',
-                  animation: 'random-path-3 15s ease-in-out infinite'
-                }}></div>
-                
-                {/* Purple blob - random path 4 */}
-                <div className="absolute top-[65%] left-[15%] w-[240px] h-[240px] rounded-full blur-xl" style={{
-                  background: 'radial-gradient(circle, rgba(180,90,255,0.8) 0%, rgba(140,70,200,0.6) 70%)',
-                  animation: 'random-path-4 18s ease-in-out infinite'
-                }}></div>
-                
-                {/* Yellow/Orange blob - random path 5 */}
-                <div className="absolute top-[45%] left-[45%] w-[280px] h-[280px] rounded-full blur-xl" style={{
-                  background: 'radial-gradient(circle, rgba(255,175,75,0.8) 0%, rgba(255,140,0,0.6) 70%)',
-                  animation: 'random-path-5 30s ease-in-out infinite'
-                }}></div>
-              </div>
-
-              <div className="relative z-10 py-20 px-6 md:py-28 md:px-20 backdrop-blur-[2px]">
-                <div className="max-w-2xl mx-auto">
-                  <h2 className="mb-6 text-4xl font-semibold tracking-tight md:text-5xl text-white leading-tight">
-                    Get In Touch
-                  </h2>
-                  <p className="mx-auto mb-10 max-w-xl text-xl leading-relaxed text-white/90 font-light">
-                Have questions about Alima or interested in joining our team? We'd love to hear from you!
-              </p>
-              <div className="flex flex-wrap justify-center gap-4">
-                    <button className="inline-flex items-center justify-center rounded-full border-0 bg-white px-8 py-4 text-base font-medium text-primary shadow-lg hover:bg-white/95 focus:outline-none transition duration-200 ease-in-out transform hover:-translate-y-1">
-                  <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="mr-2 h-5 w-5">
-                    <path d="M4 4h16c1.1 0 2 .9 2 2v12c0 1.1-.9 2-2 2H4c-1.1 0-2-.9-2-2V6c0-1.1.9-2 2-2z"></path>
-                    <polyline points="22,6 12,13 2,6"></polyline>
-                  </svg>
-                      Contact us
-                </button>
-                    <button className="inline-flex items-center justify-center rounded-full border border-white/40 bg-white/10 backdrop-blur-sm px-8 py-4 text-base font-medium text-white hover:bg-white/20 focus:outline-none transition duration-200 ease-in-out transform hover:-translate-y-1">
-                  <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="mr-2 h-5 w-5">
-                        <path d="M18 2h-3a5 5 0 0 0-5 5v3H7v4h3v8h4v-8h3l1-4h-4V7a1 1 0 0 1 1-1h3z"></path>
-                  </svg>
-                      Follow us
-                </button>
-                  </div>
-                </div>
-              </div>
-            </div>
-            
             {/* Ready to Get Started Section with glass morphism */}
             <div className="max-w-5xl mx-auto p-[1px] rounded-[32px] shadow-xl bg-gradient-to-b from-white/30 to-white/10 dark:from-white/10 dark:to-white/5 backdrop-blur-xl relative overflow-hidden" 
                  data-aos="fade-up" 
@@ -1484,17 +1397,20 @@ export default function Home() {
                    style={{
                      boxShadow: '0 0 20px rgba(200,200,200,0.15)'
                    }}>
-                <h2 className="text-3xl md:text-5xl font-bold mb-8 tracking-tight bg-clip-text text-transparent bg-gradient-to-r from-primary to-primary/70 dark:from-primary dark:to-blue-400">Ready to Get Started?</h2>
+                <h2 className="text-3xl md:text-5xl font-bold mb-8 tracking-tight text-neutral-950 dark:text-gray-100">Ready to Get Started?</h2>
                 <p className="text-xl leading-relaxed text-neutral-800 dark:text-white/90 mb-12 max-w-2xl mx-auto font-light">
-                Join Alima today and connect with skilled professionals or find new clients for your services.
+                Join Alima today! Sign up as a user or apply to become a provider. Enjoy secure payments, verified professionals, and a seamless experience from start to finish.
               </p>
                 <div className="flex flex-wrap justify-center gap-6 mb-8">
-                  <Link href="/signup" className="inline-flex items-center justify-center rounded-full bg-gradient-to-r from-primary to-primary/80 px-10 py-5 text-lg font-medium text-white shadow-lg hover:shadow-xl transition duration-200 ease-in-out transform hover:-translate-y-1 hover:from-primary hover:to-primary/90">
-                  Sign up now
-                </Link>
-                  <Link href="/popular-today" className="inline-flex items-center justify-center rounded-full border border-white/40 bg-white/10 backdrop-blur-md px-10 py-5 text-lg font-medium text-neutral-900 dark:text-white shadow-sm hover:shadow-md hover:bg-white/20 dark:hover:bg-white/10 transition duration-200 ease-in-out transform hover:-translate-y-1">
-                  Browse services
-                </Link>
+                  <Button asChild size="lg" className="rounded-full px-8 bg-gradient-to-r from-emerald-500 to-blue-500 text-white border-0 hover:from-emerald-600 hover:to-blue-600 transition-all duration-300">
+                    <Link href="/(auth)/signup">Sign Up Now</Link>
+                  </Button>
+                  <Button asChild size="lg" className="rounded-full px-8 bg-gradient-to-r from-emerald-500 to-blue-500 text-white border-0 hover:from-emerald-600 hover:to-blue-600 transition-all duration-300">
+                    <Link href="/services/apply">Apply for Services</Link>
+                  </Button>
+                  <Button asChild size="lg" className="rounded-full px-8 bg-gradient-to-r from-emerald-500 to-blue-500 text-white border-0 hover:from-emerald-600 hover:to-blue-600 transition-all duration-300">
+                    <Link href="/services">Browse Services</Link>
+                  </Button>
               </div>
               </div>
             </div>
@@ -1515,7 +1431,7 @@ export default function Home() {
           }}
           data-aos="fade-up"
           data-aos-duration="800"
-        > 
+        >
           {/* Overlay with reduced opacity to let more of the background show through */}
           <div className="absolute inset-0 bg-gray-50/10 dark:bg-neutral-950/20 backdrop-blur-[2px]"></div>
           
@@ -1538,11 +1454,10 @@ export default function Home() {
               <div className="flex flex-col justify-center space-y-8 lg:ml-auto lg:max-w-2xl" data-aos="fade-left" data-aos-delay="100">
                 <div className="space-y-6">
                   <span className="text-sm font-medium tracking-wider uppercase text-gray-700 dark:text-gray-400">Why Join Alima?</span>
-                  <h2 className="text-4xl font-bold tracking-tight text-gray-800 dark:text-gray-200 sm:text-5xl md:text-6xl drop-shadow-sm leading-tight">
-                    Your Filipino Service <br className="md:block hidden" /> Marketplace
-                  </h2>
+                  <h2 className="text-4xl font-bold tracking-tight text-gray-800 dark:text-gray-200 sm:text-5xl md:text-6xl drop-shadow-sm leading-tight">Your Filipino Service <br className="md:block hidden" /> Marketplace</h2>
+                
                   <p className="max-w-2xl text-lg text-gray-700 dark:text-gray-300 md:text-xl font-light leading-relaxed">
-                    Connect with skilled Filipino professionals or showcase your services in a platform built with trust, quality, and community at its core.
+                    Alima is your trusted Filipino service marketplace. Users enjoy a simple, secure signup and booking process. Providers apply and are verified before joining, ensuring quality and safety for everyone. All payments are handled through the platform for your peace of mind.
                   </p>
                 </div>
                 {/* Features Grid */}

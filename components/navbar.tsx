@@ -3,7 +3,7 @@
 import { useState, useEffect, useRef } from "react"
 import Link from "next/link"
 import { useRouter, usePathname } from "next/navigation"
-import { Menu, Bell, LogOut, X } from "lucide-react"
+import { Menu, Bell, LogOut, X, ArrowLeft } from "lucide-react"
 import { Button } from "@/components/ui/button"
 import { useAuth } from "@/app/context/auth-context"
 import { 
@@ -31,11 +31,10 @@ import {
 
 // Add a global scrollToTop function to ensure it's accessible from anywhere
 export function scrollToTopOfPage() {
-  // Use both document and window methods for maximum compatibility
-  window.scrollTo(0, 0);
-  window.scrollTo({top: 0, behavior: 'auto'});
-  document.body.scrollTop = 0;
-  document.documentElement.scrollTop = 0;
+  window.scrollTo({
+    top: 0,
+    behavior: 'smooth'
+  });
 }
 
 // Global function for scroll prevention, accessible to any component
@@ -47,7 +46,7 @@ export function preventScrollEvent(e: React.MouseEvent | React.KeyboardEvent | M
   return false;
 }
 
-export function Navbar() {
+export function Navbar({ showBackButton = false }: { showBackButton?: boolean }) {
   const [isMenuOpen, setIsMenuOpen] = useState(false)
   const [showLogoutConfirm, setShowLogoutConfirm] = useState(false)
   const { user, logout } = useAuth()
@@ -61,16 +60,11 @@ export function Navbar() {
     e.preventDefault();
     
     if (pathname === "/") {
-      // If already on home page, just scroll to top without navigation
-      // Use direct DOM manipulation for most reliability
+      // If already on home page, just scroll to top
       scrollToTopOfPage();
-      
-      // Also try with timeouts as fallback
-      setTimeout(scrollToTopOfPage, 10);
-      setTimeout(scrollToTopOfPage, 100);
     } else {
-      // If on another page, navigate to home
-      window.location.href = "/";
+      // If on another page, use router for navigation
+      router.push("/");
     }
   };
   
@@ -132,7 +126,8 @@ export function Navbar() {
 
   const navItems = [
     { name: "Home", href: "/" },
-    { name: "Popular Today", href: "/popular-today" },
+    { name: "Services", href: "/services" },
+    { name: "Apply for Services", href: "/services/apply" }
   ]
   
   // Handle smooth scrolling for anchor links
@@ -155,17 +150,23 @@ export function Navbar() {
   
   // Check if the current path matches the nav item (including partial matches for sub-routes)
   const isActive = (href: string) => {
-    // Handle root path
-    if (href === "/" && pathname === "/") return true;
-    if (href === "/" && pathname !== "/") return false;
-    
-    // Don't highlight special navigation items like hash links
-    if (href.includes('#')) return false;
-    
-    // Check if current path starts with the href (for nested routes)
-    if (href !== "/" && pathname?.startsWith(href)) return true;
-    
-    return false;
+    // Handle root path specifically
+    if (href === "/") {
+      return pathname === "/";
+    }
+
+    // For other links, check for exact match or if pathname starts with href for nested routes (excluding hash links)
+    if (href.includes('#')) {
+      return false; // Do not highlight hash links based on pathname
+    }
+
+    // Special handling for services pages
+    if (href === "/services") {
+      return pathname === "/services" || pathname?.startsWith("/services/");
+    }
+
+    // For other pages, check exact match
+    return pathname === href;
   }
 
   // Function to handle the logout button click in dropdown
@@ -199,16 +200,30 @@ export function Navbar() {
     <div className="sticky top-0 z-50 w-full py-6 px-4 md:px-0">
       <header className="mx-auto max-w-3xl md:max-w-4xl lg:max-w-5xl rounded-2xl bg-white/5 dark:bg-black/5 backdrop-blur-md border border-white/10 dark:border-white/5 text-foreground shadow-[0_0_15px_rgba(59,130,246,0.2)] dark:shadow-[0_0_25px_rgba(59,130,246,0.25)] transition-all hover:shadow-[0_0_20px_rgba(59,130,246,0.3)] dark:hover:shadow-[0_0_30px_rgba(59,130,246,0.35)]">
         <div className="flex h-14 items-center justify-between px-6">
-        {/* Logo */}
+          {showBackButton && (
+            <Button
+              variant="outline"
+              size="icon"
+              className="mr-4 h-8 w-8 rounded-full border-white/10 bg-white/5 hover:bg-white/10 transition-all duration-200"
+              onClick={() => router.back()}
+            >
+              <ArrowLeft className="h-4 w-4 text-foreground/80" />
+            </Button>
+          )}
+          {/* Logo */}
           <div className="flex-shrink-0">
-        <Link href="/" className="flex items-center" onClick={navigateToHome}>
+            <Link 
+              href="/" 
+              className="flex items-center" 
+              onClick={navigateToHome}
+            >
               <img 
                 src="/AlimaLOGO.svg" 
                 alt="Alima Logo" 
                 className="h-8 w-auto object-contain drop-shadow-[0_0_3px_rgba(59,130,246,0.3)]"
               />
               <span className="hidden md:block ml-2 text-xl font-bold text-foreground/90">Alima</span>
-        </Link>
+            </Link>
           </div>
 
           {/* Center Nav Items */}
@@ -226,9 +241,9 @@ export function Navbar() {
                     onClick={(e) => {
                       if (item.href === "/") {
                         navigateToHome(e);
-                        return;
+                      } else if (item.href.startsWith('/#')) {
+                        handleAnchorClick(e, item.href);
                       }
-                      handleAnchorClick(e, item.href);
                     }}
                   >
                     {item.name}
@@ -294,6 +309,9 @@ export function Navbar() {
                       Dashboard
                     </DropdownMenuItem>
                   )}
+                  <DropdownMenuItem onClick={() => router.push('/services/apply')}>
+                    Apply for Services
+                  </DropdownMenuItem>
                   <DropdownMenuItem onClick={() => user.role === "provider" ? router.push('/dashboard/notifications') : router.push('/notifications')} className="relative">
                     <span className="flex items-center">
                       Notifications

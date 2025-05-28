@@ -126,6 +126,8 @@ interface DashboardStats {
   clientRatingCount?: number;
   providerRating?: number;
   providerRatingCount?: number;
+  clientRatingChange?: number;
+  providerRatingChange?: number;
 }
 
 // Add utility function to handle various date formats from Firestore
@@ -282,7 +284,7 @@ export function DashboardOverview() {
             }
           });
           
-          // Calculate averages
+          // Calculate averages with proper fallback to 0
           const averageRating = ratingCount > 0 ? totalRating / ratingCount : 0;
           const averageClientRating = clientRatingCount > 0 ? clientRating / clientRatingCount : 0;
           const averageProviderRating = providerRatingCount > 0 ? providerRating / providerRatingCount : 0;
@@ -292,229 +294,185 @@ export function DashboardOverview() {
           let previousStartDate = new Date();
           let currentStartDate = new Date();
           
-          // Set comparison dates based on timeframe
-          if (timeframe === 'week') {
-            previousStartDate.setDate(now.getDate() - 14); // 2 weeks ago
-            currentStartDate.setDate(now.getDate() - 7); // 1 week ago
-          } else if (timeframe === 'month') {
-            previousStartDate.setMonth(now.getMonth() - 2); // 2 months ago
-            currentStartDate.setMonth(now.getMonth() - 1); // 1 month ago
-          } else if (timeframe === 'year') {
-            previousStartDate.setFullYear(now.getFullYear() - 2); // 2 years ago
-            currentStartDate.setFullYear(now.getFullYear() - 1); // 1 year ago
-          }
-
-          // Get previous period ratings
-          const previousRatingsQuery = query(
-            servicesRef,
+          // Calculate previous period ratings
+          const previousReviewsQuery = query(
+            reviewsRef,
             where("providerId", "==", user.uid),
-            where("updatedAt", "<=", Timestamp.fromDate(previousStartDate))
+            where("createdAt", ">=", previousStartDate),
+            where("createdAt", "<=", currentStartDate)
           );
           
-          getDocs(previousRatingsQuery).then((previousRatingsSnap) => {
-            let previousTotalRating = 0;
-            let previousRatedServices = 0;
-            previousRatingsSnap.docs.forEach(doc => {
-              const data = doc.data();
-              if (data.rating && data.rating > 0) {
-                previousTotalRating += data.rating;
-                previousRatedServices++;
-              }
-            });
-            const previousAverageRating = previousRatedServices > 0 ? previousTotalRating / previousRatedServices : 0;
-            const ratingChange = previousAverageRating > 0 
-              ? ((averageRating - previousAverageRating) / previousAverageRating) * 100 
-              : 0;
-
-            // Get transactions where the provider is receiving payment
-            const transactionsRef = collection(db, "transactions");
-            console.log("Attempting to query transactions with filter:", user.uid);
+          const previousReviewsSnapshot = await getDocs(previousReviewsQuery);
+          
+          let previousTotalRating = 0;
+          let previousRatingCount = 0;
+          let previousClientRating = 0;
+          let previousClientRatingCount = 0;
+          let previousProviderRating = 0;
+          let previousProviderRatingCount = 0;
+          
+          previousReviewsSnapshot.forEach(doc => {
+            const reviewData = doc.data();
+            const rating = parseFloat(reviewData.rating) || 0;
             
-            // First, get ALL transactions for this provider to ensure we have data
-            const allTransactionsQuery = query(
-              transactionsRef,
-              where("providerId", "==", user.uid),
-              where("status", "in", ["confirmed", "completed"])
-            );
-            
-            // Also query notifications for payment-related notifications
-            const notificationsRef = collection(db, "notifications");
-            const paymentNotificationsQuery = query(
-              notificationsRef,
-              where("userId", "==", user.uid),
-              where("type", "in", ["payment_proof", "payment_confirmation", "payment"])
-            );
-            
-            // Also query messages with payment proof
-            const messagesRef = collection(db, "messages");
-            const paymentMessagesQuery = query(
-              messagesRef,
-              where("receiverId", "==", user.uid),
-              where("paymentProof", "!=", null)
-            );
-            
-            // Get transactions, notifications, and payment messages
-            Promise.all([
-              getDocs(allTransactionsQuery),
-              getDocs(paymentNotificationsQuery),
-              getDocs(paymentMessagesQuery)
-            ]).then(([allTransactionsSnap, paymentNotificationsSnap, paymentMessagesSnap]) => {
-              console.log(`Found ${allTransactionsSnap.size} transactions, ${paymentNotificationsSnap.size} payment notifications, and ${paymentMessagesSnap.size} payment messages for user ${user.uid}`);
+            if (rating > 0) {
+              previousTotalRating += rating;
+              previousRatingCount++;
               
-              // Extract transaction dates from notifications if not found in transactions
-              const paymentDates = paymentNotificationsSnap.docs.map(doc => {
-                const data = doc.data();
-                return {
-                  parsedDate: parseFirestoreDate(data.timestamp),
-                  amount: data.data?.amount || 0,
-                  serviceId: data.data?.serviceId,
-                  serviceType: data.data?.serviceType || "Unknown",
-                  id: doc.id,
-                  type: 'notification',
-                  data: data.data,
-                  ...data
-                } as CombinedTransactionData;
-              });
-              
-              // Extract payment data from messages with payment proof
-              const messagePayments = paymentMessagesSnap.docs.map(doc => {
-                const data = doc.data();
-                // Try to extract amount from the message text if it's a payment message
-                let amount = 0;
-                if (data.text) {
-                  // Look for amount patterns in the text like "₱500" or "500 pesos"
-                  const amountMatch = data.text.match(/₱(\d+([.,]\d+)?)|(\d+([.,]\d+)?)(\s+)?(?:pesos|php)/i);
-                  if (amountMatch) {
-                    amount = parseFloat(amountMatch[1] || amountMatch[3]);
-                  }
-                }
-                
-                return {
-                  parsedDate: parseFirestoreDate(data.timestamp),
-                  amount: amount,
-                  conversationId: data.conversationId,
-                  serviceId: data.serviceId || "",
-                  id: doc.id,
-                  type: 'message_payment',
-                  paymentProof: data.paymentProof,
-                  ...data
-                } as CombinedTransactionData;
-              });
-              
-              // Process transaction data for direct date access
-              const allFilteredTransactions = allTransactionsSnap.docs.map(doc => {
-                const data = doc.data();
-                return {
-                  ...data,
-                  parsedDate: parseFirestoreDate(data.createdAt),
-                  id: doc.id,
-                  type: 'transaction',
-                  serviceType: data.serviceType || "Unknown"
-                } as CombinedTransactionData;
-              });
-              
-              // Debug logging for transactions
-              console.log('==== DEBUG REVENUE DATA ====');
-              console.log('Transaction data (first 5):', allFilteredTransactions.slice(0, 5));
-              console.log('Payment notifications (first 5):', paymentDates.slice(0, 5));
-              console.log('Message payments (first 5):', messagePayments.slice(0, 5));
-              console.log('User ID for provider filter:', user?.uid);
-              
-              // Look up conversation-related service details for message payments
-              const conversationIds = messagePayments
-                .filter(mp => !mp.serviceId && mp.conversationId)
-                .map(mp => mp.conversationId);
-              
-              if (conversationIds.length > 0) {
-                // Fetch conversations to get serviceId
-                const conversationsRef = collection(db, "conversations");
-                const conversationQuery = query(
-                  conversationsRef,
-                  where(documentId(), "in", conversationIds)
-                );
-                
-                getDocs(conversationQuery).then((conversationsSnap) => {
-                  // Map conversation IDs to service IDs
-                  const conversationServiceMap = new Map<string, string>();
-                  const conversationServiceTitleMap = new Map<string, string>();
-                  
-                  conversationsSnap.docs.forEach(doc => {
-                    const data = doc.data();
-                    if (data.serviceId) {
-                      conversationServiceMap.set(doc.id, data.serviceId);
-                    }
-                    if (data.serviceTitle) {
-                      conversationServiceTitleMap.set(doc.id, data.serviceTitle);
-                    }
-                  });
-                  
-                  // Update message payments with service information
-                  messagePayments.forEach(payment => {
-                    if (payment.conversationId && conversationServiceMap.has(payment.conversationId)) {
-                      payment.serviceId = conversationServiceMap.get(payment.conversationId);
-                    }
-                    if (payment.conversationId && conversationServiceTitleMap.has(payment.conversationId)) {
-                      payment.serviceTitle = conversationServiceTitleMap.get(payment.conversationId);
-                    }
-                  });
-                  
-                  // Combine all data sources with the updated message payments
-                  finalizeRevenueCalculation(
-                    [...allFilteredTransactions, ...paymentDates, ...messagePayments],
-                    services,
-                    timeframe,
-                    user,
-                    conversationsSnap,
-                    paymentNotificationsSnap,
-                    paymentMessagesSnap,
-                    allTransactionsSnap,
-                    setStats,
-                    setTimelineData,
-                    setAllTransactions,
-                    setAllNotifications,
-                    setIsLoading,
-                    uniqueProviders,
-                    totalServices,
-                    averageRating,
-                    previousAverageRating,
-                    averageClientRating,
-                    clientRatingCount,
-                    averageProviderRating,
-                    providerRatingCount,
-                    timelineData,
-                    setCategoryData
-                  );
-                }).catch(error => {
-                  console.error("Error fetching conversation details:", error);
-                  // Still proceed with the data we have
-                  finalizeRevenueCalculation(
-                    [...allFilteredTransactions, ...paymentDates, ...messagePayments],
-                    services,
-                    timeframe,
-                    user,
-                    conversationsSnap,
-                    paymentNotificationsSnap,
-                    paymentMessagesSnap,
-                    allTransactionsSnap,
-                    setStats,
-                    setTimelineData,
-                    setAllTransactions,
-                    setAllNotifications,
-                    setIsLoading,
-                    uniqueProviders,
-                    totalServices,
-                    averageRating,
-                    previousAverageRating,
-                    averageClientRating,
-                    clientRatingCount,
-                    averageProviderRating,
-                    providerRatingCount,
-                    timelineData,
-                    setCategoryData
-                  );
-                });
+              if (reviewData.raterIsProvider) {
+                previousProviderRating += rating;
+                previousProviderRatingCount++;
               } else {
-                // No conversation lookups needed, continue with data we have
+                previousClientRating += rating;
+                previousClientRatingCount++;
+              }
+            }
+          });
+          
+          const previousAverageRating = previousRatingCount > 0 ? previousTotalRating / previousRatingCount : 0;
+          const previousAverageClientRating = previousClientRatingCount > 0 ? previousClientRating / previousClientRatingCount : 0;
+          const previousAverageProviderRating = previousProviderRatingCount > 0 ? previousProviderRating / previousProviderRatingCount : 0;
+          
+          // Calculate rating changes
+          const ratingChange = averageRating - previousAverageRating;
+          
+          // Calculate client and provider rating changes
+          const clientRatingChange = averageClientRating - previousAverageClientRating;
+          const providerRatingChange = averageProviderRating - previousAverageProviderRating;
+          
+          // Get transactions where the provider is receiving payment
+          const transactionsRef = collection(db, "transactions");
+          console.log("Attempting to query transactions with filter:", user.uid);
+          
+          // First, get ALL transactions for this provider to ensure we have data
+          const allTransactionsQuery = query(
+            transactionsRef,
+            where("providerId", "==", user.uid),
+            where("status", "in", ["confirmed", "completed"])
+          );
+          
+          // Also query notifications for payment-related notifications
+          const notificationsRef = collection(db, "notifications");
+          const paymentNotificationsQuery = query(
+            notificationsRef,
+            where("userId", "==", user.uid),
+            where("type", "in", ["payment_proof", "payment_confirmation", "payment"])
+          );
+          
+          // Also query messages with payment proof
+          const messagesRef = collection(db, "messages");
+          const paymentMessagesQuery = query(
+            messagesRef,
+            where("receiverId", "==", user.uid),
+            where("paymentProof", "!=", null)
+          );
+          
+          // Get transactions, notifications, and payment messages
+          Promise.all([
+            getDocs(allTransactionsQuery),
+            getDocs(paymentNotificationsQuery),
+            getDocs(paymentMessagesQuery)
+          ]).then(([allTransactionsSnap, paymentNotificationsSnap, paymentMessagesSnap]) => {
+            console.log(`Found ${allTransactionsSnap.size} transactions, ${paymentNotificationsSnap.size} payment notifications, and ${paymentMessagesSnap.size} payment messages for user ${user.uid}`);
+            
+            // Extract transaction dates from notifications if not found in transactions
+            const paymentDates = paymentNotificationsSnap.docs.map(doc => {
+              const data = doc.data();
+              return {
+                parsedDate: parseFirestoreDate(data.timestamp),
+                amount: data.data?.amount || 0,
+                serviceId: data.data?.serviceId,
+                serviceType: data.data?.serviceType || "Unknown",
+                id: doc.id,
+                type: 'notification',
+                data: data.data,
+                ...data
+              } as CombinedTransactionData;
+            });
+            
+            // Extract payment data from messages with payment proof
+            const messagePayments = paymentMessagesSnap.docs.map(doc => {
+              const data = doc.data();
+              // Try to extract amount from the message text if it's a payment message
+              let amount = 0;
+              if (data.text) {
+                // Look for amount patterns in the text like "₱500" or "500 pesos"
+                const amountMatch = data.text.match(/₱(\d+([.,]\d+)?)|(\d+([.,]\d+)?)(\s+)?(?:pesos|php)/i);
+                if (amountMatch) {
+                  amount = parseFloat(amountMatch[1] || amountMatch[3]);
+                }
+              }
+              
+              return {
+                parsedDate: parseFirestoreDate(data.timestamp),
+                amount: amount,
+                conversationId: data.conversationId,
+                serviceId: data.serviceId || "",
+                id: doc.id,
+                type: 'message_payment',
+                paymentProof: data.paymentProof,
+                ...data
+              } as CombinedTransactionData;
+            });
+            
+            // Process transaction data for direct date access
+            const allFilteredTransactions = allTransactionsSnap.docs.map(doc => {
+              const data = doc.data();
+              return {
+                ...data,
+                parsedDate: parseFirestoreDate(data.createdAt),
+                id: doc.id,
+                type: 'transaction',
+                serviceType: data.serviceType || "Unknown"
+              } as CombinedTransactionData;
+            });
+            
+            // Debug logging for transactions
+            console.log('==== DEBUG REVENUE DATA ====');
+            console.log('Transaction data (first 5):', allFilteredTransactions.slice(0, 5));
+            console.log('Payment notifications (first 5):', paymentDates.slice(0, 5));
+            console.log('Message payments (first 5):', messagePayments.slice(0, 5));
+            console.log('User ID for provider filter:', user?.uid);
+            
+            // Look up conversation-related service details for message payments
+            const conversationIds = messagePayments
+              .filter(mp => !mp.serviceId && mp.conversationId)
+              .map(mp => mp.conversationId);
+            
+            if (conversationIds.length > 0) {
+              // Fetch conversations to get serviceId
+              const conversationsRef = collection(db, "conversations");
+              const conversationQuery = query(
+                conversationsRef,
+                where(documentId(), "in", conversationIds)
+              );
+              
+              getDocs(conversationQuery).then((conversationsSnap) => {
+                // Map conversation IDs to service IDs
+                const conversationServiceMap = new Map<string, string>();
+                const conversationServiceTitleMap = new Map<string, string>();
+                
+                conversationsSnap.docs.forEach(doc => {
+                  const data = doc.data();
+                  if (data.serviceId) {
+                    conversationServiceMap.set(doc.id, data.serviceId);
+                  }
+                  if (data.serviceTitle) {
+                    conversationServiceTitleMap.set(doc.id, data.serviceTitle);
+                  }
+                });
+                
+                // Update message payments with service information
+                messagePayments.forEach(payment => {
+                  if (payment.conversationId && conversationServiceMap.has(payment.conversationId)) {
+                    payment.serviceId = conversationServiceMap.get(payment.conversationId);
+                  }
+                  if (payment.conversationId && conversationServiceTitleMap.has(payment.conversationId)) {
+                    payment.serviceTitle = conversationServiceTitleMap.get(payment.conversationId);
+                  }
+                });
+                
+                // Combine all data sources with the updated message payments
                 finalizeRevenueCalculation(
                   [...allFilteredTransactions, ...paymentDates, ...messagePayments],
                   services,
@@ -538,48 +496,108 @@ export function DashboardOverview() {
                   averageProviderRating,
                   providerRatingCount,
                   timelineData,
-                  setCategoryData
+                  setCategoryData,
+                  ratingChange,
+                  clientRatingChange,
+                  providerRatingChange
                 );
-              }
-              
-              // After the conversations query, add notification listener
-              // Get all notifications for this user
-              const notificationsQuery = query(
-                notificationsRef,
-                where("userId", "==", user.uid),
-                orderBy("timestamp", "desc"),
-                limit(100) // Get last 100 notifications
-              );
-              
-              // Set up real-time listener for notifications
-              const notificationsUnsubscribe = onSnapshot(notificationsQuery, (notificationsSnap) => {
-                console.log("Notifications snapshot received, count:", notificationsSnap.size);
-                
-                // Process notifications by type
-                const notifications = notificationsSnap.docs.map(doc => {
-                  const data = doc.data();
-                  return {
-                    id: doc.id,
-                    type: data.type,
-                    timestamp: parseFirestoreDate(data.timestamp),
-                    data: data.data || {},
-                    read: data.read || false,
-                    ...data
-                  };
-                });
-                
-                // Store notification data for calendar
-                setNotificationData(notifications);
+              }).catch(error => {
+                console.error("Error fetching conversation details:", error);
+                // Still proceed with the data we have
+                finalizeRevenueCalculation(
+                  [...allFilteredTransactions, ...paymentDates, ...messagePayments],
+                  services,
+                  timeframe,
+                  user,
+                  conversationsSnap,
+                  paymentNotificationsSnap,
+                  paymentMessagesSnap,
+                  allTransactionsSnap,
+                  setStats,
+                  setTimelineData,
+                  setAllTransactions,
+                  setAllNotifications,
+                  setIsLoading,
+                  uniqueProviders,
+                  totalServices,
+                  averageRating,
+                  previousAverageRating,
+                  averageClientRating,
+                  clientRatingCount,
+                  averageProviderRating,
+                  providerRatingCount,
+                  timelineData,
+                  setCategoryData,
+                  ratingChange,
+                  clientRatingChange,
+                  providerRatingChange
+                );
               });
-            }).catch(error => {
-              console.error("Error in payment data processing:", error);
-              setIsLoading(false);
-              setError("Failed to fetch transaction data");
+            } else {
+              // No conversation lookups needed, continue with data we have
+              finalizeRevenueCalculation(
+                [...allFilteredTransactions, ...paymentDates, ...messagePayments],
+                services,
+                timeframe,
+                user,
+                conversationsSnap,
+                paymentNotificationsSnap,
+                paymentMessagesSnap,
+                allTransactionsSnap,
+                setStats,
+                setTimelineData,
+                setAllTransactions,
+                setAllNotifications,
+                setIsLoading,
+                uniqueProviders,
+                totalServices,
+                averageRating,
+                previousAverageRating,
+                averageClientRating,
+                clientRatingCount,
+                averageProviderRating,
+                providerRatingCount,
+                timelineData,
+                setCategoryData,
+                ratingChange,
+                clientRatingChange,
+                providerRatingChange
+              );
+            }
+            
+            // After the conversations query, add notification listener
+            // Get all notifications for this user
+            const notificationsQuery = query(
+              notificationsRef,
+              where("userId", "==", user.uid),
+              orderBy("timestamp", "desc"),
+              limit(100) // Get last 100 notifications
+            );
+            
+            // Set up real-time listener for notifications
+            const notificationsUnsubscribe = onSnapshot(notificationsQuery, (notificationsSnap) => {
+              console.log("Notifications snapshot received, count:", notificationsSnap.size);
+              
+              // Process notifications by type
+              const notifications = notificationsSnap.docs.map(doc => {
+                const data = doc.data();
+                return {
+                  id: doc.id,
+                  type: data.type,
+                  timestamp: parseFirestoreDate(data.timestamp),
+                  data: data.data || {},
+                  read: data.read || false,
+                  ...data
+                };
+              });
+              
+              // Store notification data for calendar
+              setNotificationData(notifications);
             });
           }).catch(error => {
-            console.error("Error in conversation data processing:", error);
+            console.error("Error in payment data processing:", error);
             setIsLoading(false);
-            setError("Failed to fetch conversation data");
+            setError("Failed to fetch transaction data");
           });
         });
 
@@ -753,11 +771,13 @@ export function DashboardOverview() {
           </CardHeader>
           <CardContent className="relative">
             <div className="text-3xl font-semibold mb-3 text-transparent bg-clip-text bg-gradient-to-r from-amber-600 to-yellow-600 dark:from-amber-400 dark:to-yellow-400">
-              {stats.isProvider ? stats.providerRating?.toFixed(1) || "0.0" : stats.clientRating?.toFixed(1) || "0.0"}
+              {stats.isProvider ? 
+                (stats.providerRating?.toFixed(1) || "0.0") : 
+                (stats.clientRating?.toFixed(1) || "0.0")}
             </div>
             <div className="flex items-center">
               <div className="text-xs flex items-center">
-              {stats.ratingChange > 0 ? (
+                {stats.ratingChange > 0 ? (
                   <TrendingUp className="mr-1 h-3 w-3 text-emerald-500" />
                 ) : (
                   <TrendingDown className="mr-1 h-3 w-3 text-rose-500" />
@@ -783,7 +803,9 @@ export function DashboardOverview() {
               })}
             </div>
             <Badge variant="outline" className="mt-2">
-              {stats.isProvider ? stats.providerRatingCount : stats.clientRatingCount} ratings
+              {stats.isProvider ? 
+                (stats.providerRatingCount || 0) : 
+                (stats.clientRatingCount || 0)} ratings
             </Badge>
           </CardContent>
         </Card>
@@ -794,7 +816,7 @@ export function DashboardOverview() {
             <div className="absolute top-0 right-0 w-20 h-20 bg-gradient-to-br from-emerald-200 to-teal-200 dark:from-emerald-800/30 dark:to-teal-800/30 rounded-full blur-2xl opacity-50 -translate-y-1/2 translate-x-1/3"></div>
             <CardTitle className="text-sm font-medium z-10">
               {stats.isProvider ? 
-                (parseFloat(stats.clientSpending || "0") > 0 ? "Finance" : "Revenue") : 
+                (parseFloat(stats.providerIncome || "0") > 0 ? "Finance" : "Revenue") : 
                 "Spending"}
             </CardTitle>
             <div className="h-10 w-10 rounded-xl bg-gradient-to-br from-emerald-500 to-teal-500 flex items-center justify-center z-10 shadow-md shadow-emerald-500/20">
@@ -828,7 +850,7 @@ export function DashboardOverview() {
                 </div>
               )}
               
-              {/* Client spending section */}
+              {/* Client spending section - Always show if there's spending */}
               {parseFloat(stats.clientSpending || "0") > 0 && (
                 <div className={stats.isProvider && parseFloat(stats.providerIncome || "0") > 0 ? "mt-3 pt-3 border-t border-emerald-100 dark:border-emerald-800/30" : ""}>
                   <div className="flex justify-between items-center">
@@ -1226,7 +1248,10 @@ function finalizeRevenueCalculation(
   averageProviderRating: number,
   providerRatingCount: number,
   timelineData: TimelineData[],
-  setCategoryData: (data: CategoryData[]) => void
+  setCategoryData: (data: CategoryData[]) => void,
+  ratingChange: number,
+  clientRatingChange: number,
+  providerRatingChange: number
 ) {
   // IMPORTANT: Only count transactions where this user is the provider
   // Filter out transactions where the user is not the provider
@@ -1561,20 +1586,22 @@ function finalizeRevenueCalculation(
     transactions: finalTransactionsCount,
     transactionsChange: previousTransactions.length > 0 ? ((finalTransactionsCount - previousTransactions.length) / previousTransactions.length) * 100 : 0,
     rating: averageRating,
-    ratingChange: previousAverageRating > 0 ? ((averageRating - previousAverageRating) / previousAverageRating) * 100 : 0,
+    ratingChange: ratingChange,
     revenue: finalRevenue.toFixed(2),
-    revenueChange: previousRevenue > 0 ? ((finalRevenue - previousRevenue) / previousRevenue) * 100 : 0,
+    revenueChange: revenueChange,
     serviceContactPercentage: contactedServicesPercentage,
     totalServices: totalServices,
     contactedServices: contactedServiceIds.size,
-    topServices: topServices, // Changed from finalTopServices to topServices
-    providerIncome: providerIncome.toFixed(2), 
-    clientSpending: clientSpending.toFixed(2), 
+    topServices: topServices,
+    providerIncome: providerIncome.toFixed(2),
+    clientSpending: clientSpending.toFixed(2),
     isProvider: totalServices > 0,
     clientRating: averageClientRating,
     clientRatingCount: clientRatingCount,
     providerRating: averageProviderRating,
-    providerRatingCount: providerRatingCount
+    providerRatingCount: providerRatingCount,
+    clientRatingChange: clientRatingChange,
+    providerRatingChange: providerRatingChange
   });
   
   // Set timeline data for chart display

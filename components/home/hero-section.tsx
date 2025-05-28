@@ -7,6 +7,7 @@ import { Plus, Circle } from "lucide-react"
 import { useStatistics } from "@/app/hooks/useStatistics"
 import { useEffect, useState } from "react"
 import { useNetworkStatus } from "@/app/context/network-status-context"
+import Link from "next/link"
 
 // Format numbers with K suffix (e.g., 15300 -> 15.3K)
 function formatStatNumber(num: number): string {
@@ -63,14 +64,9 @@ export function HeroSection() {
               </p>
               
               <div className="mt-6 md:mt-10 flex flex-col sm:flex-row w-full gap-3">
-                <a 
-                  className="w-full sm:w-auto inline-flex items-center justify-center gap-2 whitespace-nowrap text-sm font-medium ring-offset-background transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:pointer-events-none disabled:opacity-50 [&_svg]:pointer-events-none [&_svg]:size-4 [&_svg]:shrink-0 bg-gradient-to-r from-blue-600 to-indigo-600 hover:from-blue-700 hover:to-indigo-700 text-white h-12 rounded-full px-8 shadow-[0_8px_30px_rgba(59,130,246,0.2)] hover:shadow-[0_8px_20px_rgba(59,130,246,0.3)] transition-all duration-300"
-                  href="/popular-today"
-                  data-aos="fade-up"
-                  data-aos-delay="100"
-                >
-                  Browse Services
-                </a>
+                <Button asChild size="lg" className="rounded-full px-8 w-full sm:w-auto min-w-[180px] bg-gradient-to-r from-blue-600 to-indigo-600 hover:from-blue-700 hover:to-indigo-700 border-0 shadow-[0_8px_30px_rgba(59,130,246,0.2)] hover:shadow-[0_8px_20px_rgba(59,130,246,0.3)] transition-all duration-300">
+                  <Link href="/services">Browse Services</Link>
+                </Button>
                 <a 
                   href="#how-it-works"
                   className="w-full sm:w-auto inline-flex items-center justify-center gap-2 whitespace-nowrap text-sm font-medium ring-offset-background transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:pointer-events-none disabled:opacity-50 [&_svg]:pointer-events-none [&_svg]:size-4 [&_svg]:shrink-0 border-2 border-gray-200 dark:border-gray-800 bg-white/80 dark:bg-black/40 backdrop-blur-sm text-gray-800 dark:text-gray-200 hover:bg-white hover:text-blue-600 dark:hover:bg-black/60 dark:hover:text-blue-400 h-12 rounded-full px-8 shadow-[0_8px_30px_rgba(0,0,0,0.05)] hover:shadow-[0_8px_20px_rgba(0,0,0,0.1)] dark:shadow-[0_8px_30px_rgba(255,255,255,0.03)] dark:hover:shadow-[0_8px_20px_rgba(255,255,255,0.05)] transition-all duration-300"

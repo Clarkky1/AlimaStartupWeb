@@ -4,29 +4,49 @@ import React, { useEffect, useState } from "react"
 import { Navbar } from "@/components/navbar"
 import { Footer } from "@/components/footer"
 import { HydrationFix } from "@/components/ui/hydration-fix"
-import { usePathname } from "next/navigation"
 import AOS from 'aos'
 import { NavigationHandler } from "@/components/navigation-handler"
 
 // This is a client component that wraps children
 export function ClientLayout({ children }: { children: React.ReactNode }) {
-  const pathname = usePathname()
+  const [currentPath, setCurrentPath] = useState("")
   const [mounted, setMounted] = useState(false);
   
+  useEffect(() => {
+    // Set initial path
+    setCurrentPath(window.location.pathname)
+    setMounted(true)
+    
+    // Handle route changes
+    const handleRouteChange = () => {
+      setCurrentPath(window.location.pathname)
+    }
+    
+    window.addEventListener('popstate', handleRouteChange)
+    return () => window.removeEventListener('popstate', handleRouteChange)
+  }, [])
+  
   // Check if current path is a dashboard, login, signup, or notifications path
-  const shouldHideFooter = pathname?.startsWith('/dashboard') || 
-                          pathname === '/login' || 
-                          pathname === '/signup' ||
-                          pathname === '/signin' ||
-                          pathname === '/register' ||
-                          pathname === '/notifications' ||
-                          pathname === '/profile' ||
-                          pathname?.startsWith('/message') ||
-                          pathname === '/terms-of-service' ||
-                          pathname === '/privacy-policy';
+  const shouldHideFooter = currentPath?.startsWith('/dashboard') || 
+                          currentPath === '/login' || 
+                          currentPath === '/signup' ||
+                          currentPath === '/signin' ||
+                          currentPath === '/register' ||
+                          currentPath === '/notifications' ||
+                          currentPath === '/profile' ||
+                          currentPath?.startsWith('/message') ||
+                          currentPath === '/terms-of-service' ||
+                          currentPath === '/privacy-policy' ||
+                          currentPath?.startsWith('/services');
                           
-  // Hide navbar only on dashboard, login, signup, and notifications pages
-  const shouldHideNavbar = shouldHideFooter;
+  // Hide navbar on dashboard, login, signup, notifications, and all service pages
+  const shouldHideNavbar = currentPath?.startsWith('/dashboard') || 
+                          currentPath === '/login' || 
+                          currentPath === '/signup' ||
+                          currentPath === '/signin' ||
+                          currentPath === '/register' ||
+                          currentPath === '/notifications' ||
+                          currentPath?.startsWith('/services');
 
   // Initialize AOS with custom settings
   useEffect(() => {
@@ -75,15 +95,16 @@ export function ClientLayout({ children }: { children: React.ReactNode }) {
     };
   }, []);
 
-  useEffect(() => {
-    setMounted(true);
-  }, []);
+  // If we're on a services page, just render the children without any layout
+  if (currentPath?.startsWith('/services')) {
+    return <>{children}</>;
+  }
 
   return (
     <NavigationHandler>
       <HydrationFix />
       {!shouldHideNavbar && <Navbar />}
-      <main className={`min-h-screen ${pathname?.startsWith('/dashboard') ? 'dashboard-layout' : ''}`}>
+      <main className={`min-h-screen ${currentPath?.startsWith('/dashboard') ? 'dashboard-layout' : ''}`}>
         {children}
       </main>
       {!shouldHideFooter && <Footer />}

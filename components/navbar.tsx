@@ -210,7 +210,7 @@ export function Navbar({ showBackButton = false }: { showBackButton?: boolean })
               <ArrowLeft className="h-4 w-4 text-foreground/80" />
             </Button>
           )}
-          {/* Logo */}
+        {/* Logo */}
           <div className="flex-shrink-0">
             <Link 
               href="/" 
@@ -223,7 +223,7 @@ export function Navbar({ showBackButton = false }: { showBackButton?: boolean })
                 className="h-8 w-auto object-contain drop-shadow-[0_0_3px_rgba(59,130,246,0.3)]"
               />
               <span className="hidden md:block ml-2 text-xl font-bold text-foreground/90">Alima</span>
-            </Link>
+        </Link>
           </div>
 
           {/* Center Nav Items */}

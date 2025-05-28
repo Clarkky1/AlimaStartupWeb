@@ -53,6 +53,10 @@ interface ApplicationData {
   location: string;
   serviceDescription: string;
   serviceImage?: string;
+  validIdUploaded?: boolean;
+  proofAddressUploaded?: boolean;
+  certificationsUploaded?: boolean;
+  additionalInfo?: string;
 }
 
 export default function ServiceApplicationPage() {
@@ -63,6 +67,10 @@ export default function ServiceApplicationPage() {
   const [serviceDescription, setServiceDescription] = useState("")
   const [serviceImage, setServiceImage] = useState<File | null>(null)
   const [imagePreviewUrl, setImagePreviewUrl] = useState<string | null>(null)
+  const [validIdFile, setValidIdFile] = useState<File | null>(null)
+  const [proofAddressFile, setProofAddressFile] = useState<File | null>(null)
+  const [certificationsFiles, setCertificationsFiles] = useState<FileList | null>(null)
+  const [additionalInfo, setAdditionalInfo] = useState("")
   const { toast } = useToast()
   const router = useRouter()
   const { user } = useAuth()
@@ -86,6 +94,24 @@ export default function ServiceApplicationPage() {
       return
     }
 
+    if (!validIdFile) {
+      toast({
+        title: "Valid Government ID required",
+        description: "Please upload your valid government ID.",
+        variant: "destructive",
+      })
+      return
+    }
+
+    if (!proofAddressFile) {
+      toast({
+        title: "Proof of Address required",
+        description: "Please upload your proof of address.",
+        variant: "destructive",
+      })
+      return
+    }
+
     setLoading(true)
     try {
       const { db } = await initializeFirebase()
@@ -101,6 +127,10 @@ export default function ServiceApplicationPage() {
         serviceName: serviceName,
         location: location,
         serviceDescription: serviceDescription,
+        validIdUploaded: true,
+        proofAddressUploaded: true,
+        certificationsUploaded: certificationsFiles !== null && certificationsFiles.length > 0,
+        additionalInfo: additionalInfo.trim() !== "" ? additionalInfo : undefined,
       }
 
       // Handle image upload if an image is selected
@@ -203,8 +233,8 @@ export default function ServiceApplicationPage() {
       </div>
 
       {/* Right Column - Application Details Form and Requirements */}
-      <div className="grid grid-cols-1 space-y-8 px-4 py-8 md:ml-[calc(33.33%-16px)] lg:ml-[calc(25%-16px)] xl:ml-[calc(20%-16px)] md:grid-cols-1 md:space-y-8">
-        <div className="space-y-8 max-w-2xl mx-auto">
+      <div className="grid grid-cols-1 space-y-8 px-4 pb-8 md:ml-[calc(33.33%+16px)] lg:ml-[calc(25%+16px)] xl:ml-[calc(20%+16px)] md:grid-cols-1 md:space-y-8">
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
           {/* Service Details Form */}
           <Card>
             <CardHeader>
@@ -303,26 +333,50 @@ export default function ServiceApplicationPage() {
               <CardTitle>Requirements</CardTitle>
               <CardDescription>Please ensure you have the following ready for verification.</CardDescription>
             </CardHeader>
-            <CardContent>
+            <CardContent className="p-6 pt-0 pb-4">
               <div className="space-y-4">
                 <div className="space-y-2">
                   <Label htmlFor="valid-id">Upload Valid Government ID</Label>
-                  <Input id="valid-id" type="file" accept="image/*,application/pdf" />
+                  <Input 
+                    id="valid-id" 
+                    type="file" 
+                    accept="image/*,application/pdf" 
+                    required
+                    onChange={(e) => setValidIdFile(e.target.files ? e.target.files[0] : null)}
+                  />
                 </div>
 
                 <div className="space-y-2">
                   <Label htmlFor="proof-address">Upload Proof of Address</Label>
-                  <Input id="proof-address" type="file" accept="image/*,application/pdf" />
+                  <Input 
+                    id="proof-address" 
+                    type="file" 
+                    accept="image/*,application/pdf" 
+                    required
+                    onChange={(e) => setProofAddressFile(e.target.files ? e.target.files[0] : null)}
+                  />
                 </div>
 
                 <div className="space-y-2">
                   <Label htmlFor="certifications">Upload Professional Certifications (Optional)</Label>
-                  <Input id="certifications" type="file" accept="image/*,application/pdf" multiple />
+                  <Input 
+                    id="certifications" 
+                    type="file" 
+                    accept="image/*,application/pdf" 
+                    multiple
+                    onChange={(e) => setCertificationsFiles(e.target.files)}
+                  />
                 </div>
 
                 <div className="space-y-2">
                   <Label htmlFor="additional-info">Additional Information (Optional)</Label>
-                  <Textarea id="additional-info" placeholder="Provide any additional information relevant to your application..." />
+                  <Textarea 
+                    id="additional-info" 
+                    placeholder="Provide any additional information relevant to your application..."
+                    className="min-h-[80px] sm:min-h-[150px] resize-none overflow-y-hidden"
+                    value={additionalInfo}
+                    onChange={(e) => setAdditionalInfo(e.target.value)}
+                  />
                 </div>
               </div>
             </CardContent>

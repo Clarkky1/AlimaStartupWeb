@@ -292,11 +292,11 @@ export default function LoginPage() {
                         <Input
                           id="email"
                           type="email"
-                          placeholder="name@example.com"
                           value={email}
                           onChange={(e) => setEmail(e.target.value)}
                           required
-                          className="h-9 sm:h-10 w-full rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-ring focus:ring-offset-2"
+                          placeholder="Enter your email"
+                          className="bg-white/10 border-white/20 text-white placeholder:text-white/50 focus:outline-none focus:ring-0 focus:ring-offset-0 focus:border-transparent"
                         />
                       </div>
                       <div className="space-y-1 sm:space-y-2">
@@ -308,11 +308,11 @@ export default function LoginPage() {
                         <Input
                           id="password"
                           type="password"
-                          placeholder="••••••••"
                           value={password}
                           onChange={(e) => setPassword(e.target.value)}
                           required
-                          className="h-9 sm:h-10 w-full rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-ring focus:ring-offset-2"
+                          placeholder="Enter your password"
+                          className="bg-white/10 border-white/20 text-white placeholder:text-white/50 focus:outline-none focus:ring-0 focus:ring-offset-0 focus:border-transparent"
                         />
                         
                         {/* Move the Forgot password and Remember me on the same line */}
@@ -396,11 +396,11 @@ export default function LoginPage() {
                         <Input
                           id="forgotPasswordEmail"
                           type="email"
-                          placeholder="name@example.com"
                           value={forgotPasswordEmail}
                           onChange={(e) => setForgotPasswordEmail(e.target.value)}
                           required
-                          className="h-9 sm:h-10 w-full rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-ring focus:ring-offset-2"
+                          placeholder="Enter your email to reset password"
+                          className="bg-white/10 border-white/20 text-white placeholder:text-white/50 focus:outline-none focus:ring-0 focus:ring-offset-0 focus:border-transparent"
                         />
                       </div>
 

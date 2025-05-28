@@ -19,6 +19,8 @@ import { initializeFirebase } from "@/app/lib/firebase"
 import { collection, query, where, getDocs, orderBy, limit, doc, updateDoc } from "firebase/firestore"
 import { RatingModal } from "@/components/messages/rating-modal"
 import { useToast } from "@/components/ui/use-toast"
+import AOS from 'aos';
+import 'aos/dist/aos.css';
 
 // Dynamically import the QuoteCard component to avoid styled-components SSR issues
 const QuoteCard = dynamic(() => import("@/components/home/quote-card"), { ssr: false });
@@ -28,6 +30,12 @@ const AnimationStyles = () => {
   useEffect(() => {
     // Only run on client-side to avoid SSR issues
     if (typeof window === 'undefined') return;
+    
+    // Initialize AOS
+    AOS.init({
+      duration: 800, // Animation duration
+      once: false, // Whether animation should happen only once - while scrolling down
+    });
     
     // Add custom animation keyframes to the document
     const style = document.createElement('style');
@@ -572,12 +580,12 @@ export default function Home() {
                     
                     <h1 className="text-3xl font-bold tracking-tight sm:text-4xl md:text-5xl lg:text-6xl mb-8 relative">
                       <span className="bg-clip-text text-transparent bg-gradient-to-r from-gray-900 via-gray-800 to-gray-700 dark:from-white dark:via-gray-100 dark:to-gray-300 drop-shadow-sm">
-                        Connect with <span className="bg-clip-text text-transparent bg-gradient-to-r from-blue-600 to-indigo-600 dark:from-blue-400 dark:to-indigo-400">local</span> and <span className="bg-clip-text text-transparent bg-gradient-to-r from-purple-600 to-pink-600 dark:from-purple-400 dark:to-pink-400">global</span> talent for any service you need
+                        Your Trusted Filipino Service Marketplace
                       </span>
                     </h1>
                     
                     <p className="mb-10 max-w-lg text-base sm:text-lg text-gray-600 dark:text-gray-300 backdrop-blur-sm relative">
-                      Find skilled professionals for both digital and physical services. Whether you need a web developer or a local handyman, Alima connects you with the right talent.
+                      Find skilled professionals for any service you need.
                     </p>
                     
                     <div className="flex flex-wrap gap-4 relative">
@@ -692,35 +700,35 @@ export default function Home() {
                     {/* User Statistics - Premium Apple 2025 Style */}
                     <div className="flex justify-center w-full mt-8">
                       <div className="flex gap-x-8 max-w-xs w-full backdrop-blur-xl bg-white/15 dark:bg-black/15 border border-white/20 dark:border-white/10 rounded-2xl p-6 shadow-[0_10px_40px_-15px_rgba(0,0,0,0.15)] dark:shadow-[0_10px_40px_-15px_rgba(255,255,255,0.05)] overflow-hidden relative group transition-all duration-300 hover:shadow-[0_15px_60px_-15px_rgba(0,0,0,0.2)] dark:hover:shadow-[0_15px_60px_-15px_rgba(255,255,255,0.07)]">
-                        {/* Premium glass background effects */}
-                        <div className="absolute inset-0 bg-gradient-to-br from-white/5 via-white/10 to-white/5 dark:from-white/5 dark:via-white/2 dark:to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-500"></div>
-                        <div className="absolute -inset-1 bg-gradient-to-r from-blue-500/10 via-purple-500/10 to-pink-500/10 dark:from-blue-500/5 dark:via-purple-500/5 dark:to-pink-500/5 blur-xl opacity-0 group-hover:opacity-100 transition-opacity duration-500 rounded-3xl"></div>
-                        
-                        {/* Active Users */}
-                        <div className="text-center px-5 relative z-10 flex flex-col items-center">
-                          <p className="text-3xl md:text-4xl font-bold bg-gradient-to-r from-blue-600 to-blue-400 dark:from-blue-400 dark:to-blue-300 inline-block text-transparent bg-clip-text">
-                            {isLoading ? (
-                              <span className="inline-block h-8 w-16 bg-gray-200/50 dark:bg-gray-700/50 animate-pulse rounded-md"></span>
-                            ) : (
-                              formatStatNumber(userCount)
-                            )}
-                          </p>
-                          <div className="h-1 w-8 bg-blue-500/50 rounded-full mt-2 mb-1"></div>
-                          <p className="text-sm font-medium text-neutral-700 dark:text-neutral-300">Active Users</p>
-                        </div>
-                        
-                        {/* Services */}
-                        <div className="text-center px-5 relative z-10 flex flex-col items-center">
-                          <p className="text-3xl md:text-4xl font-bold bg-gradient-to-r from-purple-600 to-purple-400 dark:from-purple-400 dark:to-purple-300 inline-block text-transparent bg-clip-text">
-                            {isLoading ? (
-                              <span className="inline-block h-8 w-16 bg-gray-200/50 dark:bg-gray-700/50 animate-pulse rounded-md"></span>
-                            ) : (
-                              formatStatNumber(serviceCount)
-                            )}
-                          </p>
-                          <div className="h-1 w-8 bg-purple-500/50 rounded-full mt-2 mb-1"></div>
-                          <p className="text-sm font-medium text-neutral-700 dark:text-neutral-300">Services</p>
-                        </div>
+                      {/* Premium glass background effects */}
+                      <div className="absolute inset-0 bg-gradient-to-br from-white/5 via-white/10 to-white/5 dark:from-white/5 dark:via-white/2 dark:to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-500"></div>
+                      <div className="absolute -inset-1 bg-gradient-to-r from-blue-500/10 via-purple-500/10 to-pink-500/10 dark:from-blue-500/5 dark:via-purple-500/5 dark:to-pink-500/5 blur-xl opacity-0 group-hover:opacity-100 transition-opacity duration-500 rounded-3xl"></div>
+                      
+                      {/* Active Users */}
+                      <div className="text-center px-5 relative z-10 flex flex-col items-center">
+                        <p className="text-3xl md:text-4xl font-bold bg-gradient-to-r from-blue-600 to-blue-400 dark:from-blue-400 dark:to-blue-300 inline-block text-transparent bg-clip-text">
+                          {isLoading ? (
+                            <span className="inline-block h-8 w-16 bg-gray-200/50 dark:bg-gray-700/50 animate-pulse rounded-md"></span>
+                          ) : (
+                            formatStatNumber(userCount)
+                          )}
+                        </p>
+                        <div className="h-1 w-8 bg-blue-500/50 rounded-full mt-2 mb-1"></div>
+                        <p className="text-sm font-medium text-neutral-700 dark:text-neutral-300">Active Users</p>
+                      </div>
+                      
+                      {/* Services */}
+                      <div className="text-center px-5 relative z-10 flex flex-col items-center">
+                        <p className="text-3xl md:text-4xl font-bold bg-gradient-to-r from-purple-600 to-purple-400 dark:from-purple-400 dark:to-purple-300 inline-block text-transparent bg-clip-text">
+                          {isLoading ? (
+                            <span className="inline-block h-8 w-16 bg-gray-200/50 dark:bg-gray-700/50 animate-pulse rounded-md"></span>
+                          ) : (
+                            formatStatNumber(serviceCount)
+                          )}
+                        </p>
+                        <div className="h-1 w-8 bg-purple-500/50 rounded-full mt-2 mb-1"></div>
+                        <p className="text-sm font-medium text-neutral-700 dark:text-neutral-300">Services</p>
+                      </div>
                       </div>
                     </div>
                   </div>
@@ -738,20 +746,20 @@ export default function Home() {
             <div className="mx-auto max-w-5xl lg:max-w-6xl">
               <div className="grid grid-cols-1 lg:grid-cols-2 gap-16 items-center">
                 <div className="order-2 lg:order-1" data-aos="fade-right">
-                  <h2 className="text-3xl font-semibold md:text-4xl mb-6 text-gray-900 dark:text-gray-100">The Problem We Solve</h2>
+                  <h2 className="text-3xl font-semibold md:text-4xl mb-6 text-gray-900 dark:text-gray-100">The Problems Alima Solves</h2>
                   <p className="text-gray-600 dark:text-gray-300 text-lg mb-8">
-                    Finding trustworthy professionals and ensuring safe transactions can be difficult. Alima solves this by verifying every user, requiring providers to apply, and handling all payments securely through our platform. No more risky direct payments or unverified service providers.
+                    Finding trustworthy professionals and ensuring safe transactions is challenging. Alima verifies users, vets providers, and handles payments securely.
                   </p>
 
                   <div className="space-y-6">
                     <div className="flex items-start gap-4">
                       <div className="flex-shrink-0 w-12 h-12 rounded-2xl bg-gradient-to-br from-red-100 to-red-50 dark:from-red-900/30 dark:to-red-800/20 flex items-center justify-center">
                         <X className="w-6 h-6 text-red-600 dark:text-red-400" />
-                </div>
+                      </div>
                       <div>
-                        <h3 className="text-xl font-medium mb-2">Lack of Trust</h3>
+                        <h3 className="text-xl font-medium mb-2">Untrustworthy Providers & Lack of Verification</h3>
                         <p className="text-gray-600 dark:text-gray-400">
-                          Traditional methods offer little verification of service provider credentials or reliability
+                          Traditional methods offer little verification of service provider credentials or reliability. Alima addresses this with a strict provider application and verification process.
                         </p>
                       </div>
                     </div>
@@ -761,9 +769,9 @@ export default function Home() {
                         <X className="w-6 h-6 text-red-600 dark:text-red-400" />
                       </div>
                       <div>
-                        <h3 className="text-xl font-medium mb-2">Limited Options</h3>
+                        <h3 className="text-xl font-medium mb-2">Limited Options for Niche Services</h3>
                         <p className="text-gray-600 dark:text-gray-400">
-                          Finding the right service provider often relies on word-of-mouth, limiting your choices
+                          Finding the right service provider often relies on word-of-mouth, limiting your choices. Alima solves this by allowing service providers to list multiple services under different categories, showcasing their diverse skill set and attracting a wider range of clients.
                         </p>
                       </div>
                     </div>
@@ -775,7 +783,7 @@ export default function Home() {
                       <div>
                         <h3 className="text-xl font-medium mb-2">Inconsistent Quality</h3>
                         <p className="text-gray-600 dark:text-gray-400">
-                          Without reliable reviews and ratings, service quality is unpredictable
+                          Without reliable reviews and ratings, service quality is unpredictable. Alima solves this by allowing clients to leave reviews and ratings for completed services, providing valuable feedback for both providers and clients.
                         </p>
                       </div>
                     </div>
@@ -815,7 +823,7 @@ export default function Home() {
             <div className="text-center mb-16 max-w-3xl mx-auto" data-aos="fade-up">
               <h2 className="text-3xl font-semibold tracking-tight md:text-4xl lg:text-5xl mb-6 text-gray-900 dark:text-gray-100">How Alima Works</h2>
               <p className="text-gray-600 dark:text-gray-300 text-lg">
-                Our platform makes it easy to connect with talented professionals for both digital services and local physical work
+                Connect clients with verified service providers safely and efficiently.
               </p>
             </div>
             
@@ -826,9 +834,9 @@ export default function Home() {
                   <div className="w-16 h-16 mb-6 rounded-full flex items-center justify-center bg-gradient-to-br from-blue-500/10 to-purple-500/10 dark:from-blue-500/20 dark:to-purple-500/20">
                     <UserRoundSearch className="w-8 h-8 text-blue-600 dark:text-blue-400" />
                   </div>
-                  <h3 className="text-xl font-medium mb-3">1. Sign Up or Apply</h3>
+                  <h3 className="text-xl font-medium mb-3">Sign Up or Apply to be a Provider</h3>
                   <p className="text-gray-600 dark:text-gray-400">
-                    Users can sign up quickly with required details and a profile picture. Service providers must apply and be approved before offering services.
+                    Sign up as a client or apply to be a verified provider.
                   </p>
                 </div>
                 </div>
@@ -839,9 +847,9 @@ export default function Home() {
                   <div className="w-16 h-16 mb-6 rounded-full flex items-center justify-center bg-gradient-to-br from-green-500/10 to-teal-500/10 dark:from-green-500/20 dark:to-teal-500/20">
                     <MessagesSquare className="w-8 h-8 text-green-600 dark:text-green-400" />
                   </div>
-                  <h3 className="text-xl font-medium mb-3">2. Connect & Book</h3>
+                  <h3 className="text-xl font-medium mb-3">Browse Services & Connect</h3>
                   <p className="text-gray-600 dark:text-gray-400">
-                    Browse or search for services, connect with verified providers, and discuss your needs securely on Alima.
+                    Explore services by category or location and connect with providers.
                   </p>
                 </div>
                 </div>
@@ -852,9 +860,9 @@ export default function Home() {
                   <div className="w-16 h-16 mb-6 rounded-full flex items-center justify-center bg-gradient-to-br from-amber-500/10 to-orange-500/10 dark:from-amber-500/20 dark:to-orange-500/20">
                     <CheckCircle className="w-8 h-8 text-amber-600 dark:text-amber-400" />
                   </div>
-                  <h3 className="text-xl font-medium mb-3">3. Pay & Review</h3>
+                  <h3 className="text-xl font-medium mb-3">Secure Payment & Review</h3>
                   <p className="text-gray-600 dark:text-gray-400">
-                    Make payments safely through Alima. The platform holds funds until the service is complete, then releases payment to the provider. Leave a review to help others!
+                    Secure payments and leave reviews after service.
                   </p>
                 </div>
               </div>
@@ -871,6 +879,9 @@ export default function Home() {
             <div className="mx-auto max-w-5xl lg:max-w-6xl">
               <h2 className="text-3xl font-semibold tracking-tight md:text-4xl mb-8 text-center" data-aos="fade-up">What Our Users Say</h2>
               
+              <p className="text-gray-600 dark:text-gray-300 text-lg text-center mb-8 max-w-2xl mx-auto">
+                Hear directly from clients and providers about their positive experiences with Alima.
+              </p>
               <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
                 {/* Testimonial 1 */}
                 <div className="backdrop-blur-xl bg-white/20 dark:bg-black/20 border border-white/30 dark:border-white/10 p-8 rounded-2xl shadow-lg relative overflow-hidden group" data-aos="fade-up" data-aos-delay="100">
@@ -983,7 +994,7 @@ export default function Home() {
               <h2 className="text-3xl font-semibold md:text-5xl mb-6 text-neutral-950 dark:text-gray-100">Our Mission</h2>
               
               <p className="text-xl text-gray-600 dark:text-gray-300" data-aos="fade-up" data-aos-delay="100">
-                To build a trusted, secure, and empowering platform where users can confidently find services and providers can grow their business—knowing every transaction is safe and every user is verified.
+                Building a trusted platform for finding services and growing businesses securely.
               </p>
             </div>
 
@@ -994,9 +1005,9 @@ export default function Home() {
                     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M15 19.128a9.38 9.38 0 002.625.372 9.337 9.337 0 004.121-.952 4.125 4.125 0 00-7.533-2.493M15 19.128v-.003c0-1.113-.285-2.16-.786-3.07M15 19.128v.106A12.318 12.318 0 018.624 21c-2.331 0-4.512-.645-6.374-1.766l-.001-.109a6.375 6.375 0 0111.964-3.07M12 6.375a3.375 3.375 0 11-6.75 0 3.375 3.375 0 016.75 0zm8.25 2.25a2.625 2.625 0 11-5.25 0 2.625 2.625 0 015.25 0z" />
                   </svg>
                 </div>
-                <h3 className="text-xl font-medium mb-4">For Clients</h3>
+                <h3 className="text-xl font-medium mb-4">For Clients: Find Verified Services</h3>
                 <p className="text-gray-600 dark:text-gray-400">
-                  Find trustworthy, skilled professionals quickly and confidently for any service you need, with complete transparency.
+                  Effortlessly find and connect with trustworthy, skilled professionals through our comprehensive service listings and secure messaging.
                   </p>
                 </div>
 
@@ -1006,9 +1017,9 @@ export default function Home() {
                     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M20.25 14.15v4.25c0 1.094-.787 2.036-1.872 2.18-2.087.277-4.216.42-6.378.42s-4.291-.143-6.378-.42c-1.085-.144-1.872-1.086-1.872-2.18v-4.25m16.5 0a2.18 2.18 0 00.75-1.661V8.706c0-1.081-.768-2.015-1.837-2.175a48.114 48.114 0 00-3.413-.387m4.5 8.006c-.194.165-.42.295-.673.38A23.978 23.978 0 0112 15.75c-2.648 0-5.195-.429-7.577-1.22a2.016 2.016 0 01-.673-.38m0 0A2.18 2.18 0 013 12.489V8.706c0-1.081.768-2.015 1.837-2.175a48.111 48.111 0 013.413-.387m7.5 0V5.25A2.25 2.25 0 0013.5 3h-3a2.25 2.25 0 00-2.25 2.25v.894m7.5 0a48.667 48.667 0 00-7.5 0M12 12.75h.008v.008H12v-.008z" />
                   </svg>
                   </div>
-                <h3 className="text-xl font-medium mb-4">For Service Providers</h3>
+                <h3 className="text-xl font-medium mb-4">For Providers: Grow Your Business Securely</h3>
                 <p className="text-gray-600 dark:text-gray-400">
-                  Showcase your skills, connect with clients who value quality work, and build a thriving business on your terms.
+                  Apply to showcase your verified skills, connect with serious clients, and manage secure transactions all in one place.
                 </p>
               </div>
 
@@ -1043,7 +1054,7 @@ export default function Home() {
                 <div className="mb-16 text-center" data-aos="fade-up">
                   <h2 className="mb-4 text-4xl font-medium tracking-tight md:text-5xl text-neutral-950 dark:text-gray-100">Meet Our Team</h2>
                   <p className="mx-auto max-w-2xl text-lg text-neutral-600 dark:text-neutral-300 px-4 font-light">
-                    The passionate individuals behind Alima who work tirelessly to create the best possible experience for our users. We are committed to security, user verification, and safe payments for everyone.
+                    The passionate individuals behind Alima.
                   </p>
                 </div>
 
@@ -1253,9 +1264,10 @@ export default function Home() {
                 <h2 className="text-3xl font-semibold tracking-tight md:text-4xl lg:text-5xl mb-6 text-gray-900 dark:text-gray-100">Frequently Asked Questions</h2>
               
                 <p className="text-gray-600 dark:text-gray-300 mb-0 max-w-2xl mx-auto text-lg">
-                  Everything you need to know about using Alima
+                  Find answers to common questions about Alima.
                 </p>
               </div>
+              
               
               <div className="grid grid-cols-1 gap-4" data-aos="fade-up" data-aos-delay="150">
                 {/* FAQ Item 1 */}
@@ -1376,7 +1388,7 @@ export default function Home() {
         {/* 8. CALL TO ACTION with Contact Section */}
         <div id="contact" className="relative py-20 overflow-hidden bg-white dark:bg-neutral-900 scroll-mt-40">
           <div className="container mx-auto px-6 md:px-8 lg:px-12 relative z-10">
-
+            
             {/* Ready to Get Started Section with glass morphism */}
             <div className="max-w-5xl mx-auto p-[1px] rounded-[32px] shadow-xl bg-gradient-to-b from-white/30 to-white/10 dark:from-white/10 dark:to-white/5 backdrop-blur-xl relative overflow-hidden" 
                  data-aos="fade-up" 
@@ -1399,7 +1411,7 @@ export default function Home() {
                    }}>
                 <h2 className="text-3xl md:text-5xl font-bold mb-8 tracking-tight text-neutral-950 dark:text-gray-100">Ready to Get Started?</h2>
                 <p className="text-xl leading-relaxed text-neutral-800 dark:text-white/90 mb-12 max-w-2xl mx-auto font-light">
-                Join Alima today! Sign up as a user or apply to become a provider. Enjoy secure payments, verified professionals, and a seamless experience from start to finish.
+                Join Alima today as a user or provider.
               </p>
                 <div className="flex flex-wrap justify-center gap-6 mb-8">
                   <Button asChild size="lg" className="rounded-full px-8 bg-gradient-to-r from-emerald-500 to-blue-500 text-white border-0 hover:from-emerald-600 hover:to-blue-600 transition-all duration-300">
@@ -1431,7 +1443,7 @@ export default function Home() {
           }}
           data-aos="fade-up"
           data-aos-duration="800"
-        >
+        > 
           {/* Overlay with reduced opacity to let more of the background show through */}
           <div className="absolute inset-0 bg-gray-50/10 dark:bg-neutral-950/20 backdrop-blur-[2px]"></div>
           
@@ -1457,7 +1469,7 @@ export default function Home() {
                   <h2 className="text-4xl font-bold tracking-tight text-gray-800 dark:text-gray-200 sm:text-5xl md:text-6xl drop-shadow-sm leading-tight">Your Filipino Service <br className="md:block hidden" /> Marketplace</h2>
                 
                   <p className="max-w-2xl text-lg text-gray-700 dark:text-gray-300 md:text-xl font-light leading-relaxed">
-                    Alima is your trusted Filipino service marketplace. Users enjoy a simple, secure signup and booking process. Providers apply and are verified before joining, ensuring quality and safety for everyone. All payments are handled through the platform for your peace of mind.
+                    Alima is your trusted Filipino service marketplace for secure connections and transactions.
                   </p>
                 </div>
                 {/* Features Grid */}
@@ -1522,6 +1534,23 @@ export default function Home() {
             </div>
           </div>
         </section>
+
+        {/* Featured Services Section */}
+        <section className="py-12 md:py-20">
+          <div className="container mx-auto px-4">
+            <div className="text-center mb-8">
+              <h2 className="text-3xl md:text-4xl font-bold">Explore Featured Services</h2>
+              <p className="mt-2 text-lg text-muted-foreground">
+                Discover top services or find providers. Use filters on the Services page.
+              </p>
+            </div>
+            <GlobalServices category="global" /> {/* Ensure this component fetches a broader range or popular services */}
+          </div>
+        </section>
+
+        {/* How it Works Section */}
+        {/* Assuming there is a 'How it Works' or similar section, update its content */}
+        {/* I will look for a section that describes the user journey and update it */}
       </main>
       {/* Rating Dialog */}
       <RatingModal 

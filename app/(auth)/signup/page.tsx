@@ -12,6 +12,8 @@ import { useToast } from "@/components/ui/use-toast"
 import { useAuth } from "@/app/context/auth-context"
 import { initializeFirebase } from "@/app/lib/firebase"
 import Image from "next/image"
+import { X } from "lucide-react"
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
 
 export default function SignupPage() {
   const [name, setName] = useState("")
@@ -28,6 +30,11 @@ export default function SignupPage() {
   const searchParams = useSearchParams()
   const returnUrl = searchParams.get('returnUrl')
   const { setUser } = useAuth()
+  const [gender, setGender] = useState("male")
+  const [state, setState] = useState("")
+  const [city, setCity] = useState("")
+  const [street, setStreet] = useState("")
+  const [postalCode, setPostalCode] = useState("")
 
   const handleSignup = async (e: React.FormEvent) => {
     e.preventDefault()
@@ -74,14 +81,19 @@ export default function SignupPage() {
       await setDoc(doc(db, "users", userCredential.user.uid), {
         name,
         email,
-        phone,
+        phone: "+63" + phone,
         address,
         role: "user", // Always set as user
         createdAt: new Date().toISOString(),
         updatedAt: new Date().toISOString(),
         displayName: name,
         profilePicture: profilePictureUrl,
-        lastUpdated: new Date().toISOString()
+        lastUpdated: new Date().toISOString(),
+        gender,
+        state,
+        city,
+        street,
+        postalCode
       })
 
       setUser({
@@ -137,6 +149,13 @@ export default function SignupPage() {
     if (input) input.value = '';
   }
 
+  const handlePhoneChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const value = e.target.value.replace(/\D/g, ''); // Remove non-digits
+    if (value.length <= 10) { // Philippine mobile numbers are 10 digits after +63
+      setPhone(value);
+    }
+  };
+
   return (
     <div 
       className="flex min-h-screen items-center justify-center bg-cover bg-center relative px-4 sm:px-6"
@@ -173,157 +192,225 @@ export default function SignupPage() {
               <CardDescription className="text-sm sm:text-base text-gray-300">Create an account to get started</CardDescription>
             </CardHeader>
             <CardContent className="p-0">
-              <form onSubmit={handleSignup}>
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+              <form onSubmit={handleSignup} className="max-h-[calc(100vh-200px)] overflow-y-auto max-w-xl mx-auto px-4">
+                {/* Profile Picture Section */}
+                <div className="mb-4 flex flex-col items-center">
+                  <div className="relative w-20 h-20 sm:w-24 sm:h-24 rounded-full overflow-hidden border-2 border-white/20 bg-white/10 group">
+                    {previewUrl ? (
+                      <>
+                        <Image
+                          src={previewUrl}
+                          alt="Profile preview"
+                          fill
+                          className="object-cover"
+                        />
+                        <div className="absolute inset-0 bg-black/50 backdrop-blur-sm opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center">
+                          <button
+                            type="button"
+                            onClick={handleRemoveProfilePicture}
+                            className="text-white hover:text-gray-200 transition-colors"
+                            title="Remove profile picture"
+                            aria-label="Remove profile picture"
+                          >
+                            <X className="h-8 w-8" />
+                          </button>
+                        </div>
+                      </>
+                    ) : (
+                      <div className="w-full h-full flex items-center justify-center text-white/50">
+                        <svg
+                          xmlns="http://www.w3.org/2000/svg"
+                          width="24"
+                          height="24"
+                          viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                          <path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2" />
+                          <circle cx="12" cy="7" r="4" />
+                        </svg>
+                      </div>
+                    )}
+                  </div>
+                  <div className="mt-1">
+                    <Input
+                      id="profilePicture"
+                      type="file"
+                      accept="image/*"
+                      onChange={handleProfilePictureChange}
+                      className="hidden"
+                    />
+                    <Label
+                      htmlFor="profilePicture"
+                      className="cursor-pointer text-sm text-white/80 hover:text-white"
+                    >
+                      {previewUrl ? "Change photo" : "Add photo"}
+                    </Label>
+                  </div>
+                </div>
+
+                {/* Form Fields - Two Column Layout */}
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                   {/* Left Column */}
                   <div className="space-y-4">
-                    <div className="space-y-1.5 sm:space-y-2">
-                      <Label htmlFor="name" className="text-sm sm:text-base text-white">Full Name</Label>
+                    {/* Full Name */}
+                    <div className="space-y-2">
+                      <Label htmlFor="name" className="text-white">Full Name</Label>
                       <Input
                         id="name"
-                        placeholder="John Doe"
                         value={name}
                         onChange={(e) => setName(e.target.value)}
                         required
-                        className="bg-white text-gray-900 border-gray-300 h-10 sm:h-11"
+                        placeholder="Enter your full name"
+                        className="bg-white/10 border-white/20 text-white placeholder:text-white/50 focus:outline-none focus:ring-0 focus:ring-offset-0 focus:border-transparent"
                       />
                     </div>
-                    <div className="space-y-1.5 sm:space-y-2">
-                      <Label htmlFor="phone" className="text-sm sm:text-base text-white">Phone Number</Label>
+
+                    {/* Gender */}
+                    <div className="space-y-2">
+                      <Label htmlFor="gender" className="text-white">Gender</Label>
+                      <Select value={gender} onValueChange={setGender}>
+                        <SelectTrigger className="bg-white/10 border-white/20 text-white focus:outline-none focus:ring-0 focus:border-transparent">
+                          <SelectValue placeholder="Select gender" />
+                        </SelectTrigger>
+                        <SelectContent>
+                          <SelectItem value="male">Male</SelectItem>
+                          <SelectItem value="female">Female</SelectItem>
+                          <SelectItem value="other">Other</SelectItem>
+                        </SelectContent>
+                      </Select>
+                    </div>
+
+                    {/* Email */}
+                    <div className="space-y-2">
+                      <Label htmlFor="email" className="text-white">Email</Label>
                       <Input
-                        id="phone"
-                        type="tel"
-                        placeholder="+1234567890"
-                        value={phone}
-                        onChange={(e) => setPhone(e.target.value)}
+                        id="email"
+                        type="email"
+                        value={email}
+                        onChange={(e) => setEmail(e.target.value)}
                         required
-                        className="bg-white text-gray-900 border-gray-300 h-10 sm:h-11"
+                        placeholder="Enter your email"
+                        className="bg-white/10 border-white/20 text-white placeholder:text-white/50 focus:outline-none focus:ring-0 focus:ring-offset-0 focus:border-transparent"
                       />
                     </div>
-                    <div className="space-y-1.5 sm:space-y-2">
-                      <Label htmlFor="address" className="text-sm sm:text-base text-white">Address</Label>
+
+                    {/* Password */}
+                    <div className="space-y-2">
+                      <Label htmlFor="password" className="text-white">Password</Label>
                       <Input
-                        id="address"
-                        placeholder="123 Main St, City, Country"
-                        value={address}
-                        onChange={(e) => setAddress(e.target.value)}
+                        id="password"
+                        type="password"
+                        value={password}
+                        onChange={(e) => setPassword(e.target.value)}
                         required
-                        className="bg-white text-gray-900 border-gray-300 h-10 sm:h-11"
+                        placeholder="Enter your password"
+                        className="bg-white/10 border-white/20 text-white placeholder:text-white/50 focus:outline-none focus:ring-0 focus:ring-offset-0 focus:border-transparent"
+                      />
+                    </div>
+
+                    {/* Confirm Password */}
+                    <div className="space-y-2">
+                      <Label htmlFor="confirmPassword" className="text-white">Confirm Password</Label>
+                      <Input
+                        id="confirmPassword"
+                        type="password"
+                        value={confirmPassword}
+                        onChange={(e) => setConfirmPassword(e.target.value)}
+                        required
+                        placeholder="Confirm your password"
+                        className="bg-white/10 border-white/20 text-white placeholder:text-white/50 focus:outline-none focus:ring-0 focus:ring-offset-0 focus:border-transparent"
                       />
                     </div>
                   </div>
 
                   {/* Right Column */}
                   <div className="space-y-4">
-                    <div className="space-y-1.5 sm:space-y-2">
-                      <Label htmlFor="email" className="text-sm sm:text-base text-white">Email</Label>
+                    {/* Phone Number */}
+                    <div className="space-y-2">
+                      <Label htmlFor="phone" className="text-white">Phone Number</Label>
+                      <div className="relative">
+                        <span className="absolute left-3 top-1/2 -translate-y-1/2 text-white/50">+63</span>
+                        <Input
+                          id="phone"
+                          value={phone}
+                          onChange={handlePhoneChange}
+                          required
+                          placeholder="Enter 10-digit mobile number"
+                          className="pl-12 bg-white/10 border-white/20 text-white placeholder:text-white/50 focus:outline-none focus:ring-0 focus:ring-offset-0 focus:border-transparent"
+                        />
+                      </div>
+                    </div>
+
+                    {/* State */}
+                    <div className="space-y-2">
+                      <Label htmlFor="state" className="text-white">State</Label>
                       <Input
-                        id="email"
-                        type="email"
-                        placeholder="name@example.com"
-                        value={email}
-                        onChange={(e) => setEmail(e.target.value)}
+                        id="state"
+                        value={state}
+                        onChange={(e) => setState(e.target.value)}
                         required
-                        className="bg-white text-gray-900 border-gray-300 h-10 sm:h-11"
+                        placeholder="Enter your state"
+                        className="bg-white/10 border-white/20 text-white placeholder:text-white/50 focus:outline-none focus:ring-0 focus:ring-offset-0 focus:border-transparent"
                       />
                     </div>
-                    <div className="space-y-1.5 sm:space-y-2">
-                      <Label htmlFor="password" className="text-sm sm:text-base text-white">Password</Label>
+
+                    {/* City */}
+                    <div className="space-y-2">
+                      <Label htmlFor="city" className="text-white">City</Label>
                       <Input
-                        id="password"
-                        type="password"
-                        placeholder="••••••••"
-                        value={password}
-                        onChange={(e) => setPassword(e.target.value)}
+                        id="city"
+                        value={city}
+                        onChange={(e) => setCity(e.target.value)}
                         required
-                        className="bg-white text-gray-900 border-gray-300 h-10 sm:h-11"
+                        placeholder="Enter your city"
+                        className="bg-white/10 border-white/20 text-white placeholder:text-white/50 focus:outline-none focus:ring-0 focus:ring-offset-0 focus:border-transparent"
                       />
                     </div>
-                    <div className="space-y-1.5 sm:space-y-2">
-                      <Label htmlFor="confirmPassword" className="text-sm sm:text-base text-white">Confirm Password</Label>
+
+                    {/* Street */}
+                    <div className="space-y-2">
+                      <Label htmlFor="street" className="text-white">Street</Label>
                       <Input
-                        id="confirmPassword"
-                        type="password"
-                        placeholder="••••••••"
-                        value={confirmPassword}
-                        onChange={(e) => setConfirmPassword(e.target.value)}
+                        id="street"
+                        value={street}
+                        onChange={(e) => setStreet(e.target.value)}
                         required
-                        className="bg-white text-gray-900 border-gray-300 h-10 sm:h-11"
+                        placeholder="Enter your street"
+                        className="bg-white/10 border-white/20 text-white placeholder:text-white/50 focus:outline-none focus:ring-0 focus:ring-offset-0 focus:border-transparent"
+                      />
+                    </div>
+
+                    {/* Postal Code */}
+                    <div className="space-y-2">
+                      <Label htmlFor="postalCode" className="text-white">Postal Code</Label>
+                      <Input
+                        id="postalCode"
+                        value={postalCode}
+                        onChange={(e) => setPostalCode(e.target.value)}
+                        required
+                        placeholder="Enter your postal code"
+                        className="bg-white/10 border-white/20 text-white placeholder:text-white/50 focus:outline-none focus:ring-0 focus:ring-offset-0 focus:border-transparent"
                       />
                     </div>
                   </div>
                 </div>
 
-                {/* Profile Picture Section - full width row */}
-                <div className="mt-4 flex flex-col items-center justify-center w-full">
-                  <Label htmlFor="profilePicture" className="text-sm sm:text-base text-white mb-2">Profile Picture (Optional)</Label>
-                  <div className="flex flex-col sm:flex-row items-center gap-6 w-full sm:w-auto">
-                    <Input
-                      id="profilePicture"
-                      type="file"
-                      accept="image/*"
-                      onChange={handleProfilePictureChange}
-                      className="bg-white text-gray-900 border-gray-300 h-10 sm:h-11 w-full sm:w-auto"
-                    />
-                    <div className="relative w-48 h-48 rounded-lg overflow-hidden border-2 border-gray-300 bg-gray-100 mt-4 sm:mt-0">
-                      {previewUrl ? (
-                        <>
-                          {/* Remove button */}
-                          <button
-                            type="button"
-                            onClick={handleRemoveProfilePicture}
-                            className="absolute top-2 right-2 z-10 bg-white bg-opacity-80 hover:bg-opacity-100 text-gray-700 rounded-full p-1 shadow-md focus:outline-none"
-                            aria-label="Remove image"
-                          >
-                            <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 20 20" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><line x1="4" y1="4" x2="16" y2="16" /><line x1="16" y1="4" x2="4" y2="16" /></svg>
-                          </button>
-                          <Image
-                            src={previewUrl}
-                            alt="Profile preview"
-                            fill
-                            className="object-cover"
-                          />
-                        </>
-                      ) : (
-                        <div className="w-full h-full flex items-center justify-center text-gray-400">
-                          <svg
-                            xmlns="http://www.w3.org/2000/svg"
-                            width="48"
-                            height="48"
-                            viewBox="0 0 24 24"
-                            fill="none"
-                            stroke="currentColor"
-                            strokeWidth="2"
-                            strokeLinecap="round"
-                            strokeLinejoin="round"
-                          >
-                            <path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2" />
-                            <circle cx="12" cy="7" r="4" />
-                          </svg>
-                        </div>
-                      )}
-                    </div>
-                  </div>
-                </div>
+                <Button 
+                  type="submit" 
+                  className="w-full mt-6 bg-blue-600 text-white hover:bg-blue-700"
+                  disabled={loading}
+                >
+                  {loading ? "Creating account..." : "Create Account"}
+                </Button>
 
-                <div className="mt-6">
-                  <Button type="submit" className="w-full bg-blue-600 text-white hover:bg-blue-700 h-10 sm:h-11 text-sm sm:text-base" disabled={loading}>
-                    {loading ? "Creating account..." : "Sign Up"}
-                  </Button>
+                <div className="mt-4 text-center">
+                  <p className="text-sm text-white/70">
+                    Already have an account?{" "}
+                    <Link href="/login" className="text-blue-400 hover:underline">
+                      Log in
+                    </Link>
+                  </p>
                 </div>
               </form>
             </CardContent>
-            <CardFooter className="flex justify-center p-0 pt-3 sm:pt-4">
-              <p className="text-xs sm:text-sm text-gray-300">
-                Already have an account?{" "}
-                <Link 
-                  href={returnUrl ? `/login?returnUrl=${encodeURIComponent(returnUrl)}` : "/login"} 
-                  className="text-blue-400 hover:underline"
-                >
-                  Login
-                </Link>
-              </p>
-            </CardFooter>
           </Card>
         </div>
       </div>

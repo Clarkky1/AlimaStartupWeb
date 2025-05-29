@@ -14,6 +14,8 @@ import { Label } from "@/components/ui/label"
 import { Input } from "@/components/ui/input"
 import { Textarea } from "@/components/ui/textarea"
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription, DialogFooter } from "@/components/ui/dialog"
+import { CheckCircle } from 'lucide-react'
 
 const SERVICE_CATEGORIES = [
   { value: "accounting", label: "Accounting & Bookkeeping Services" },
@@ -61,6 +63,7 @@ interface ApplicationData {
 
 export default function ServiceApplicationPage() {
   const [loading, setLoading] = useState(false)
+  const [showSuccessModal, setShowSuccessModal] = useState(false)
   const [category, setCategory] = useState("")
   const [serviceName, setServiceName] = useState("")
   const [location, setLocation] = useState("")
@@ -179,12 +182,8 @@ export default function ServiceApplicationPage() {
 
       await addDoc(collection(db, "notifications"), userNotification)
 
-      toast({
-        title: "Application submitted",
-        description: "Your application has been submitted successfully",
-      })
-
-      router.push('/dashboard')
+      // Show success modal instead of toast and redirect
+      setShowSuccessModal(true)
     } catch (error: any) {
       toast({
         title: "Error",
@@ -195,6 +194,23 @@ export default function ServiceApplicationPage() {
       setLoading(false)
     }
   }
+
+  const handleImageChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    if (e.target.files && e.target.files[0]) {
+      setServiceImage(e.target.files[0])
+      setImagePreviewUrl(URL.createObjectURL(e.target.files[0]))
+    } else {
+      setServiceImage(null)
+      setImagePreviewUrl(null)
+    }
+  }
+
+  // Function to close modal and potentially redirect or update state
+  const handleModalClose = () => {
+    setShowSuccessModal(false);
+    // Optionally: redirect or perform other actions after modal is closed
+    // For now, we stay on the apply page, the user can navigate manually
+  };
 
   return (
     <div className="relative">
@@ -234,19 +250,20 @@ export default function ServiceApplicationPage() {
 
       {/* Right Column - Application Details Form and Requirements */}
       <div className="grid grid-cols-1 space-y-8 px-4 pb-8 md:ml-[calc(33.33%+16px)] lg:ml-[calc(25%+16px)] xl:ml-[calc(20%+16px)] md:grid-cols-1 md:space-y-8">
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
-          {/* Service Details Form */}
-          <Card>
-            <CardHeader>
-              <CardTitle>Service Details</CardTitle>
-              <CardDescription>Enter the details for the service you want to provide.</CardDescription>
-            </CardHeader>
-            <CardContent>
+        {/* Combined Service Details and Requirements Form */}
+        <Card>
+          <CardHeader>
+            <CardTitle>Service Details & Requirements</CardTitle>
+            <CardDescription>Enter the details for the service you want to provide and upload the necessary documents.</CardDescription>
+          </CardHeader>
+          <CardContent>
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
+              {/* Service Details Form Fields - Left Column */}
               <div className="space-y-4">
                 <div className="space-y-2 relative">
                   <Label htmlFor="category">Category</Label>
                   <Select value={category} onValueChange={setCategory}>
-                    <SelectTrigger className="w-full">
+                    <SelectTrigger className="w-full bg-transparent border">
                       <SelectValue placeholder="Select a category" />
                     </SelectTrigger>
                     <SelectContent 
@@ -270,6 +287,7 @@ export default function ServiceApplicationPage() {
                     placeholder="e.g., Expert Plumbing Services" 
                     value={serviceName} 
                     onChange={(e) => setServiceName(e.target.value)} 
+                    className="bg-transparent border"
                   />
                 </div>
 
@@ -280,6 +298,7 @@ export default function ServiceApplicationPage() {
                     placeholder="e.g., Metro Manila" 
                     value={location} 
                     onChange={(e) => setLocation(e.target.value)} 
+                    className="bg-transparent border"
                   />
                 </div>
 
@@ -287,102 +306,118 @@ export default function ServiceApplicationPage() {
                   <Label htmlFor="serviceDescription">Service Description</Label>
                   <Textarea 
                     id="serviceDescription" 
-                    placeholder="Describe the services you offer..." 
+                    placeholder="Describe your service, what it includes, and your experience." 
                     value={serviceDescription} 
                     onChange={(e) => setServiceDescription(e.target.value)} 
+                    className="bg-transparent border"
                   />
                 </div>
 
+                {/* Add Service Image Upload */}
                 <div className="space-y-2">
-                  <Label htmlFor="serviceImage">Service Image (Optional)</Label>
+                  <Label htmlFor="serviceImage">Upload Service Image (Optional)</Label>
                   <Input 
                     id="serviceImage" 
                     type="file" 
-                    accept="image/*"
-                    onChange={(e) => {
-                      if (e.target.files && e.target.files[0]) {
-                        setServiceImage(e.target.files[0])
-                        setImagePreviewUrl(URL.createObjectURL(e.target.files[0]))
-                      } else {
-                        setServiceImage(null)
-                        setImagePreviewUrl(null)
-                      }
-                    }}
+                    accept="image/*" 
+                    onChange={handleImageChange}
+                    className="bg-transparent border"
                   />
-                  {imagePreviewUrl && (
+                   {imagePreviewUrl && (
                     <div className="mt-2">
-                      <img src={imagePreviewUrl} alt="Image Preview" className="w-32 h-32 object-cover rounded-md" />
+                      <img src={imagePreviewUrl} alt="Image Preview" className="w-32 h-auto rounded" />
                     </div>
                   )}
                 </div>
-
-                <Button 
-                  onClick={handleApply} 
-                  disabled={loading || !category}
-                  className="w-full mt-4"
-                >
-                  {loading ? "Submitting..." : "Submit Application"}
-                </Button>
               </div>
-            </CardContent>
-          </Card>
 
-          {/* Requirements Section */}
-          <Card>
-            <CardHeader>
-              <CardTitle>Requirements</CardTitle>
-              <CardDescription>Please ensure you have the following ready for verification.</CardDescription>
-            </CardHeader>
-            <CardContent className="p-6 pt-0 pb-4">
+              {/* Requirements and Additional Info - Right Column */}
               <div className="space-y-4">
-                <div className="space-y-2">
-                  <Label htmlFor="valid-id">Upload Valid Government ID</Label>
-                  <Input 
-                    id="valid-id" 
-                    type="file" 
-                    accept="image/*,application/pdf" 
-                    required
-                    onChange={(e) => setValidIdFile(e.target.files ? e.target.files[0] : null)}
-                  />
+                {/* Requirements Section Fields */}
+                 <div> {/* Wrap requirements section for spacing */}
+                   <h3 className="text-lg font-semibold">Requirements</h3>
+                   <p className="text-sm text-muted-foreground mb-4">Please ensure you have the following ready for verification.</p>
+                  <div className="space-y-4">
+                    <div className="space-y-2">
+                      <Label htmlFor="valid-id">Upload Valid Government ID</Label>
+                      <Input 
+                        id="valid-id" 
+                        type="file" 
+                        accept="image/*,application/pdf" 
+                        required
+                        onChange={(e) => setValidIdFile(e.target.files ? e.target.files[0] : null)}
+                        className="bg-transparent border"
+                      />
+                    </div>
+
+                    <div className="space-y-2">
+                      <Label htmlFor="proof-address">Upload Proof of Address</Label>
+                      <Input 
+                        id="proof-address" 
+                        type="file" 
+                        accept="image/*,application/pdf" 
+                        required
+                        onChange={(e) => setProofAddressFile(e.target.files ? e.target.files[0] : null)}
+                        className="bg-transparent border"
+                      />
+                    </div>
+
+                    <div className="space-y-2">
+                       <Label htmlFor="certifications">Upload Professional Certifications (Optional)</Label>
+                       <Input 
+                         id="certifications" 
+                         type="file" 
+                         accept="image/*,application/pdf" 
+                         multiple
+                         onChange={(e) => setCertificationsFiles(e.target.files)}
+                         className="bg-transparent border"
+                       />
+                     </div>
+                  </div>
                 </div>
 
-                <div className="space-y-2">
-                  <Label htmlFor="proof-address">Upload Proof of Address</Label>
-                  <Input 
-                    id="proof-address" 
-                    type="file" 
-                    accept="image/*,application/pdf" 
-                    required
-                    onChange={(e) => setProofAddressFile(e.target.files ? e.target.files[0] : null)}
-                  />
-                </div>
-
-                <div className="space-y-2">
-                  <Label htmlFor="certifications">Upload Professional Certifications (Optional)</Label>
-                  <Input 
-                    id="certifications" 
-                    type="file" 
-                    accept="image/*,application/pdf" 
-                    multiple
-                    onChange={(e) => setCertificationsFiles(e.target.files)}
-                  />
-                </div>
-
-                <div className="space-y-2">
+                {/* Additional Information */}
+                <div className="mt-8 space-y-2"> {/* Adjusted spacing */}
                   <Label htmlFor="additional-info">Additional Information (Optional)</Label>
-                  <Textarea 
-                    id="additional-info" 
-                    placeholder="Provide any additional information relevant to your application..."
-                    className="min-h-[80px] sm:min-h-[150px] resize-none overflow-y-hidden"
-                    value={additionalInfo}
-                    onChange={(e) => setAdditionalInfo(e.target.value)}
-                  />
+                   <Textarea 
+                     id="additional-info" 
+                     placeholder="Provide any other relevant information about your service or qualifications." 
+                     value={additionalInfo}
+                     onChange={(e) => setAdditionalInfo(e.target.value)}
+                     className="bg-transparent border"
+                   />
                 </div>
               </div>
-            </CardContent>
-          </Card>
-        </div>
+            </div>
+
+            {/* Submit Button - Centered below the two columns */}
+            <div className="flex justify-center mt-8">
+              <Button 
+                onClick={handleApply} 
+                disabled={loading || !category || !validIdFile || !proofAddressFile}
+                className="w-fit"
+              >
+                {loading ? "Submitting..." : "Submit Application"}
+              </Button>
+            </div>
+          </CardContent>
+        </Card>
       </div>
+
+      {/* Success Modal */}
+      <Dialog open={showSuccessModal} onOpenChange={handleModalClose}>
+        <DialogContent className="sm:max-w-[425px]">
+          <DialogHeader>
+            <DialogTitle>Application Submitted</DialogTitle>
+            <DialogDescription>Your application has been submitted successfully.</DialogDescription>
+          </DialogHeader>
+          <DialogFooter>
+            <Button type="submit" onClick={handleModalClose}>
+              Close
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
     </div>
   )
 } 

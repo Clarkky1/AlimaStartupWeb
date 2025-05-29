@@ -28,6 +28,8 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/u
 import { Skeleton } from "@/components/ui/skeleton"
 import { ChevronDown, ChevronUp, Grid, MessageSquare, Clock, Users, ChevronLeft, ChevronRight } from "lucide-react"
 import { useRouter } from "next/navigation"
+import { Avatar, AvatarImage, AvatarFallback } from "@/components/ui/avatar"
+import { useAuth } from "@/app/context/auth-context"
 
 export default function ServicesPage() {
   const searchParams = useSearchParams()
@@ -42,6 +44,7 @@ export default function ServicesPage() {
   const [showCategories, setShowCategories] = useState(false)
   const [showConnections, setShowConnections] = useState(false)
   const [isRightPanelExpanded, setIsRightPanelExpanded] = useState(false)
+  const [hasPendingApplication, setHasPendingApplication] = useState(false)
   
   interface Service {
     id: string;
@@ -70,6 +73,37 @@ export default function ServicesPage() {
   const [loading, setLoading] = useState(true)
   const { toast } = useToast()
   const router = useRouter()
+  const { user } = useAuth()
+
+  // Effect to check for pending service applications
+  useEffect(() => {
+    async function checkPendingApplications() {
+      if (!user) return;
+
+      try {
+        const { db } = await initializeFirebase();
+        if (!db) throw new Error("Failed to initialize Firebase");
+
+        const applicationsQuery = query(
+          collection(db, "service_applications"),
+          where("userId", "==", user.uid),
+          where("status", "==", "pending")
+        );
+
+        const querySnapshot = await getDocs(applicationsQuery);
+        if (!querySnapshot.empty) {
+          setHasPendingApplication(true);
+        } else {
+          setHasPendingApplication(false);
+        }
+      } catch (error) {
+        console.error("Error checking pending applications:", error);
+        // Optionally show a toast or handle error state
+      }
+    }
+
+    checkPendingApplications();
+  }, [user]);
 
   // Reset all filters
   const resetFilters = () => {
@@ -230,6 +264,31 @@ export default function ServicesPage() {
             </svg>
             <span className="ml-1">Back</span>
           </Button>
+          {/* Profile Link/Button */}
+          {user && (
+             <Button
+               variant="ghost"
+               onClick={() => router.push('/profile')}
+               className="flex items-center text-foreground bg-background/50 hover:bg-background/80 backdrop-blur-sm rounded-full p-2 ml-4"
+             >
+               <Avatar className="h-6 w-6">
+                  <AvatarImage src={user.avatar || user.profilePicture || user.photoURL || '/default-avatar.png'} alt="User avatar" />
+                  <AvatarFallback>{user.name ? user.name.charAt(0).toUpperCase() : 'U'}</AvatarFallback>
+               </Avatar>
+               <span className="ml-2 hidden md:inline">Profile</span>
+             </Button>
+          )}
+          {/* Pending Application Indicator */}
+          {user && hasPendingApplication && (
+            <Button
+              variant="outline"
+              size="sm"
+              className="ml-2"
+              onClick={() => router.push('/services/apply')}
+            >
+              Pending Application
+            </Button>
+          )}
         </div>
       </div>
 
@@ -487,9 +546,15 @@ export default function ServicesPage() {
                   {isRightPanelExpanded && showConnections && (
                     <div className="rounded-lg border bg-card p-3 space-y-3">
                       <h3 className="text-sm font-semibold">Connections</h3>
-                      <p className="text-sm text-muted-foreground">No pending connections.</p>
-                      <p className="text-sm text-muted-foreground">No connection history.</p>
-                      <p className="text-sm text-muted-foreground">Select a connection to message.</p>
+                      {!user ? (
+                        <p className="text-sm text-muted-foreground">Please login to see your connections.</p>
+                      ) : (
+                        <>
+                          <p className="text-sm text-muted-foreground">No pending connections.</p>
+                          <p className="text-sm text-muted-foreground">No connection history.</p>
+                          <p className="text-sm text-muted-foreground">Select a connection to message.</p>
+                        </>
+                      )}
                     </div>
                   )}
 

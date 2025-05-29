@@ -21,6 +21,7 @@ import { RatingModal } from "@/components/messages/rating-modal"
 import { useToast } from "@/components/ui/use-toast"
 import AOS from 'aos';
 import 'aos/dist/aos.css';
+import { FAQSection } from "@/components/home/faq-section"
 
 // Dynamically import the QuoteCard component to avoid styled-components SSR issues
 const QuoteCard = dynamic(() => import("@/components/home/quote-card"), { ssr: false });
@@ -1255,135 +1256,7 @@ export default function Home() {
         </div>
         
         {/* 7. FAQ */}
-        <div id="faq" className="py-12 relative scroll-mt-40 bg-white dark:bg-neutral-900 overflow-hidden">
-          {/* Apple-inspired glassmorphism background */}
-          
-          <div className="container mx-auto px-6 md:px-8 lg:px-12 relative z-10">
-            <div className="mx-auto max-w-5xl lg:max-w-6xl">
-              <div className="text-center mb-16" data-aos="fade-up">
-                <h2 className="text-3xl font-semibold tracking-tight md:text-4xl lg:text-5xl mb-6 text-gray-900 dark:text-gray-100">Frequently Asked Questions</h2>
-              
-                <p className="text-gray-600 dark:text-gray-300 mb-0 max-w-2xl mx-auto text-lg">
-                  Find answers to common questions about Alima.
-                </p>
-              </div>
-              
-              
-              <div className="grid grid-cols-1 gap-4" data-aos="fade-up" data-aos-delay="150">
-                {/* FAQ Item 1 */}
-                <div className="group">
-                  <div className="backdrop-blur-xl bg-white/80 dark:bg-black/50 border border-gray-200/50 dark:border-white/5 p-8 rounded-2xl shadow-sm transition-all duration-300 hover:shadow-md hover:translate-y-[-2px]">
-                    <div className="flex items-start justify-between">
-                      <h3 className="text-xl font-medium mb-4 text-gray-900 dark:text-white">How do I find the right service provider?</h3>
-                      <div className="ml-4 flex-shrink-0 flex items-center justify-center w-8 h-8 rounded-full bg-gray-100 dark:bg-gray-800 group-hover:bg-primary/10 dark:group-hover:bg-primary/20 transition-colors duration-300">
-                        <svg className="w-5 h-5 text-gray-500 dark:text-gray-400 group-hover:text-primary dark:group-hover:text-primary transition-colors duration-300" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-                          <path d="M12 5v14M5 12h14" strokeLinecap="round" strokeLinejoin="round"/>
-                        </svg>
-                      </div>
-                    </div>
-                    <p className="text-gray-600 dark:text-gray-300 text-base leading-relaxed">Our platform offers detailed profiles, reviews, and portfolios so you can evaluate service providers. You can also filter by location, price range, and category to find the perfect match.</p>
-                  </div>
-                </div>
-                
-                {/* FAQ Item 2 */}
-                <div className="group">
-                  <div className="backdrop-blur-xl bg-white/80 dark:bg-black/50 border border-gray-200/50 dark:border-white/5 p-8 rounded-2xl shadow-sm transition-all duration-300 hover:shadow-md hover:translate-y-[-2px]">
-                    <div className="flex items-start justify-between">
-                      <h3 className="text-xl font-medium mb-4 text-gray-900 dark:text-white">How much does it cost to join Alima?</h3>
-                      <div className="ml-4 flex-shrink-0 flex items-center justify-center w-8 h-8 rounded-full bg-gray-100 dark:bg-gray-800 group-hover:bg-primary/10 dark:group-hover:bg-primary/20 transition-colors duration-300">
-                        <svg className="w-5 h-5 text-gray-500 dark:text-gray-400 group-hover:text-primary dark:group-hover:text-primary transition-colors duration-300" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-                          <path d="M12 5v14M5 12h14" strokeLinecap="round" strokeLinejoin="round"/>
-                        </svg>
-                      </div>
-                    </div>
-                    <p className="text-gray-600 dark:text-gray-300 text-base leading-relaxed">Creating an account on Alima is completely free. Service providers pay a small commission on completed jobs, while clients can browse, contact, and hire providers at no cost.</p>
-                  </div>
-                </div>
-                
-                {/* FAQ Item 3 */}
-                <div className="group">
-                  <div className="backdrop-blur-xl bg-white/80 dark:bg-black/50 border border-gray-200/50 dark:border-white/5 p-8 rounded-2xl shadow-sm transition-all duration-300 hover:shadow-md hover:translate-y-[-2px]">
-                    <div className="flex items-start justify-between">
-                      <h3 className="text-xl font-medium mb-4 text-gray-900 dark:text-white">How are payments handled?</h3>
-                      <div className="ml-4 flex-shrink-0 flex items-center justify-center w-8 h-8 rounded-full bg-gray-100 dark:bg-gray-800 group-hover:bg-primary/10 dark:group-hover:bg-primary/20 transition-colors duration-300">
-                        <svg className="w-5 h-5 text-gray-500 dark:text-gray-400 group-hover:text-primary dark:group-hover:text-primary transition-colors duration-300" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-                          <path d="M12 5v14M5 12h14" strokeLinecap="round" strokeLinejoin="round"/>
-                        </svg>
-                      </div>
-                    </div>
-                    <p className="text-gray-600 dark:text-gray-300 text-base leading-relaxed">All payments are processed securely through Alima. Funds are held until the service is completed and approved, protecting both users and providers.</p>
-                  </div>
-                </div>
-                
-                {/* FAQ Item 4 */}
-                <div className="group">
-                  <div className="backdrop-blur-xl bg-white/80 dark:bg-black/50 border border-gray-200/50 dark:border-white/5 p-8 rounded-2xl shadow-sm transition-all duration-300 hover:shadow-md hover:translate-y-[-2px]">
-                    <div className="flex items-start justify-between">
-                      <h3 className="text-xl font-medium mb-4 text-gray-900 dark:text-white">What if I'm not satisfied with the service?</h3>
-                      <div className="ml-4 flex-shrink-0 flex items-center justify-center w-8 h-8 rounded-full bg-gray-100 dark:bg-gray-800 group-hover:bg-primary/10 dark:group-hover:bg-primary/20 transition-colors duration-300">
-                        <svg className="w-5 h-5 text-gray-500 dark:text-gray-400 group-hover:text-primary dark:group-hover:text-primary transition-colors duration-300" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-                          <path d="M12 5v14M5 12h14" strokeLinecap="round" strokeLinejoin="round"/>
-                        </svg>
-                      </div>
-                    </div>
-                    <p className="text-gray-600 dark:text-gray-300 text-base leading-relaxed">Our satisfaction guarantee ensures you only pay for work that meets your requirements. If issues arise, our dispute resolution team will help mediate and find a fair solution.</p>
-                  </div>
-                </div>
-                
-                {/* FAQ Item 5 */}
-                <div className="group">
-                  <div className="backdrop-blur-xl bg-white/80 dark:bg-black/50 border border-gray-200/50 dark:border-white/5 p-8 rounded-2xl shadow-sm transition-all duration-300 hover:shadow-md hover:translate-y-[-2px]">
-                    <div className="flex items-start justify-between">
-                      <h3 className="text-xl font-medium mb-4 text-gray-900 dark:text-white">Can I offer multiple services as a provider?</h3>
-                      <div className="ml-4 flex-shrink-0 flex items-center justify-center w-8 h-8 rounded-full bg-gray-100 dark:bg-gray-800 group-hover:bg-primary/10 dark:group-hover:bg-primary/20 transition-colors duration-300">
-                        <svg className="w-5 h-5 text-gray-500 dark:text-gray-400 group-hover:text-primary dark:group-hover:text-primary transition-colors duration-300" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-                          <path d="M12 5v14M5 12h14" strokeLinecap="round" strokeLinejoin="round"/>
-                        </svg>
-                      </div>
-                    </div>
-                    <p className="text-gray-600 dark:text-gray-300 text-base leading-relaxed">Yes, service providers can list multiple services under different categories. This allows you to showcase your diverse skill set and attract a wider range of clients.</p>
-                  </div>
-                </div>
-                <div className="group">
-                  <div className="backdrop-blur-xl bg-white/80 dark:bg-black/50 border border-gray-200/50 dark:border-white/5 p-8 rounded-2xl shadow-sm transition-all duration-300 hover:shadow-md hover:translate-y-[-2px]">
-                    <div className="flex items-start justify-between">
-                      <h3 className="text-xl font-medium mb-4 text-gray-900 dark:text-white">How does Alima verify providers?</h3>
-                      <div className="ml-4 flex-shrink-0 flex items-center justify-center w-8 h-8 rounded-full bg-gray-100 dark:bg-gray-800 group-hover:bg-primary/10 dark:group-hover:bg-primary/20 transition-colors duration-300">
-                        <svg className="w-5 h-5 text-gray-500 dark:text-gray-400 group-hover:text-primary dark:group-hover:text-primary transition-colors duration-300" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-                          <path d="M12 5v14M5 12h14" strokeLinecap="round" strokeLinejoin="round"/>
-                        </svg>
-                      </div>
-                    </div>
-                    <p className="text-gray-600 dark:text-gray-300 text-base leading-relaxed">All providers must submit an application and are reviewed by the Alima team before being approved to offer services. This ensures only trusted professionals are on the platform.</p>
-                  </div>
-                </div>
-                <div className="group">
-                  <div className="backdrop-blur-xl bg-white/80 dark:bg-black/50 border border-gray-200/50 dark:border-white/5 p-8 rounded-2xl shadow-sm transition-all duration-300 hover:shadow-md hover:translate-y-[-2px]">
-                    <div className="flex items-start justify-between">
-                      <h3 className="text-xl font-medium mb-4 text-gray-900 dark:text-white">Why does Alima handle all payments?</h3>
-                      <div className="ml-4 flex-shrink-0 flex items-center justify-center w-8 h-8 rounded-full bg-gray-100 dark:bg-gray-800 group-hover:bg-primary/10 dark:group-hover:bg-primary/20 transition-colors duration-300">
-                        <svg className="w-5 h-5 text-gray-500 dark:text-gray-400 group-hover:text-primary dark:group-hover:text-primary transition-colors duration-300" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-                          <path d="M12 5v14M5 12h14" strokeLinecap="round" strokeLinejoin="round"/>
-                        </svg>
-                      </div>
-                    </div>
-                    <p className="text-gray-600 dark:text-gray-300 text-base leading-relaxed">Handling payments through Alima protects both users and providers. Funds are only released when the service is complete, reducing risk and ensuring satisfaction for everyone.</p>
-                  </div>
-                </div>
-              </div>
-              
-              {/* More questions button - Hidden */}
-              {/* <div className="mt-12 text-center" data-aos="fade-up" data-aos-delay="200">
-                <Link href="/support" className="inline-flex items-center justify-center px-6 py-3 border border-transparent text-base font-medium rounded-full text-primary bg-primary/5 hover:bg-primary/10 transition-colors duration-300">
-                  View all FAQs
-                  <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5 ml-2" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-                    <path d="M5 12h14M12 5l7 7-7 7"/>
-                  </svg>
-                </Link>
-              </div> */}
-            </div>
-          </div>
-        </div>
+        <FAQSection />
         
         {/* 8. CALL TO ACTION with Contact Section */}
         <div id="contact" className="relative py-20 overflow-hidden bg-white dark:bg-neutral-900 scroll-mt-40">

@@ -304,13 +304,8 @@ export function Navbar({ showBackButton = false }: { showBackButton?: boolean })
                     </div>
                   </DropdownMenuLabel>
                   <DropdownMenuSeparator />
-                  {user.role === "provider" && (
-                    <DropdownMenuItem onClick={() => router.push('/dashboard')}>
-                      Dashboard
-                    </DropdownMenuItem>
-                  )}
-                  <DropdownMenuItem onClick={() => router.push('/services/apply')}>
-                    Apply for Services
+                  <DropdownMenuItem onClick={() => router.push('/pending-items')}>
+                    Pending Connections
                   </DropdownMenuItem>
                   <DropdownMenuItem onClick={() => user.role === "provider" ? router.push('/dashboard/notifications') : router.push('/notifications')} className="relative">
                     <span className="flex items-center">
@@ -325,7 +320,7 @@ export function Navbar({ showBackButton = false }: { showBackButton?: boolean })
                       )}
                     </span>
                   </DropdownMenuItem>
-                  <DropdownMenuItem onClick={() => user.role === "provider" ? router.push('/dashboard/chat') : fetchRecentConversation()}>
+                  <DropdownMenuItem onClick={() => router.push('/messages')}>
                     <span className="flex items-center">
                       Messages
                       {messageCounts > 0 && (
@@ -338,8 +333,8 @@ export function Navbar({ showBackButton = false }: { showBackButton?: boolean })
                       )}
                     </span>
                   </DropdownMenuItem>
-                  <DropdownMenuItem onClick={() => router.push('/profile')}>
-                    Profile
+                  <DropdownMenuItem onClick={() => router.push('/payment-history')}>
+                    Payment History
                   </DropdownMenuItem>
                   <DropdownMenuSeparator />
                     <DropdownMenuItem onClick={handleLogoutClick} className="text-destructive">

@@ -22,6 +22,7 @@ import { useToast } from "@/components/ui/use-toast"
 import AOS from 'aos';
 import 'aos/dist/aos.css';
 import { FAQSection } from "@/components/home/faq-section"
+import { ScrollToTop } from "@/components/ui/scroll-to-top"
 
 // Dynamically import the QuoteCard component to avoid styled-components SSR issues
 const QuoteCard = dynamic(() => import("@/components/home/quote-card"), { ssr: false });
@@ -1435,6 +1436,7 @@ export default function Home() {
         serviceTitle={ratingData.serviceTitle}
         transactionId={ratingData.transactionId}
       />
+      <ScrollToTop />
     </div>
   )
 }

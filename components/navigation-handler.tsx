@@ -12,3 +12,7 @@ export function NavigationHandler({ children }: NavigationHandlerProps) {
   
   return <>{children}</>;
 } 
+
+//export default NavigationHandler;
+  //const pathname = use pathname
+  //const pathname = use pathname
